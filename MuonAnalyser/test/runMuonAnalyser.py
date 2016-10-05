@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+import os
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process("MuonAnalyser",eras.Phase2C1)
@@ -31,6 +32,11 @@ process.source = cms.Source("PoolSource",
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
+
+#run for entire sample
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
+filelst = open(dir+"pu200.txt", "r")
+process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("outHisto.root"))
 
