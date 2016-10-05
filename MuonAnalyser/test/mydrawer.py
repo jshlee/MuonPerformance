@@ -46,7 +46,7 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     if "recoMuon" in plotvar:
-        idcut = "recoMuon_signal&&recoMuon_is"+id
+        idcut = "!recoMuon_signal&&recoMuon_is"+id
         h_ph2pu0 = getFake("pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, idcut)
         h_ph2pu140 = getFake("pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, idcut)
         h_ph2pu200 = getFake("pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, idcut)
@@ -65,13 +65,16 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
     if "genMuon" in plotvar:
         h_init.SetMaximum(1.3)
         h_init.SetMinimum(0.2)
+        h_init.GetYaxis().SetTitleOffset(1)
         y_name = y_name+"Efficiency"
     if "recoMuon" in plotvar:
         h_init.SetMaximum(max(h.GetMaximum() for h in hlist)*2)
+        h_init.GetYaxis().SetLabelSize(0.032)
+        h_init.GetYaxis().SetTitleOffset(1.5)
         y_name = y_name+"Fake Rate"
     h_init.GetXaxis().SetTitle(x_name)
     h_init.GetYaxis().SetTitle(y_name)
-    h_init.GetYaxis().SetTitleOffset(0.98)
+    h_init.GetYaxis().SetTitleOffset(1)
 
 
     ############ Plot design ##############
@@ -89,7 +92,10 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
     drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV")
 
     #Legend and drawing
-    leg = ROOT.TLegend(0.6,0.2,0.85,0.35)
+    legTop = ROOT.TLegend(0.6,0.7,0.85,0.85)
+    legBot = ROOT.TLegend(0.6,0.2,0.85,0.35)
+    if "genMuon"  in plotvar: leg = legBot
+    if "recoMuon" in plotvar: leg = legTop
     for h in hlist:
         h.Draw("e1same")
         leg.AddEntry(h,h.GetTitle(),"p")
