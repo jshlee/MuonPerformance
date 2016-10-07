@@ -12,18 +12,11 @@ def setMarkerStyle(h,color,style):
     h.SetLineColor(color)
     h.SetLineWidth(2)
 
-def getEff(filename,treename,title,binning,plotvar,cut):
-    h1 = makeTH1(filename,treename,title,binning,plotvar,"")
-    h2 = makeTH1(filename,treename,title,binning,plotvar,cut)
+def getEff(filename,treename,title,binning,plotvar,dencut,numcut):
+    h1 = makeTH1(filename,treename,title,binning,plotvar,dencut)
+    h2 = makeTH1(filename,treename,title,binning,plotvar,numcut)
     h2.Divide(h1)
     return copy.deepcopy(h2)
-
-def getFake(filename,treename,title,binning,plotvar,cut):
-    tfile = ROOT.TFile(filename)
-    tree  = tfile.Get(treename)
-    nevents = tree.GetEntries()
-    h = getTH1(title,binning,tree,plotvar,cut,1./nevents)
-    return copy.deepcopy(h)
 
 def drawSampleName(samplename):
     tex2 = ROOT.TLatex()
@@ -32,24 +25,23 @@ def drawSampleName(samplename):
     tex2.SetTextSize(0.04)
     tex2.DrawLatex(0.18, 0.8, samplename)
 
-datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
+datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/bu'
 id = sys.argv[1]
-binning_l = [[10,5,105],[25,0,2.5],[12,-3,3],[10,5,105],[25,0,2.5],[12,-3,3]]
+binning_l = [[10,5,105],[8,0,2.4],[12,-3,3],[10,5,105],[8,0,2.4],[12,-3,3]]
 
 for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi()", "recoMuon.Pt()", "abs(recoMuon.Eta())", "recoMuon.Phi()"]):
     #Get histos
     if "genMuon" in plotvar:
-        idcut = "genMuon_is"+id
-        h_ph2pu0 = getEff("pu0.root", "MuonAnalyser/gen", "PhaseII PU0", binning_l[i], plotvar, idcut)
-        h_ph2pu140 = getEff("pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, idcut)
-        h_ph2pu200 = getEff("pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, idcut)
+        h_ph2pu0 = getEff("bu/pu0.root", "MuonAnalyser/gen", "PhaseII PU0", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
+        h_ph2pu140 = getEff("bu/pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
+        h_ph2pu200 = getEff("bu/pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     if "recoMuon" in plotvar:
-        idcut = "!recoMuon_signal&&recoMuon_is"+id
-        h_ph2pu0 = getFake("pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, idcut)
-        h_ph2pu140 = getFake("pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, idcut)
-        h_ph2pu200 = getFake("pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, idcut)
+        cut = "!recoMuon_signal"
+        h_ph2pu0 = getEff("bu/pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu140 = getEff("bu/pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu200 = getEff("bu/pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     #Set init histo
@@ -60,17 +52,17 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
     x_name = "Muon "
     if "Pt"  in plotvar: x_name = x_name+"p_{T}"
     if "Eta" in plotvar: x_name = x_name+"|#eta|"
+    if "Phi" in plotvar: x_name = x_name+"#phi"
 
     y_name = id+" Muon "
     if "genMuon" in plotvar:
         h_init.SetMaximum(1.3)
         h_init.SetMinimum(0.2)
-        h_init.GetYaxis().SetTitleOffset(1)
         y_name = y_name+"Efficiency"
     if "recoMuon" in plotvar:
-        h_init.SetMaximum(max(h.GetMaximum() for h in hlist)*2)
-        h_init.GetYaxis().SetLabelSize(0.032)
-        h_init.GetYaxis().SetTitleOffset(1.5)
+        h_init.SetMaximum(max(h.GetMaximum() for h in hlist)*2.5)
+        h_init.GetYaxis().SetLabelSize(0.035)
+        h_init.GetYaxis().SetTitleOffset(1.2)
         y_name = y_name+"Fake Rate"
     h_init.GetXaxis().SetTitle(x_name)
     h_init.GetYaxis().SetTitle(y_name)
@@ -82,6 +74,7 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
     setMarkerStyle(h_ph2pu0, 4, 20) #blue, circle
     setMarkerStyle(h_ph2pu140, 1, 34) #black, cross
     setMarkerStyle(h_ph2pu200, 2, 21) #red, square
+    #setMarkerStyle(h_run2, 3, 22) #green, triangle
 
     name = "%s_%s"%(plotvar,id)
 

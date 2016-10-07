@@ -167,7 +167,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
-	if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
+	if ( isTightMuonCustom(*mu, pv0) ) b_genMuon_isTight = true;
+	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
 	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
 	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
       }
@@ -189,7 +190,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     
-    if ( muon::isTightMuon(*mu, pv0) ) b_recoMuon_isTight = true;
+    if ( isTightMuonCustom(*mu, pv0) ) b_recoMuon_isTight = true;
+    //if ( muon::isTightMuon(*mu, pv0) ) b_recoMuon_isTight = true;
     if ( muon::isMediumMuon(*mu) )  b_recoMuon_isMedium = true;
     if ( muon::isLooseMuon(*mu) )  b_recoMuon_isLoose = true;
 
