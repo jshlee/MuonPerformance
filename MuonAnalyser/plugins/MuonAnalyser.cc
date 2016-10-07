@@ -29,6 +29,10 @@ public:
   explicit MuonAnalyser(const edm::ParameterSet&);
   ~MuonAnalyser();
 
+  bool isLooseMuonCustom(const reco::Muon& mu) const;
+  bool isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const;
+
+
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
@@ -163,7 +167,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
-	if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
+	if ( isTightMuonCustom(*mu, pv0) ) b_genMuon_isTight = true;
+	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
 	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
 	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
       }
@@ -173,6 +178,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   for (size_t i = 0; i < muonHandle->size(); ++i) {
     const Muon* mu = muonHandle->refAt(i).get();    
+    b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
     b_recoMuon_signal = false;
     b_recoMuon_isTight = false;
     b_recoMuon_isMedium = false;
@@ -184,7 +190,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     
-    if ( muon::isTightMuon(*mu, pv0) ) b_recoMuon_isTight = true;
+    if ( isTightMuonCustom(*mu, pv0) ) b_recoMuon_isTight = true;
+    //if ( muon::isTightMuon(*mu, pv0) ) b_recoMuon_isTight = true;
     if ( muon::isMediumMuon(*mu) )  b_recoMuon_isMedium = true;
     if ( muon::isLooseMuon(*mu) )  b_recoMuon_isLoose = true;
 
@@ -237,4 +244,29 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
 }
+
+bool MuonAnalyser::isLooseMuonCustom(const reco::Muon& mu) const
+{
+  if ( !(mu.isGlobalMuon()) ) return false;
+  if ( !(mu.isPFMuon() || mu.isTrackerMuon()) ) return false;
+  return true;
+}
+
+bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const
+{
+  if ( !(mu.isGlobalMuon()) ) return false;
+  if ( !(mu.isPFMuon()) ) return false;
+  if ( !(mu.globalTrack().isNonnull()) )  return false;
+  if ( !(mu.muonBestTrack().isNonnull()) ) return false;
+  if ( !(mu.innerTrack().isNonnull()) ) return false;
+  if ( !(mu.globalTrack()->normalizedChi2()<10.) ) return false;
+  if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 0) ) return false;
+  if ( !(mu.numberOfMatchedStations() > 1) ) return false;
+  if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.2) ) return false;
+  //if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
+  if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 0) ) return false;
+  if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5) ) return false;
+  return true;
+}
+
 DEFINE_FWK_MODULE(MuonAnalyser);

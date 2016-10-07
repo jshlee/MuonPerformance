@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+import os
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process("MuonAnalyser",eras.Phase2C1)
@@ -14,7 +15,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
 
-process.MessageLogger.categories.append("MuonAnalyser")
+#process.MessageLogger.categories.append("MuonAnalyser")
 process.MessageLogger.debugModules = cms.untracked.vstring("*")
 process.MessageLogger.destinations = cms.untracked.vstring("cout","junk")
 process.MessageLogger.cout = cms.untracked.PSet(
@@ -31,6 +32,11 @@ process.source = cms.Source("PoolSource",
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
+
+#run for entire sample
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
+filelst = open(dir+"pu140.txt", "r")
+process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("outHisto.root"))
 
