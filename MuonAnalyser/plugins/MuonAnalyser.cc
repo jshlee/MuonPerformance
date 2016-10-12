@@ -42,7 +42,7 @@ private:
   TTree* recottree_;
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
-  bool b_genMuon_isTightWithGEM, b_genMuon_isMediumWithGEM, b_genMuon_isLooseWithGEM;
+  bool b_genMuon_isWithGEM;
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
   int b_recoMuon_noChamberMatch;
@@ -96,9 +96,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isTight", &b_genMuon_isTight, "genMuon_isTight/O");
   genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
   genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
-  genttree_->Branch("genMuon_isTightWithGEM", &b_genMuon_isTightWithGEM, "genMuon_isTightWithGEM/O");
-  genttree_->Branch("genMuon_isMediumWithGEM", &b_genMuon_isMediumWithGEM, "genMuon_isMediumWithGEM/O");
-  genttree_->Branch("genMuon_isLooseWithGEM", &b_genMuon_isLooseWithGEM, "genMuon_isLooseWithGEM/O");
+  genttree_->Branch("genMuon_isWithGEM", &b_genMuon_isWithGEM, "genMuon_isWithGEM/O");
   
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
@@ -186,9 +184,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
-    b_genMuon_isTightWithGEM = false;
-    b_genMuon_isMediumWithGEM = false;
-    b_genMuon_isLooseWithGEM = false;
+    b_genMuon_isWithGEM = false;
     
     vector<pair<RefToBase<Muon>, double> > MuRefV;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
@@ -201,10 +197,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
 	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
 	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
-
-	if ( isTightMuonCustom(*mu, pv0) && nGEMhit(*mu) >=2 ) b_genMuon_isTightWithGEM = true;
-	if ( muon::isMediumMuon(*mu) && nGEMhit(*mu) >=2 )  b_genMuon_isMediumWithGEM = true;
-	if ( muon::isLooseMuon(*mu) && nGEMhit(*mu) >=2 )  b_genMuon_isLooseWithGEM = true;	
+	if ( nGEMhit(*mu) >=2 ) b_genMuon_isWithGEM = true;
 
       }
     }
