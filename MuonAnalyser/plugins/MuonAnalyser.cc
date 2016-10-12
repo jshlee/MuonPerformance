@@ -31,6 +31,8 @@ public:
 
   bool isLooseMuonCustom(const reco::Muon& mu) const;
   bool isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const;
+  int nGEMhit(const reco::Muon& mu) const;
+  void treereset();
 
 
 private:
@@ -40,10 +42,18 @@ private:
   TTree* recottree_;
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
+  bool b_genMuon_isTightWithGEM, b_genMuon_isMediumWithGEM, b_genMuon_isLooseWithGEM;
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
+  int b_recoMuon_noRecHitGEM;
+
+  bool b_recoMuon_global; bool b_recoMuon_pf;
+  float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
+  float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
+  float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
+  int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
 
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   //edm::EDGetTokenT<std::vector<PSimHit> > MuonGEMHitsToken_;
@@ -86,6 +96,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isTight", &b_genMuon_isTight, "genMuon_isTight/O");
   genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
   genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
+  genttree_->Branch("genMuon_isTightWithGEM", &b_genMuon_isTightWithGEM, "genMuon_isTightWithGEM/O");
+  genttree_->Branch("genMuon_isMediumWithGEM", &b_genMuon_isMediumWithGEM, "genMuon_isMediumWithGEM/O");
+  genttree_->Branch("genMuon_isLooseWithGEM", &b_genMuon_isLooseWithGEM, "genMuon_isLooseWithGEM/O");
   
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
@@ -102,6 +115,20 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noSegmentGEM", &b_recoMuon_noSegmentGEM, "recoMuon_noSegmentGEM/I");
   recottree_->Branch("recoMuon_noSegmentME0", &b_recoMuon_noSegmentME0, "recoMuon_noSegmentME0/I");
 
+  recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
+
+  recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
+  recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
+  recottree_->Branch("recoMuon_normalizedChi2", &b_recoMuon_chi2, "recoMuon_normalizedChi2/F");
+  recottree_->Branch("recoMuon_chi2LocalPosition", &b_recoMuon_chi2pos, "recoMuon_chi2LocalPosition/F");
+  recottree_->Branch("recoMuon_trkKink", &b_recoMuon_trkKink, "recoMuon_trkKink/F");
+  recottree_->Branch("recoMuon_segmentCompatibility", &b_recoMuon_segcompati, "recoMuon_segmentCompatibility/F");
+  recottree_->Branch("recoMuon_numberOfValidMuonHits", &b_recoMuon_nglobalhits, "recoMuon_numberOfValidMuonHits/I");
+  recottree_->Branch("recoMuon_numberOfMatchedStations", &b_recoMuon_nstations, "recoMuon_numberOfMatchedStations/I");
+  recottree_->Branch("recoMuon_pv0pos_dxy", &b_recoMuon_trackdxy, "recoMuon_pv0pos_dxy/F");
+  recottree_->Branch("recoMuon_pv0pos_dz", &b_recoMuon_trackdz, "recoMuon_pv0pos_dz/F");
+  recottree_->Branch("recoMuon_numberOfValidPixelHits", &b_recoMuon_ninnerhits, "recoMuon_numberOfValidPixelHits/I");
+  recottree_->Branch("recoMuon_trackerLayersWithMeasurement", &b_recoMuon_trackerlayers, "recoMuon_trackerLayersWithMeasurement/F");
 }
 MuonAnalyser::~MuonAnalyser(){}
 void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -159,6 +186,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
+    b_genMuon_isTightWithGEM = false;
+    b_genMuon_isMediumWithGEM = false;
+    b_genMuon_isLooseWithGEM = false;
     
     vector<pair<RefToBase<Muon>, double> > MuRefV;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
@@ -171,12 +201,18 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
 	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
 	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
+
+	if ( isTightMuonCustom(*mu, pv0) && nGEMhit(*mu) >=2 ) b_genMuon_isTightWithGEM = true;
+	if ( muon::isMediumMuon(*mu) && nGEMhit(*mu) >=2 )  b_genMuon_isMediumWithGEM = true;
+	if ( muon::isLooseMuon(*mu) && nGEMhit(*mu) >=2 )  b_genMuon_isLooseWithGEM = true;	
+
       }
     }
     genttree_->Fill();
   }
 
   for (size_t i = 0; i < muonHandle->size(); ++i) {
+    treereset();
     const Muon* mu = muonHandle->refAt(i).get();    
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
     b_recoMuon_signal = false;
@@ -204,6 +240,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentGEM = 0;
     b_recoMuon_noSegmentME0 = 0;
 
+    b_recoMuon_noRecHitGEM = 0;
+
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
       //cout<< "chamber->detector() "<< chamber->detector()<<endl;
@@ -227,6 +265,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 4){ //gem
+      auto gemSegment = (*(*segment).gemSegmentRef);
+      b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
 	  ++b_recoMuon_noSegmentGEM;
 	}
       }
@@ -240,6 +280,32 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       
     }
     
+    //Loose
+    b_recoMuon_global = mu->isGlobalMuon();
+    b_recoMuon_pf = mu->isPFMuon();
+
+    //Medium
+    if ( mu->globalTrack().isNonnull() ){
+        b_recoMuon_chi2 = mu->globalTrack()->normalizedChi2();
+    }
+    b_recoMuon_chi2pos = mu->combinedQuality().chi2LocalPosition;
+    b_recoMuon_trkKink = mu->combinedQuality().trkKink;
+    b_recoMuon_segcompati = muon::segmentCompatibility(*mu);
+
+    //Tight
+    b_recoMuon_nstations = mu->numberOfMatchedStations();
+    if ( mu->globalTrack().isNonnull() ){
+        b_recoMuon_nglobalhits = mu->globalTrack()->hitPattern().numberOfValidMuonHits();
+    }
+    if ( mu->muonBestTrack().isNonnull() ){
+        b_recoMuon_trackdxy = fabs(mu->muonBestTrack()->dxy(pv0.position()));
+        b_recoMuon_trackdz = fabs(mu->muonBestTrack()->dz(pv0.position()));
+    }
+    if ( mu->innerTrack().isNonnull() ){
+        b_recoMuon_ninnerhits = mu->innerTrack()->hitPattern().numberOfValidPixelHits();
+        b_recoMuon_trackerlayers = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement();
+    }
+
     recottree_->Fill();
   }
 
@@ -267,6 +333,30 @@ bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) con
   if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 0) ) return false;
   if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5) ) return false;
   return true;
+}
+
+int MuonAnalyser::nGEMhit(const reco::Muon& mu) const
+{
+  int noRecHitGEM = 0;
+  const vector<MuonChamberMatch>& chambers = mu.matches();
+  for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+    for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
+  if (chamber->detector() == 4){ //gem
+    auto gemSegment = (*(*segment).gemSegmentRef);
+    noRecHitGEM += gemSegment.nRecHits();
+  }
+    }
+  }
+  return noRecHitGEM;
+}
+
+void MuonAnalyser::treereset()
+{
+  b_recoMuon_global = -9; b_recoMuon_pf = -9;
+  b_recoMuon_chi2 = -9; b_recoMuon_chi2pos = -9; b_recoMuon_trkKink = -9; b_recoMuon_segcompati = -9;
+  b_recoMuon_nglobalhits = -9; b_recoMuon_nstations = -9;
+  b_recoMuon_trackdxy = -9; b_recoMuon_trackdz = -9;
+  b_recoMuon_ninnerhits = -9; b_recoMuon_trackerlayers = -9;
 }
 
 DEFINE_FWK_MODULE(MuonAnalyser);

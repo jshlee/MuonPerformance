@@ -25,28 +25,27 @@ def drawSampleName(samplename):
     tex2.SetTextSize(0.04)
     tex2.DrawLatex(0.18, 0.8, samplename)
 
-datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/bu'
+datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
+#datadir = "TenMuExtendedE_"
 id = sys.argv[1]
 binning_l = [[10,5,105],[8,0,2.4],[12,-3,3],[10,5,105],[8,0,2.4],[12,-3,3]]
 
 for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi()", "recoMuon.Pt()", "abs(recoMuon.Eta())", "recoMuon.Phi()"]):
     #Get histos
     if "genMuon" in plotvar:
-        h_ph2pu0 = getEff("bu/pu0.root", "MuonAnalyser/gen", "PhaseII PU0", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
-        h_ph2pu140 = getEff("bu/pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
-        h_ph2pu200 = getEff("bu/pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
+        h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/gen", "PhaseII PU0", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
+        h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
+        h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     if "recoMuon" in plotvar:
-        cut = "!recoMuon_signal"
-        h_ph2pu0 = getEff("bu/pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
-        h_ph2pu140 = getEff("bu/pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
-        h_ph2pu200 = getEff("bu/pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     #Set init histo
-    nbins = h_ph2pu0.GetNbinsX()
-    h_init = ROOT.TH1F("","",nbins,h_ph2pu0.GetBinLowEdge(1),h_ph2pu0.GetBinLowEdge(nbins+1))
+    h_init = ROOT.TH1F("","",binning_l[i][0],binning_l[i][1],binning_l[i][2])
 
     #Set axis
     x_name = "Muon "
