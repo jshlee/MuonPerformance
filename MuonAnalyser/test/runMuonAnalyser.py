@@ -34,9 +34,9 @@ process.source = cms.Source("PoolSource",
 )
 
 #run for entire sample
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
-filelst = open(dir+"pu140.txt", "r")
-process.source.fileNames = filelst.readlines()
+#dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
+#filelst = open(dir+"pu140.txt", "r")
+#process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("outHisto.root"))
 
