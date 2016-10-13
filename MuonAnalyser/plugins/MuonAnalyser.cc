@@ -45,7 +45,7 @@ private:
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon;
   bool b_genMuon_isTightWithGEM, b_genMuon_isMediumWithGEM, b_genMuon_isLooseWithGEM;
   TLorentzVector b_recoMuon;
-  bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose, b_recoMuon_isME0Muon, b_recoMuon_GEMMuon;
+  bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose, b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM;
