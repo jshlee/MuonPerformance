@@ -339,28 +339,41 @@ bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) con
 int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
 {
   int noRecHitGEM = 0;
+  int noRecHitMuon = 0;
+  int noRecHit = 0;
   const reco::Track* muonTrack = 0;  
   if ( muon->globalTrack().isNonnull() ) muonTrack = muon->globalTrack().get();
   else if ( muon->outerTrack().isNonnull()  ) muonTrack = muon->outerTrack().get();
   if (muonTrack){
-    // cout << " numberOfMuonHits "<< muonTrack->hitPattern().numberOfMuonHits() <<endl;
-    // cout << " numberOfValidMuonHits "<< muonTrack->hitPattern().numberOfValidMuonHits() <<endl;
+    // cout << " numberOfValidHits        "<< muonTrack->hitPattern().numberOfValidHits() <<endl;
+    // cout << " numberOfValidTrackerHits "<< muonTrack->hitPattern().numberOfValidTrackerHits() <<endl;
+    // cout << " numberOfMuonHits         "<< muonTrack->hitPattern().numberOfMuonHits() <<endl;
+    // cout << " numberOfValidMuonHits    "<< muonTrack->hitPattern().numberOfValidMuonHits() <<endl;
     // cout << " numberOfValidMuonDTHits  "<< muonTrack->hitPattern().numberOfValidMuonDTHits() <<endl;
     // cout << " numberOfValidMuonCSCHits "<< muonTrack->hitPattern().numberOfValidMuonCSCHits() <<endl;
     // cout << " numberOfValidMuonRPCHits "<< muonTrack->hitPattern().numberOfValidMuonRPCHits() <<endl;
     // cout << " numberOfValidMuonGEMHits "<< muonTrack->hitPattern().numberOfValidMuonGEMHits() <<endl;
     // cout << " numberOfLostMuonGEMHits  "<< muonTrack->hitPattern().numberOfLostMuonGEMHits() <<endl;
     // cout << " numberOfBadMuonGEMHits   "<< muonTrack->hitPattern().numberOfBadMuonGEMHits() <<endl;
-    // cout << " numberOfValidMuonME0Hits "<< muonTrack->hitPattern().numberOfValidMuonGEMHits() <<endl;
+    // cout << " numberOfValidMuonME0Hits "<< muonTrack->hitPattern().numberOfValidMuonME0Hits() <<endl;
     for(auto i=muonTrack->recHitsBegin(); i!=muonTrack->recHitsEnd(); i++) {
       DetId hitId = (*i)->geographicalId();
-      if (hitId.det()!=DetId::Muon) continue;      
+      if (!(*i)->isValid() ) continue;
+      if ((*i)->recHits().size()) noRecHit +=(*i)->recHits().size();
+      else noRecHit++;
+      
+      if (hitId.det()!=DetId::Muon) continue;
       if (hitId.subdetId() == MuonSubdetId::GEM) ++noRecHitGEM;
+
+      if ((*i)->recHits().size()) noRecHitMuon +=(*i)->recHits().size();
+      else noRecHitMuon++;
       //      cout << "(*i)->size()="<< (*i)->recHits().size()<< " det="<< hitId.det() << " subdet=" << hitId.subdetId() <<endl;
     }
     
   }
-  //  cout << " noRecHitGEM "<< noRecHitGEM <<endl;
+  cout << " noRecHit     "<< noRecHit <<endl;
+  cout << " noRecHitMuon "<< noRecHitMuon <<endl;
+  cout << " noRecHitGEM  "<< noRecHitGEM <<endl;
   
   
   // const vector<MuonChamberMatch>& chambers = mu.matches();
