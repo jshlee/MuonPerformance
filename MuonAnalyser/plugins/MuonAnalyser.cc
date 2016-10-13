@@ -144,16 +144,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   if (vertices->empty()) { cout << "noPV" << endl; return; }
   auto pv0 = vertices->front();
 
-  // Handle<vector<PSimHit>> MuonGEMHits;
-  // iEvent.getByToken(MuonGEMHitsToken_, MuonGEMHits);
-
   Handle<TrackingParticleCollection> simHandle;
   iEvent.getByToken(simToken_, simHandle);
-  //const TrackingParticleCollection simColl = *(simHandle.product());
 
   Handle<View<Muon> > muonHandle;
   iEvent.getByToken(muonToken_, muonHandle);
-  //View<Muon> muonColl = *(muonHandle.product());
   
   MuonToTrackingParticleAssociator const* assoByHits = nullptr;
   Handle<MuonToTrackingParticleAssociator> associatorBase;
@@ -203,13 +198,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
-	if ( isTightMuonCustom(*mu, pv0) ) b_genMuon_isTight = true;
-	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
-	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
-	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
-	if ( mu->isME0Muon() )  b_genMuon_isME0Muon = true;	
-	if ( mu->isGEMMuon() )  b_genMuon_isGEMMuon = true;	
+
+	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
+	b_genMuon_isMedium = muon::isMediumMuon(*mu);
+	b_genMuon_isLoose = muon::isLooseMuon(*mu);
+	b_genMuon_isME0Muon = mu->isME0Muon();
+	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_noRecHitGEM = nGEMhit(mu);
+
 	//if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
       }
     }
@@ -223,21 +219,22 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const Muon* mu = muRef.get();
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
-    b_recoMuon_signal = false;
-    b_recoMuon_isTight = false;
-    b_recoMuon_isMedium = false;
-    b_recoMuon_isLoose = false;
-    b_recoMuon_isME0Muon = false;
-    b_recoMuon_isGEMMuon = false;
 
+    b_recoMuon_signal = false;
     for (auto signal : signalMuons){
       if (mu == signal){
 	b_recoMuon_signal = true;
 	break;
       }
     }
+    
     if (!b_recoMuon_signal){
-      //vector<pair<RefToBase<TrackingParticle>, double> > trkRefV;    
+      //vector<pair<RefToBase<TrackingParticle>, double> > trkRefV;
+      cout << "fake muon " 
+	   << " pt = " << mu->pt()
+	   << " eta = " << mu->eta()
+	   << endl;
+      
       if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
 	auto trkRefV = muonToSimColl[muRef];
 	if ( !trkRefV.empty()) {
@@ -249,14 +246,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	}
       }
     }
-    
-    if ( isTightMuonCustom(*mu, pv0) ) b_recoMuon_isTight = true;
-    //if ( muon::isTightMuon(*mu, pv0) ) b_recoMuon_isTight = true;
-    if ( muon::isMediumMuon(*mu) )  b_recoMuon_isMedium = true;
-    if ( muon::isLooseMuon(*mu) )  b_recoMuon_isLoose = true;
-    if ( mu->isME0Muon() )  b_recoMuon_isME0Muon = true;
-    if ( mu->isGEMMuon() )  b_recoMuon_isGEMMuon = true;
 
+    b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
+    b_recoMuon_isMedium = muon::isMediumMuon(*mu);
+    b_recoMuon_isLoose = muon::isLooseMuon(*mu);
+    b_recoMuon_isME0Muon = mu->isME0Muon();
+    b_recoMuon_isGEMMuon = mu->isGEMMuon();
+    b_recoMuon_noRecHitGEM = nGEMhit(mu);
+   
     const vector<MuonChamberMatch>& chambers = mu->matches();
     b_recoMuon_noChamberMatch = chambers.size();
     b_recoMuon_noSegment = 0;
@@ -265,8 +262,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentRPC = 0;
     b_recoMuon_noSegmentGEM = 0;
     b_recoMuon_noSegmentME0 = 0;
-
-    b_recoMuon_noRecHitGEM = nGEMhit(mu);
     b_recoMuon_noRecHitME0 = 0;
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
