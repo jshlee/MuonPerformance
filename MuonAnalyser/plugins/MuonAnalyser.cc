@@ -14,6 +14,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
 
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
@@ -43,7 +44,8 @@ private:
   TTree* recottree_;
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon;
-  bool b_genMuon_isTightWithGEM, b_genMuon_isMediumWithGEM, b_genMuon_isLooseWithGEM;
+  int b_genMuon_noRecHitGEM;
+  
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose, b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
   int b_recoMuon_noChamberMatch;
@@ -97,9 +99,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isTight", &b_genMuon_isTight, "genMuon_isTight/O");
   genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
   genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
-  genttree_->Branch("genMuon_isTightWithGEM", &b_genMuon_isTightWithGEM, "genMuon_isTightWithGEM/O");
-  genttree_->Branch("genMuon_isMediumWithGEM", &b_genMuon_isMediumWithGEM, "genMuon_isMediumWithGEM/O");
-  genttree_->Branch("genMuon_isLooseWithGEM", &b_genMuon_isLooseWithGEM, "genMuon_isLooseWithGEM/O");
+  genttree_->Branch("genMuon_noRecHitGEM", &b_genMuon_noRecHitGEM, "genMuon_noRecHitGEM/I");
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
   
@@ -192,9 +192,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
-    b_genMuon_isTightWithGEM = false;
-    b_genMuon_isMediumWithGEM = false;
-    b_genMuon_isLooseWithGEM = false;
+    b_genMuon_noRecHitGEM = 0;
     b_genMuon_isME0Muon = false;
     b_genMuon_isGEMMuon = false;
     
@@ -210,13 +208,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
 	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
 	if ( mu->isME0Muon() )  b_genMuon_isME0Muon = true;	
-    //if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
 	if ( mu->isGEMMuon() )  b_genMuon_isGEMMuon = true;	
-
-	if ( isTightMuonCustom(*mu, pv0) && nGEMhit(mu) >=2 ) b_genMuon_isTightWithGEM = true;
-	if ( muon::isMediumMuon(*mu) && nGEMhit(mu) >=2 )  b_genMuon_isMediumWithGEM = true;
-	if ( muon::isLooseMuon(*mu) && nGEMhit(mu) >=2 )  b_genMuon_isLooseWithGEM = true;	
-
+	b_genMuon_noRecHitGEM = nGEMhit(mu);
+	//if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
       }
     }
     genttree_->Fill();
@@ -224,7 +218,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   for (size_t i = 0; i < muonHandle->size(); ++i) {
     treereset();
-    const Muon* mu = muonHandle->refAt(i).get();    
+    
+    auto muRef = muonHandle->refAt(i);
+    const Muon* mu = muRef.get();
+
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
     b_recoMuon_signal = false;
     b_recoMuon_isTight = false;
@@ -237,6 +234,19 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if (mu == signal){
 	b_recoMuon_signal = true;
 	break;
+      }
+    }
+    if (!b_recoMuon_signal){
+      //vector<pair<RefToBase<TrackingParticle>, double> > trkRefV;    
+      if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
+	auto trkRefV = muonToSimColl[muRef];
+	if ( !trkRefV.empty()) {
+	  const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
+	  cout << "trkParticle " << trkParticle->pdgId()
+	       << " pt = " << trkParticle->pt()
+	       << " eta = " << trkParticle->eta()
+	       << endl;
+	}
       }
     }
     
@@ -256,7 +266,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentGEM = 0;
     b_recoMuon_noSegmentME0 = 0;
 
-    b_recoMuon_noRecHitGEM = 0;
+    b_recoMuon_noRecHitGEM = nGEMhit(mu);
     b_recoMuon_noRecHitME0 = 0;
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
@@ -282,8 +292,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 4){ //gem
-      auto gemSegment = (*(*segment).gemSegmentRef);
-      b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
+	  // auto gemSegment = (*(*segment).gemSegmentRef);
+	  // b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
 	  ++b_recoMuon_noSegmentGEM;
 	}
       }
@@ -292,8 +302,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 5){ //me0
 	  ++b_recoMuon_noSegmentME0;
-      auto me0Segment = (*(*segment).me0SegmentRef);
-      b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
+	  auto me0Segment = (*(*segment).me0SegmentRef);
+	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
 	}
       }
       
@@ -305,7 +315,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     //Medium
     if ( mu->globalTrack().isNonnull() ){
-        b_recoMuon_chi2 = mu->globalTrack()->normalizedChi2();
+      b_recoMuon_chi2 = mu->globalTrack()->normalizedChi2();
     }
     b_recoMuon_chi2pos = mu->combinedQuality().chi2LocalPosition;
     b_recoMuon_trkKink = mu->combinedQuality().trkKink;
@@ -314,15 +324,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     //Tight
     b_recoMuon_nstations = mu->numberOfMatchedStations();
     if ( mu->globalTrack().isNonnull() ){
-        b_recoMuon_nglobalhits = mu->globalTrack()->hitPattern().numberOfValidMuonHits();
+      b_recoMuon_nglobalhits = mu->globalTrack()->hitPattern().numberOfValidMuonHits();
     }
     if ( mu->muonBestTrack().isNonnull() ){
-        b_recoMuon_trackdxy = fabs(mu->muonBestTrack()->dxy(pv0.position()));
-        b_recoMuon_trackdz = fabs(mu->muonBestTrack()->dz(pv0.position()));
+      b_recoMuon_trackdxy = fabs(mu->muonBestTrack()->dxy(pv0.position()));
+      b_recoMuon_trackdz = fabs(mu->muonBestTrack()->dz(pv0.position()));
     }
     if ( mu->innerTrack().isNonnull() ){
-        b_recoMuon_ninnerhits = mu->innerTrack()->hitPattern().numberOfValidPixelHits();
-        b_recoMuon_trackerlayers = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement();
+      b_recoMuon_ninnerhits = mu->innerTrack()->hitPattern().numberOfValidPixelHits();
+      b_recoMuon_trackerlayers = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement();
     }
 
     recottree_->Fill();
@@ -389,20 +399,9 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
     }
     
   }
-  cout << " noRecHit     "<< noRecHit <<endl;
-  cout << " noRecHitMuon "<< noRecHitMuon <<endl;
-  cout << " noRecHitGEM  "<< noRecHitGEM <<endl;
-  
-  
-  // const vector<MuonChamberMatch>& chambers = mu.matches();
-  // for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
-  //   for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
-  // if (chamber->detector() == 4){ //gem
-  //   auto gemSegment = (*(*segment).gemSegmentRef);
-  //   noRecHitGEM += gemSegment.nRecHits();
-  // }
-  //   }
-  // }
+  // cout << " noRecHit     "<< noRecHit <<endl;
+  // cout << " noRecHitMuon "<< noRecHitMuon <<endl;
+  // cout << " noRecHitGEM  "<< noRecHitGEM <<endl;
   return noRecHitGEM;
 }
 
