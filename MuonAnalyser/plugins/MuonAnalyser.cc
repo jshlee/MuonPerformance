@@ -18,6 +18,7 @@
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/Associations/interface/MuonToTrackingParticleAssociator.h"
+#include "SimMuon/MCTruth/interface/MuonToSimAssociatorByHits.h"
 #include "SimTracker/Common/interface/TrackingParticleSelector.h"
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
 
@@ -149,7 +150,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   Handle<MuonToTrackingParticleAssociator> associatorBase;
   iEvent.getByToken(muAssocToken_, associatorBase);
   MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
-  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
+  //reco::InnerTk or reco::GlobalTk
+  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle);
   
   vector<const Muon*> signalMuons; signalMuons.clear();
   
