@@ -19,6 +19,7 @@
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/Associations/interface/MuonToTrackingParticleAssociator.h"
 #include "SimTracker/Common/interface/TrackingParticleSelector.h"
+#include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
 
 #include <TTree.h>
 #include <TFile.h>
@@ -31,7 +32,7 @@ public:
 
   bool isLooseMuonCustom(const reco::Muon& mu) const;
   bool isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const;
-  int nGEMhit(const reco::Muon& mu) const;
+  int nGEMhit(const reco::Muon * mu) const;
   void treereset();
 
 
@@ -43,6 +44,7 @@ private:
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
   bool b_genMuon_isWithGEM;
+  int b_genMuon_noRecHitGEM;
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
   int b_recoMuon_noChamberMatch;
@@ -97,6 +99,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
   genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
   genttree_->Branch("genMuon_isWithGEM", &b_genMuon_isWithGEM, "genMuon_isWithGEM/O");
+  genttree_->Branch("genMuon_noRecHitGEM", &b_genMuon_noRecHitGEM, "genMuon_noRecHitGEM/I");
   
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
@@ -112,7 +115,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noSegmentRPC", &b_recoMuon_noSegmentRPC, "recoMuon_noSegmentRPC/I");
   recottree_->Branch("recoMuon_noSegmentGEM", &b_recoMuon_noSegmentGEM, "recoMuon_noSegmentGEM/I");
   recottree_->Branch("recoMuon_noSegmentME0", &b_recoMuon_noSegmentME0, "recoMuon_noSegmentME0/I");
-
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
@@ -192,12 +194,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
+    b_genMuon_noRecHitGEM = nGEMhit(mu);
 	signalMuons.push_back(mu);
 	if ( isTightMuonCustom(*mu, pv0) ) b_genMuon_isTight = true;
 	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
 	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
 	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
-	if ( nGEMhit(*mu) >=2 ) b_genMuon_isWithGEM = true;
 
       }
     }
@@ -233,7 +235,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentGEM = 0;
     b_recoMuon_noSegmentME0 = 0;
 
-    b_recoMuon_noRecHitGEM = 0;
+    b_recoMuon_noRecHitGEM = nGEMhit(mu);
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
@@ -258,8 +260,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 4){ //gem
-      auto gemSegment = (*(*segment).gemSegmentRef);
-      b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
+      //auto gemSegment = (*(*segment).gemSegmentRef);
+      //b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
 	  ++b_recoMuon_noSegmentGEM;
 	}
       }
@@ -328,18 +330,42 @@ bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) con
   return true;
 }
 
-int MuonAnalyser::nGEMhit(const reco::Muon& mu) const
+int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
 {
   int noRecHitGEM = 0;
-  const vector<MuonChamberMatch>& chambers = mu.matches();
-  for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
-    for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
-  if (chamber->detector() == 4){ //gem
-    auto gemSegment = (*(*segment).gemSegmentRef);
-    noRecHitGEM += gemSegment.nRecHits();
-  }
+  const reco::Track* muonTrack = 0;  
+  if ( muon->globalTrack().isNonnull() ) muonTrack = muon->globalTrack().get();
+  else if ( muon->outerTrack().isNonnull()  ) muonTrack = muon->outerTrack().get();
+  if (muonTrack){
+    // cout << " numberOfMuonHits "<< muonTrack->hitPattern().numberOfMuonHits() <<endl;
+    // cout << " numberOfValidMuonHits "<< muonTrack->hitPattern().numberOfValidMuonHits() <<endl;
+    // cout << " numberOfValidMuonDTHits  "<< muonTrack->hitPattern().numberOfValidMuonDTHits() <<endl;
+    // cout << " numberOfValidMuonCSCHits "<< muonTrack->hitPattern().numberOfValidMuonCSCHits() <<endl;
+    // cout << " numberOfValidMuonRPCHits "<< muonTrack->hitPattern().numberOfValidMuonRPCHits() <<endl;
+    // cout << " numberOfValidMuonGEMHits "<< muonTrack->hitPattern().numberOfValidMuonGEMHits() <<endl;
+    // cout << " numberOfLostMuonGEMHits  "<< muonTrack->hitPattern().numberOfLostMuonGEMHits() <<endl;
+    // cout << " numberOfBadMuonGEMHits   "<< muonTrack->hitPattern().numberOfBadMuonGEMHits() <<endl;
+    // cout << " numberOfValidMuonME0Hits "<< muonTrack->hitPattern().numberOfValidMuonGEMHits() <<endl;
+    for(auto i=muonTrack->recHitsBegin(); i!=muonTrack->recHitsEnd(); i++) {
+      DetId hitId = (*i)->geographicalId();
+      if (hitId.det()!=DetId::Muon) continue;      
+      if (hitId.subdetId() == MuonSubdetId::GEM) ++noRecHitGEM;
+      //      cout << "(*i)->size()="<< (*i)->recHits().size()<< " det="<< hitId.det() << " subdet=" << hitId.subdetId() <<endl;
     }
+    
   }
+  //  cout << " noRecHitGEM "<< noRecHitGEM <<endl;
+  
+  
+  // const vector<MuonChamberMatch>& chambers = mu.matches();
+  // for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+  //   for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
+  // if (chamber->detector() == 4){ //gem
+  //   auto gemSegment = (*(*segment).gemSegmentRef);
+  //   noRecHitGEM += gemSegment.nRecHits();
+  // }
+  //   }
+  // }
   return noRecHitGEM;
 }
 
