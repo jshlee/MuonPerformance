@@ -1,5 +1,4 @@
 #include <memory>
-// user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -36,7 +35,6 @@ public:
   int nGEMhit(const reco::Muon * mu) const;
   void treereset();
 
-
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
@@ -59,13 +57,11 @@ private:
   int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
 
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
-  //edm::EDGetTokenT<std::vector<PSimHit> > MuonGEMHitsToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
 
   TrackingParticleSelector tpSelector_;
-  
 };
 using namespace std;
 using namespace reco;
@@ -73,7 +69,6 @@ using namespace edm;
 MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
   vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
-  //MuonGEMHitsToken_ = consumes<vector<PSimHit> >(pset.getParameter<edm::InputTag>("MuonGEMHits"));
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
@@ -156,19 +151,16 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   assoByHits = associatorBase.product();
 
   RefToBaseVector<Muon> Muons;
-  for (size_t i = 0; i < muonHandle->size(); ++i) {
-    Muons.push_back(muonHandle->refAt(i));
-  }
+  for (size_t i = 0; i < muonHandle->size(); ++i) Muons.push_back(muonHandle->refAt(i));
+  
   RefVector<TrackingParticleCollection> allTPs;
-  for (size_t i = 0; i < simHandle->size(); ++i) {
-    allTPs.push_back(TrackingParticleRef(simHandle,i));
-  }
+  for (size_t i = 0; i < simHandle->size(); ++i) allTPs.push_back(TrackingParticleRef(simHandle,i));
   
   reco::MuonToSimCollection muonToSimColl;
   reco::SimToMuonCollection simToMuonColl;  
   assoByHits->associateMuons(muonToSimColl, simToMuonColl, Muons, reco::GlobalTk, allTPs);
   
-  vector<const Muon*> signalMuons;signalMuons.clear();
+  vector<const Muon*> signalMuons; signalMuons.clear();
   
   for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
     TrackingParticleRef simRef(simHandle, i);
