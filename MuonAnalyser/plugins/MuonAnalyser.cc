@@ -145,20 +145,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   Handle<View<Muon> > muonHandle;
   iEvent.getByToken(muonToken_, muonHandle);
   
-  MuonToTrackingParticleAssociator const* assoByHits = nullptr;
+  reco::MuonToSimCollection muonToSimColl; reco::SimToMuonCollection simToMuonColl;  
   Handle<MuonToTrackingParticleAssociator> associatorBase;
   iEvent.getByToken(muAssocToken_, associatorBase);
-  assoByHits = associatorBase.product();
-
-  RefToBaseVector<Muon> Muons;
-  for (size_t i = 0; i < muonHandle->size(); ++i) Muons.push_back(muonHandle->refAt(i));
-  
-  RefVector<TrackingParticleCollection> allTPs;
-  for (size_t i = 0; i < simHandle->size(); ++i) allTPs.push_back(TrackingParticleRef(simHandle,i));
-  
-  reco::MuonToSimCollection muonToSimColl;
-  reco::SimToMuonCollection simToMuonColl;  
-  assoByHits->associateMuons(muonToSimColl, simToMuonColl, Muons, reco::GlobalTk, allTPs);
+  MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
+  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
   
   vector<const Muon*> signalMuons; signalMuons.clear();
   
@@ -168,14 +159,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( ! tpSelector_(*simTP) ) continue;
 
     b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
-    
-    // GlobalPoint  simVtx(simRef->vertex().x(), simRef->vertex().y(), simRef->vertex().z());
-    // GlobalVector simMom(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z());
-    // const double simDxy = -simVtx.x()*sin(simPhi)+simVtx.y()*cos(simPhi);
-    // const double simDz  = simVtx.z() - (simVtx.x()*simMom.x()+simVtx.y()*simMom.y())*simMom.z()/simMom.perp2();    
-    // const unsigned int nSimHits = simRef->numberOfHits();
-    
-    // Get sim-reco association for a simRef
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
@@ -183,10 +166,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isME0Muon = false;
     b_genMuon_isGEMMuon = false;
     
-    vector<pair<RefToBase<Muon>, double> > MuRefV;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
-      MuRefV = simToMuonColl[simRef];
-      
+      vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
@@ -221,11 +202,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
     
     if (!b_recoMuon_signal){
-      //vector<pair<RefToBase<TrackingParticle>, double> > trkRefV;
-      cout << "fake muon " 
-	   << " pt = " << mu->pt()
-	   << " eta = " << mu->eta()
-	   << endl;
+      // cout << "fake muon " 
+      // 	   << " pt = " << mu->pt()
+      // 	   << " eta = " << mu->eta()
+      // 	   << endl;
       
       if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
 	auto trkRefV = muonToSimColl[muRef];
