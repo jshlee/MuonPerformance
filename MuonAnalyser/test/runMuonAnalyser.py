@@ -28,7 +28,9 @@ process.MessageLogger.cout = cms.untracked.PSet(
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/cms/scratch/jlee/upgradeMuonReco/reco.root'
+      #'file:/cms/scratch/jlee/upgradeMuonReco/reco.root'
+      'file:/cms/scratch/jlee/upgradeMuonReco/RelValZMM_13_reco.root'
+        
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
@@ -38,7 +40,7 @@ process.source = cms.Source("PoolSource",
 #filelst = open(dir+"pu140.txt", "r")
 #process.source.fileNames = filelst.readlines()
 
-process.TFileService = cms.Service("TFileService",fileName = cms.string("outHisto.root"))
+process.TFileService = cms.Service("TFileService",fileName = cms.string("outHisto2.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
