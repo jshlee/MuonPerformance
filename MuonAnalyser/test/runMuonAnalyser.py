@@ -44,7 +44,8 @@ process.TFileService = cms.Service("TFileService",fileName = cms.string("outHist
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
-process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis","Tracker")
+process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
+process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
 
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
