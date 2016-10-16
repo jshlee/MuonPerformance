@@ -120,8 +120,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
 
-  recottree_->Branch("recoMuon_ME0dXdZ", &b_recoMuon_ME0dXdZ, "recoMuon_ME0dXdZ/I");
-  recottree_->Branch("recoMuon_ME0dYdZ", &b_recoMuon_ME0dYdZ, "recoMuon_ME0dYdZ/I");
+  recottree_->Branch("recoMuon_ME0dXdZ", &b_recoMuon_ME0dXdZ, "recoMuon_ME0dXdZ/F");
+  recottree_->Branch("recoMuon_ME0dYdZ", &b_recoMuon_ME0dYdZ, "recoMuon_ME0dYdZ/F");
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");

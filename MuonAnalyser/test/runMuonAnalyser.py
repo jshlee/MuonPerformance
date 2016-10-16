@@ -45,8 +45,8 @@ filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 process.source.fileNames = filelst.readlines()
 
-process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0.root"))
-#process.TFileService = cms.Service("TFileService",fileName = cms.string("pu200.root"))
+#process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0.root"))
+process.TFileService = cms.Service("TFileService",fileName = cms.string("pu200.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
