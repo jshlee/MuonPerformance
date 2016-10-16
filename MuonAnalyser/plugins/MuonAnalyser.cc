@@ -50,6 +50,7 @@ private:
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
+  float b_recoMuon_ME0dXdZ, b_recoMuon_ME0dYdZ;
 
   bool b_recoMuon_global; bool b_recoMuon_pf;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
@@ -118,6 +119,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
+
+  recottree_->Branch("recoMuon_ME0dXdZ", &b_recoMuon_ME0dXdZ, "recoMuon_ME0dXdZ/I");
+  recottree_->Branch("recoMuon_ME0dYdZ", &b_recoMuon_ME0dYdZ, "recoMuon_ME0dYdZ/I");
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
@@ -238,6 +242,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentME0 = 0;
     b_recoMuon_noRecHitME0 = 0;
 
+    b_recoMuon_ME0dXdZ = 0;
+    b_recoMuon_ME0dYdZ = 0;
+
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
       //cout<< "chamber->detector() "<< chamber->detector()<<endl;
@@ -271,8 +278,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 5){ //me0
 	  ++b_recoMuon_noSegmentME0;
-	  auto me0Segment = (*(*segment).me0SegmentRef);
+	  
+      auto me0Segment = (*(*segment).me0SegmentRef);
 	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
+      
+      b_recoMuon_ME0dXdZ += segment->dXdZ;
+      b_recoMuon_ME0dYdZ += segment->dYdZ;
 	}
       }
       
