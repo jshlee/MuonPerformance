@@ -207,23 +207,23 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     
-    if (!b_recoMuon_signal){
-      // cout << "fake muon " 
-      // 	   << " pt = " << mu->pt()
-      // 	   << " eta = " << mu->eta()
-      // 	   << endl;
-      
-      if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
-	auto trkRefV = muonToSimColl[muRef];
-	if ( !trkRefV.empty()) {
-	  const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
-	  cout << "trkParticle " << trkParticle->pdgId()
-	       << " pt = " << trkParticle->pt()
-	       << " eta = " << trkParticle->eta()
-	       << endl;
-	}
-      }
-    }
+    // if (!b_recoMuon_signal){
+    //   // cout << "fake muon " 
+    //   // 	   << " pt = " << mu->pt()
+    //   // 	   << " eta = " << mu->eta()
+    //   // 	   << endl;
+    //   
+    //   if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
+	// auto trkRefV = muonToSimColl[muRef];
+	// if ( !trkRefV.empty()) {
+	//   const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
+	//   cout << "trkParticle " << trkParticle->pdgId()
+	//        << " pt = " << trkParticle->pt()
+	//        << " eta = " << trkParticle->eta()
+	//        << endl;
+	// }
+    //   }
+    // }
 
     b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
     b_recoMuon_isMedium = muon::isMediumMuon(*mu);
