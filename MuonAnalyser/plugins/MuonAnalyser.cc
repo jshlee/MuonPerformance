@@ -282,8 +282,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       auto me0Segment = (*(*segment).me0SegmentRef);
 	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
       
-     // b_recoMuon_ME0dXdZ += segment->dXdZ;
-     // b_recoMuon_ME0dYdZ += segment->dYdZ;
+      b_recoMuon_ME0dXdZ += segment->dXdZ;
+      b_recoMuon_ME0dYdZ += segment->dYdZ;
 	}
       }
       
