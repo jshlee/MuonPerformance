@@ -42,7 +42,7 @@ private:
   TTree* genttree_;
   TTree* recottree_;
   TLorentzVector b_genMuon;
-  bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon;
+  bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon;
   int b_genMuon_noRecHitGEM;
   
   TLorentzVector b_recoMuon;
@@ -56,7 +56,9 @@ private:
   float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
   float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
   int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
-
+  int b_recoMuon_pdgId;
+  
+  
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
@@ -98,9 +100,11 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_noRecHitGEM", &b_genMuon_noRecHitGEM, "genMuon_noRecHitGEM/I");
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
-  
+  genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
+
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
+  recottree_->Branch("recoMuon_pdgId", &b_recoMuon_pdgId, "recoMuon_pdgId/I");
   recottree_->Branch("recoMuon_signal", &b_recoMuon_signal, "recoMuon_signal/O");
   recottree_->Branch("recoMuon_isTight", &b_recoMuon_isTight, "recoMuon_isTight/O");
   recottree_->Branch("recoMuon_isMedium", &b_recoMuon_isMedium, "recoMuon_isMedium/O");
@@ -167,6 +171,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_noRecHitGEM = 0;
     b_genMuon_isME0Muon = false;
     b_genMuon_isGEMMuon = false;
+    b_genMuon_isMuon = false;
     
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
@@ -179,11 +184,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isLoose = muon::isLooseMuon(*mu);
 	b_genMuon_isME0Muon = mu->isME0Muon();
 	b_genMuon_isGEMMuon = mu->isGEMMuon();
+	b_genMuon_isMuon = mu->isMuon();
 	b_genMuon_noRecHitGEM = nGEMhit(mu);
-
 	//if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
       }
     }
+    
     genttree_->Fill();
   }
 
@@ -203,21 +209,16 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     
-    if (!b_recoMuon_signal){
-      // cout << "fake muon " 
-      // 	   << " pt = " << mu->pt()
-      // 	   << " eta = " << mu->eta()
-      // 	   << endl;
-      
-      if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
-	auto trkRefV = muonToSimColl[muRef];
-	if ( !trkRefV.empty()) {
-	  const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
-	  cout << "trkParticle " << trkParticle->pdgId()
-	       << " pt = " << trkParticle->pt()
-	       << " eta = " << trkParticle->eta()
-	       << endl;
-	}
+    b_recoMuon_pdgId = 0;
+    if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
+      auto trkRefV = muonToSimColl[muRef];
+      if ( !trkRefV.empty()) {
+	const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
+	b_recoMuon_pdgId = trkParticle->pdgId();
+	// cout << "trkParticle " << trkParticle->pdgId()
+	//      << " pt = " << trkParticle->pt()
+	//      << " eta = " << trkParticle->eta()
+	//      << endl;
       }
     }
 
@@ -227,7 +228,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_isME0Muon = mu->isME0Muon();
     b_recoMuon_isGEMMuon = mu->isGEMMuon();
     b_recoMuon_noRecHitGEM = nGEMhit(mu);
-   
+
     const vector<MuonChamberMatch>& chambers = mu->matches();
     b_recoMuon_noChamberMatch = chambers.size();
     b_recoMuon_noSegment = 0;
