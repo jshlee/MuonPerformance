@@ -1,5 +1,4 @@
 #include <memory>
-// user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -19,6 +18,7 @@
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/Associations/interface/MuonToTrackingParticleAssociator.h"
+#include "SimMuon/MCTruth/interface/MuonToSimAssociatorByHits.h"
 #include "SimTracker/Common/interface/TrackingParticleSelector.h"
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
 
@@ -36,7 +36,6 @@ public:
   int nGEMhit(const reco::Muon * mu) const;
   void treereset();
 
-
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
@@ -51,6 +50,7 @@ private:
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
+  int b_recoMuon_noRecHitGEM_fake;
 
   bool b_recoMuon_global; bool b_recoMuon_pf;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
@@ -59,13 +59,11 @@ private:
   int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
 
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
-  //edm::EDGetTokenT<std::vector<PSimHit> > MuonGEMHitsToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
 
   TrackingParticleSelector tpSelector_;
-  
 };
 using namespace std;
 using namespace reco;
@@ -73,7 +71,6 @@ using namespace edm;
 MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
   vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
-  //MuonGEMHitsToken_ = consumes<vector<PSimHit> >(pset.getParameter<edm::InputTag>("MuonGEMHits"));
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
@@ -120,6 +117,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noSegmentGEM", &b_recoMuon_noSegmentGEM, "recoMuon_noSegmentGEM/I");
   recottree_->Branch("recoMuon_noSegmentME0", &b_recoMuon_noSegmentME0, "recoMuon_noSegmentME0/I");
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
+  recottree_->Branch("recoMuon_noRecHitGEM_fake", &b_recoMuon_noRecHitGEM_fake, "recoMuon_noRecHitGEM_fake/I");
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
@@ -143,36 +141,20 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   if (vertices->empty()) { cout << "noPV" << endl; return; }
   auto pv0 = vertices->front();
 
-  // Handle<vector<PSimHit>> MuonGEMHits;
-  // iEvent.getByToken(MuonGEMHitsToken_, MuonGEMHits);
-
   Handle<TrackingParticleCollection> simHandle;
   iEvent.getByToken(simToken_, simHandle);
-  //const TrackingParticleCollection simColl = *(simHandle.product());
 
   Handle<View<Muon> > muonHandle;
   iEvent.getByToken(muonToken_, muonHandle);
-  //View<Muon> muonColl = *(muonHandle.product());
   
-  MuonToTrackingParticleAssociator const* assoByHits = nullptr;
+  reco::MuonToSimCollection muonToSimColl; reco::SimToMuonCollection simToMuonColl;  
   Handle<MuonToTrackingParticleAssociator> associatorBase;
   iEvent.getByToken(muAssocToken_, associatorBase);
-  assoByHits = associatorBase.product();
-
-  RefToBaseVector<Muon> Muons;
-  for (size_t i = 0; i < muonHandle->size(); ++i) {
-    Muons.push_back(muonHandle->refAt(i));
-  }
-  RefVector<TrackingParticleCollection> allTPs;
-  for (size_t i = 0; i < simHandle->size(); ++i) {
-    allTPs.push_back(TrackingParticleRef(simHandle,i));
-  }
+  MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
+  //reco::InnerTk or reco::GlobalTk
+  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle);
   
-  reco::MuonToSimCollection muonToSimColl;
-  reco::SimToMuonCollection simToMuonColl;  
-  assoByHits->associateMuons(muonToSimColl, simToMuonColl, Muons, reco::GlobalTk, allTPs);
-  
-  vector<const Muon*> signalMuons;signalMuons.clear();
+  vector<const Muon*> signalMuons; signalMuons.clear();
   
   for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
     TrackingParticleRef simRef(simHandle, i);
@@ -180,14 +162,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( ! tpSelector_(*simTP) ) continue;
 
     b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
-    
-    // GlobalPoint  simVtx(simRef->vertex().x(), simRef->vertex().y(), simRef->vertex().z());
-    // GlobalVector simMom(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z());
-    // const double simDxy = -simVtx.x()*sin(simPhi)+simVtx.y()*cos(simPhi);
-    // const double simDz  = simVtx.z() - (simVtx.x()*simMom.x()+simVtx.y()*simMom.y())*simMom.z()/simMom.perp2();    
-    // const unsigned int nSimHits = simRef->numberOfHits();
-    
-    // Get sim-reco association for a simRef
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
@@ -195,22 +169,20 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isME0Muon = false;
     b_genMuon_isGEMMuon = false;
     
-    vector<pair<RefToBase<Muon>, double> > MuRefV;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
-      MuRefV = simToMuonColl[simRef];
-      
+      vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
     b_genMuon_noRecHitGEM = nGEMhit(mu);
 	signalMuons.push_back(mu);
-	if ( isTightMuonCustom(*mu, pv0) ) b_genMuon_isTight = true;
-	//if ( muon::isTightMuon(*mu, pv0) ) b_genMuon_isTight = true;
-	if ( muon::isMediumMuon(*mu) )  b_genMuon_isMedium = true;
-	if ( muon::isLooseMuon(*mu) )  b_genMuon_isLoose = true;	
-	if ( mu->isME0Muon() )  b_genMuon_isME0Muon = true;	
-	if ( mu->isGEMMuon() )  b_genMuon_isGEMMuon = true;	
 
+	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
+	b_genMuon_isMedium = muon::isMediumMuon(*mu);
+	b_genMuon_isLoose = muon::isLooseMuon(*mu);
+	b_genMuon_isME0Muon = mu->isME0Muon();
+	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_noRecHitGEM = nGEMhit(mu);
+
 	//if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
       }
     }
@@ -224,21 +196,23 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const Muon* mu = muRef.get();
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
-    b_recoMuon_signal = false;
-    b_recoMuon_isTight = false;
-    b_recoMuon_isMedium = false;
-    b_recoMuon_isLoose = false;
-    b_recoMuon_isME0Muon = false;
-    b_recoMuon_isGEMMuon = false;
 
+    b_recoMuon_signal = false;
     for (auto signal : signalMuons){
       if (mu == signal){
 	b_recoMuon_signal = true;
 	break;
       }
     }
+    
+    b_recoMuon_noRecHitGEM_fake = -9;
     if (!b_recoMuon_signal){
-      //vector<pair<RefToBase<TrackingParticle>, double> > trkRefV;    
+      // cout << "fake muon " 
+      // 	   << " pt = " << mu->pt()
+      // 	   << " eta = " << mu->eta()
+      // 	   << endl;
+      
+      b_recoMuon_noRecHitGEM_fake = nGEMhit(mu);
       if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
 	auto trkRefV = muonToSimColl[muRef];
 	if ( !trkRefV.empty()) {
@@ -250,14 +224,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	}
       }
     }
-    
-    if ( isTightMuonCustom(*mu, pv0) ) b_recoMuon_isTight = true;
-    //if ( muon::isTightMuon(*mu, pv0) ) b_recoMuon_isTight = true;
-    if ( muon::isMediumMuon(*mu) )  b_recoMuon_isMedium = true;
-    if ( muon::isLooseMuon(*mu) )  b_recoMuon_isLoose = true;
-    if ( mu->isME0Muon() )  b_recoMuon_isME0Muon = true;
-    if ( mu->isGEMMuon() )  b_recoMuon_isGEMMuon = true;
 
+    b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
+    b_recoMuon_isMedium = muon::isMediumMuon(*mu);
+    b_recoMuon_isLoose = muon::isLooseMuon(*mu);
+    b_recoMuon_isME0Muon = mu->isME0Muon();
+    b_recoMuon_isGEMMuon = mu->isGEMMuon();
+    b_recoMuon_noRecHitGEM = nGEMhit(mu);
+   
     const vector<MuonChamberMatch>& chambers = mu->matches();
     b_recoMuon_noChamberMatch = chambers.size();
     b_recoMuon_noSegment = 0;
@@ -266,8 +240,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentRPC = 0;
     b_recoMuon_noSegmentGEM = 0;
     b_recoMuon_noSegmentME0 = 0;
-
-    b_recoMuon_noRecHitGEM = nGEMhit(mu);
     b_recoMuon_noRecHitME0 = 0;
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
