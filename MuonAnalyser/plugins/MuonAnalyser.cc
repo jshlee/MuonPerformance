@@ -119,6 +119,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noSegmentRPC", &b_recoMuon_noSegmentRPC, "recoMuon_noSegmentRPC/I");
   recottree_->Branch("recoMuon_noSegmentGEM", &b_recoMuon_noSegmentGEM, "recoMuon_noSegmentGEM/I");
   recottree_->Branch("recoMuon_noSegmentME0", &b_recoMuon_noSegmentME0, "recoMuon_noSegmentME0/I");
+
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
 
@@ -176,7 +177,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
-    b_genMuon_noRecHitGEM = nGEMhit(mu);
 	signalMuons.push_back(mu);
 
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
