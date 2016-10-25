@@ -15,8 +15,9 @@ def setMarkerStyle(h,color,style):
 def getEff(filename,treename,title,binning,plotvar,dencut,numcut):
     h1 = makeTH1(filename,treename,title,binning,plotvar,dencut)
     h2 = makeTH1(filename,treename,title,binning,plotvar,numcut)
-    h2.Divide(h1)
-    return copy.deepcopy(h2)
+    hEff = ROOT.TEfficiency(h2,h1)
+    hEff.SetTitle(title)
+    return copy.deepcopy(hEff)
 
 def drawSampleName(samplename):
     tex2 = ROOT.TLatex()
@@ -55,11 +56,11 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
 
     y_name = id+" Muon "
     if "genMuon" in plotvar:
-        h_init.SetMaximum(1.3)
-        h_init.SetMinimum(0.2)
+        h_init.SetMaximum(1.1)
+        h_init.SetMinimum(0.6)
         y_name = y_name+"Efficiency"
     if "recoMuon" in plotvar:
-        h_init.SetMaximum(max(h.GetMaximum() for h in hlist)*2.5)
+        #h_init.SetMaximum(max(h.GetMaximum() for h in hlist)*2.5)
         h_init.GetYaxis().SetLabelSize(0.035)
         h_init.GetYaxis().SetTitleOffset(1.2)
         y_name = y_name+"Fake Rate"
