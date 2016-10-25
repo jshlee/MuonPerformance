@@ -28,17 +28,25 @@ process.MessageLogger.cout = cms.untracked.PSet(
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/cms/scratch/jlee/upgradeMuonReco/reco.root'
+      #'file:/cms/scratch/jlee/upgradeMuonReco/reco.root'
+      #'file:/cms/scratch/jlee/upgradeMuonReco/RelValZMM_13_reco.root'
+      #'file:/cms/scratch/jlee/upgradeMuonReco/RelValTenMuExtendedE_0_200_reco.root'
+      #'file:/xrootd/store/user/jlee/RelValTenMuExtendedE_0_200/crab_20161014_004717/161013_154753/0000/*.root' #pu0
+      #'file:/xrootd/store/user/jlee/RelValTenMuExtendedE_0_200/crab_20161014_004624/161013_154703/0000/*.root' #pu200
+        
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
 
-#run for entire sample
-#dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
-#filelst = open(dir+"pu140.txt", "r")
-#process.source.fileNames = filelst.readlines()
 
-process.TFileService = cms.Service("TFileService",fileName = cms.string("outHisto.root"))
+#run for entire sample
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/my/'
+filelst = open(dir+"pu0.txt", "r")
+#filelst = open(dir+"pu200.txt", "r")
+process.source.fileNames = filelst.readlines()
+
+#process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0.root"))
+process.TFileService = cms.Service("TFileService",fileName = cms.string("pu200.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
