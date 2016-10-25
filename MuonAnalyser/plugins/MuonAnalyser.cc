@@ -239,9 +239,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentME0 = 0;
     b_recoMuon_noRecHitME0 = 0;
 
-    b_recoMuon_ME0dXdZ = 0;
-    b_recoMuon_ME0dYdZ = 0;
-
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
       //cout<< "chamber->detector() "<< chamber->detector()<<endl;
@@ -275,7 +272,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 5){ //me0
 	  ++b_recoMuon_noSegmentME0;
-      auto me0Segment = (*(*segment).me0SegmentRef);
+       auto me0Segment = (*(*segment).me0SegmentRef);
 	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
 	}
       }
