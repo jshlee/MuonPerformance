@@ -272,7 +272,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 5){ //me0
 	  ++b_recoMuon_noSegmentME0;
-     auto me0Segment = (*(*segment).me0SegmentRef);
+      auto me0Segment = (*(*segment).me0SegmentRef);
 	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
 	}
       }
