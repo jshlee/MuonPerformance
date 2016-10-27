@@ -66,9 +66,6 @@ class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
 		TrackingParticleSelector tpSelector_;
 
-		TH1D *hmu_pfIso_R03, *hmu_pfIso_R04;
-		TH1D *hgen_pfIso_R03, *hgen_pfIso_R04;
-		TH1D *hgen_pfIso_R03_dR, *hgen_pfIso_R04_dR;
 };
 using namespace std;
 using namespace reco;
@@ -95,13 +92,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
 	usesResource("TFileService");
 	edm::Service<TFileService> fs;
-
-	hmu_pfIso_R04 = fs->make<TH1D>("hmu_pfIso_R04","Mu_PFIso _{R04}",20,0,5);
-	hmu_pfIso_R03 = fs->make<TH1D>("hmu_pfIso_R03","Mu_PFIso _{R03}",20,0,5);
-	hgen_pfIso_R04 = fs->make<TH1D>("hgen_pfIso_R04","Gen_PFIso _{R04}",10,0,5);
-	hgen_pfIso_R03 = fs->make<TH1D>("hgen_pfIso_R03","Gen_PFIso _{R03}",10,0,5);
-	hgen_pfIso_R04_dR = fs->make<TH1D>("hgen_pfIso_R04_dR","Gen_PFIso_{dR<0.1} _{R04}",10,0,5);
-	hgen_pfIso_R03_dR = fs->make<TH1D>("hgen_pfIso_R03_dR","Gen_PFIso_{d$<0.1} _{R03}",10,0,5);
 
 	genttree_ = fs->make<TTree>("gen", "gen");
 	genttree_->Branch("genMuon", "TLorentzVector", &b_genMuon);
@@ -170,36 +160,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 	vector<const Muon*> signalMuons; signalMuons.clear();
 
-	//---------------------------------------------Muon PFIsolation Section------------------------------------------
-	double genPFIsoR03=0, genPFIsoR04=0;
-	for (size_t i = 0; i < muonHandle->size(); ++i)
-	{treereset();
-		auto muRef = muonHandle->refAt(i);
-		const Muon* mu = muRef.get();
-
-		const double chghad = mu->pfIsolationR04().sumChargedHadronPt;
-		const double neuhad = mu->pfIsolationR04().sumNeutralHadronEt;
-		const double pho = mu->pfIsolationR04().sumPhotonEt;
-		const double pu = mu->pfIsolationR04().sumPUPt;
-		const double muPFIsoBetaR04 = chghad+TMath::Max(0.,neuhad+pho-0.5*pu)/mu->pt();
-
-		const double chghad_ = mu->pfIsolationR03().sumChargedHadronPt;
-		const double neuhad_ = mu->pfIsolationR03().sumNeutralHadronEt;
-		const double pho_ = mu->pfIsolationR03().sumPhotonEt;
-		const double pu_ = mu->pfIsolationR03().sumPUPt;
-		const double muPFIsoBetaR03 = chghad_+TMath::Max(0.,neuhad_+pho_-0.5*pu_)/mu->pt();
-
-		if(fabs(mu->pt())>10 && fabs(mu->eta())<2.4)
-		{
-			hmu_pfIso_R04->Fill(muPFIsoBetaR04);
-			hmu_pfIso_R03->Fill(muPFIsoBetaR03);
-			genPFIsoR03=muPFIsoBetaR03;
-			genPFIsoR04=muPFIsoBetaR04;
-		}
-		b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
-	}
-	//--------------------------------------------------------------------------------------------------------------
-
 	for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
 		TrackingParticleRef simRef(simHandle, i);
 		const TrackingParticle* simTP = simRef.get();
@@ -208,13 +168,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 		b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
 
 		double dR = b_recoMuon.DeltaR(b_genMuon);
-		if(dR<0.1)
-		{
-			hgen_pfIso_R03_dR->Fill(genPFIsoR03);
-			hgen_pfIso_R04_dR->Fill(genPFIsoR04);
-		}
-		hgen_pfIso_R03->Fill(genPFIsoR03);
-		hgen_pfIso_R04->Fill(genPFIsoR04);
 
 		b_genMuon_isTight = false;
 		b_genMuon_isMedium = false;
@@ -249,6 +202,18 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 		auto muRef = muonHandle->refAt(i);
 		const Muon* mu = muRef.get();
+
+		const double chghad = mu->pfIsolationR04().sumChargedHadronPt;
+		const double neuhad = mu->pfIsolationR04().sumNeutralHadronEt;
+		const double pho = mu->pfIsolationR04().sumPhotonEt;
+		const double pu = mu->pfIsolationR04().sumPUPt;
+		const double muPFIsoBetaR04 = chghad+TMath::Max(0.,neuhad+pho-0.5*pu)/mu->pt();
+
+		const double chghad_ = mu->pfIsolationR03().sumChargedHadronPt;
+		const double neuhad_ = mu->pfIsolationR03().sumNeutralHadronEt;
+		const double pho_ = mu->pfIsolationR03().sumPhotonEt;
+		const double pu_ = mu->pfIsolationR03().sumPUPt;
+		const double muPFIsoBetaR03 = chghad_+TMath::Max(0.,neuhad_+pho_-0.5*pu_)/mu->pt();
 
 		b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
