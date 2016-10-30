@@ -203,17 +203,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 		auto muRef = muonHandle->refAt(i);
 		const Muon* mu = muRef.get();
 
-		const double chghad = mu->pfIsolationR04().sumChargedHadronPt;
-		const double neuhad = mu->pfIsolationR04().sumNeutralHadronEt;
-		const double pho = mu->pfIsolationR04().sumPhotonEt;
-		const double pu = mu->pfIsolationR04().sumPUPt;
-		const double muPFIsoBetaR04 = chghad+TMath::Max(0.,neuhad+pho-0.5*pu)/mu->pt();
 
-		const double chghad_ = mu->pfIsolationR03().sumChargedHadronPt;
-		const double neuhad_ = mu->pfIsolationR03().sumNeutralHadronEt;
-		const double pho_ = mu->pfIsolationR03().sumPhotonEt;
-		const double pu_ = mu->pfIsolationR03().sumPUPt;
-		const double muPFIsoBetaR03 = chghad_+TMath::Max(0.,neuhad_+pho_-0.5*pu_)/mu->pt();
+		const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt)/mu->pt();
+
+		const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt)/mu->pt();
 
 		b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
