@@ -69,7 +69,7 @@ private:
 using namespace std;
 using namespace reco;
 using namespace edm;
-uonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
+MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
   vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
@@ -177,16 +177,16 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
     const Muon* mu = MuRefV.begin()->first.get();
-       signalMuons.push_back(mu);
+    signalMuons.push_back(mu);
 
-       b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
-       b_genMuon_isMedium = muon::isMediumMuon(*mu);
-       b_genMuon_isLoose = muon::isLooseMuon(*mu);
-       b_genMuon_isME0Muon = mu->isME0Muon();
-       b_genMuon_isGEMMuon = mu->isGEMMuon();
-       b_genMuon_isMuon = mu->isMuon();
-       b_genMuon_noRecHitGEM = nGEMhit(mu);
-       //if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
+    b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
+    b_genMuon_isMedium = muon::isMediumMuon(*mu);
+    b_genMuon_isLoose = muon::isLooseMuon(*mu);
+    b_genMuon_isME0Muon = mu->isME0Muon();
+    b_genMuon_isGEMMuon = mu->isGEMMuon();
+    b_genMuon_isMuon = mu->isMuon();
+    b_genMuon_noRecHitGEM = nGEMhit(mu);
+    //if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
       }
     }
     
@@ -198,16 +198,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
-    const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt)/mu->pt();
-    const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt)/mu->pt();
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
     b_recoMuon_signal = false;
     for (auto signal : signalMuons){
       if (mu == signal){
-       b_recoMuon_signal = true;
-       break;
+    b_recoMuon_signal = true;
+    break;
       }
     }
     
@@ -215,12 +213,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
       auto trkRefV = muonToSimColl[muRef];
       if ( !trkRefV.empty()) {
-       const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
-       b_recoMuon_pdgId = trkParticle->pdgId();
-       // cout << "trkParticle " << trkParticle->pdgId()
-       //      << " pt = " << trkParticle->pt()
-       //      << " eta = " << trkParticle->eta()
-       //      << endl;
+    const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
+    b_recoMuon_pdgId = trkParticle->pdgId();
+    // cout << "trkParticle " << trkParticle->pdgId()
+    //      << " pt = " << trkParticle->pt()
+    //      << " eta = " << trkParticle->eta()
+    //      << endl;
       }
     }
 
@@ -245,38 +243,38 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
       //cout<< "chamber->detector() "<< chamber->detector()<<endl;
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->segmentMatches.begin(); segment != chamber->segmentMatches.end(); ++segment ){
-       ++b_recoMuon_noSegment;
-       if (chamber->detector() == 1){
-         ++b_recoMuon_noSegmentDT;
-       }
-       if (chamber->detector() == 2){
-         ++b_recoMuon_noSegmentCSC;
-       }
+    ++b_recoMuon_noSegment;
+    if (chamber->detector() == 1){
+      ++b_recoMuon_noSegmentDT;
+    }
+    if (chamber->detector() == 2){
+      ++b_recoMuon_noSegmentCSC;
+    }
       }
       
       for ( std::vector<reco::MuonRPCHitMatch>::const_iterator segment = chamber->rpcMatches.begin(); segment != chamber->rpcMatches.end(); ++segment ){
-       ++b_recoMuon_noSegment;      
-       if (chamber->detector() == 3){
-         ++b_recoMuon_noSegmentRPC;
-       }
+    ++b_recoMuon_noSegment;      
+    if (chamber->detector() == 3){
+      ++b_recoMuon_noSegmentRPC;
+    }
       }
       
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
-       ++b_recoMuon_noSegment;      
-       if (chamber->detector() == 4){ //gem
-         // auto gemSegment = (*(*segment).gemSegmentRef);
-         // b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
-         ++b_recoMuon_noSegmentGEM;
-       }
+    ++b_recoMuon_noSegment;      
+    if (chamber->detector() == 4){ //gem
+      // auto gemSegment = (*(*segment).gemSegmentRef);
+      // b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
+      ++b_recoMuon_noSegmentGEM;
+    }
       }
       
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
-       ++b_recoMuon_noSegment;      
-       if (chamber->detector() == 5){ //me0
-         ++b_recoMuon_noSegmentME0;
+    ++b_recoMuon_noSegment;      
+    if (chamber->detector() == 5){ //me0
+      ++b_recoMuon_noSegmentME0;
       auto me0Segment = (*(*segment).me0SegmentRef);
-         b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
-       }
+      b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
+    }
       }
       
     }
