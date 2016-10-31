@@ -51,7 +51,7 @@ private:
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
 
-  bool b_recoMuon_global; bool b_recoMuon_pf;
+  bool b_recoMuon_global; bool b_recoMuon_pf; float b_recoMuon_pfIsoR03; float b_recoMuon_pfIsoR04;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
   float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
   float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
@@ -125,6 +125,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
+  recottree_->Bramch("recoMuon_PFIsolationR03",&b_recoMuon_pfIsoR03,"recoMuon_PFIsolationR03/F");
+  recottree_->Bramch("recoMuon_PFIsolationR04",&b_recoMuon_pfIsoR04,"recoMuon_PFIsolationR04/F");
   recottree_->Branch("recoMuon_normalizedChi2", &b_recoMuon_chi2, "recoMuon_normalizedChi2/F");
   recottree_->Branch("recoMuon_chi2LocalPosition", &b_recoMuon_chi2pos, "recoMuon_chi2LocalPosition/F");
   recottree_->Branch("recoMuon_trkKink", &b_recoMuon_trkKink, "recoMuon_trkKink/F");
@@ -198,6 +200,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
+
+    b_recoMuon_pfIsoR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt())/mu->pt();
+    b_recoMuon_pfIsoR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt())/mu->pt();
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
@@ -377,7 +382,7 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
 
 void MuonAnalyser::treereset()
 {
-  b_recoMuon_global = -9; b_recoMuon_pf = -9;
+  b_recoMuon_global = -9; b_recoMuon_pf = -9; b_recoMuon_pfIsoR03 = -9; b_recoMuon_pfIsoR04 = -9;
   b_recoMuon_chi2 = -9; b_recoMuon_chi2pos = -9; b_recoMuon_trkKink = -9; b_recoMuon_segcompati = -9;
   b_recoMuon_nglobalhits = -9; b_recoMuon_nstations = -9;
   b_recoMuon_trackdxy = -9; b_recoMuon_trackdz = -9;
