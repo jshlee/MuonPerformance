@@ -201,8 +201,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
 
-    b_recoMuon_pfIsoR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt())/mu->pt();
-    b_recoMuon_pfIsoR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt())/mu->pt();
+    const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt())/mu->pt();
+    const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt())/mu->pt(); 
+
+    b_recoMuon_pfIsoR03 = muPFIsoBetaR03;
+    b_recoMuon_pfIsoR04 = muPFIsoBetaR04;
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
@@ -382,7 +385,7 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
 
 void MuonAnalyser::treereset()
 {
-  b_recoMuon_global = -9; b_recoMuon_pf = -9; b_recoMuon_pfIsoR03 = -9; b_recoMuon_pfIsoR04 = -9;
+  b_recoMuon_global = -9; b_recoMuon_pf = -9;
   b_recoMuon_chi2 = -9; b_recoMuon_chi2pos = -9; b_recoMuon_trkKink = -9; b_recoMuon_segcompati = -9;
   b_recoMuon_nglobalhits = -9; b_recoMuon_nstations = -9;
   b_recoMuon_trackdxy = -9; b_recoMuon_trackdz = -9;
