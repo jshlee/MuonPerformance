@@ -177,7 +177,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
     const Muon* mu = MuRefV.begin()->first.get();
-    signalMuons.push_back(mu);
+       signalMuons.push_back(mu);
 
        b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
        b_genMuon_isMedium = muon::isMediumMuon(*mu);
@@ -186,7 +186,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
        b_genMuon_isGEMMuon = mu->isGEMMuon();
        b_genMuon_isMuon = mu->isMuon();
        b_genMuon_noRecHitGEM = nGEMhit(mu);
-    //if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
+       //if ( b_genMuon.Eta()>2.4 ){ cout << fabs(b_genMuon.Eta()) << "  " << mu->isME0Muon() << endl; } 
       }
     }
     
