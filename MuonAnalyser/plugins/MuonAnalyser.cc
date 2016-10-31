@@ -178,6 +178,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
             if ( !MuRefV.empty()) {
                 const Muon* mu = MuRefV.begin()->first.get();
                 signalMuons.push_back(mu);
+                const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt)/mu->pt();
+                const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt)/mu->pt();
 
                 b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
                 b_genMuon_isMedium = muon::isMediumMuon(*mu);
@@ -198,9 +200,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
         auto muRef = muonHandle->refAt(i);
         const Muon* mu = muRef.get();
-
-        double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt)/mu->pt();
-        double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt)/mu->pt();
 
         b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
