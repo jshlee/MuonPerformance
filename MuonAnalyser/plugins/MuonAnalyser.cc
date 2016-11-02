@@ -43,7 +43,7 @@ private:
   TTree* recottree_;
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon;
-  int b_genMuon_noRecHitGEM;
+  int b_genMuon_noRecHitGEM; float b_genMuon_Iso;
   
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose, b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
@@ -101,6 +101,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
   genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
+  genttree_->Branch("genMuon_Iso",&b_genMuon_Iso,"genMuon_Iso/F");
 
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
