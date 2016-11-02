@@ -125,8 +125,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
-  recottree_->Branch("recoMuon_PFIsolationR03",&b_recoMuon_IsoR03,"recoMuon_PFIsolationR03/F");
-  recottree_->Branch("recoMuon_PFIsolationR04",&b_recoMuon_IsoR04,"recoMuon_PFIsolationR04/F");
+  recottree_->Branch("recoMuon_IsolationR03",&b_recoMuon_IsoR03,"recoMuon_IsolationR03/F");
+  recottree_->Branch("recoMuon_IsolationR04",&b_recoMuon_IsoR04,"recoMuon_IsolationR04/F");
   recottree_->Branch("recoMuon_normalizedChi2", &b_recoMuon_chi2, "recoMuon_normalizedChi2/F");
   recottree_->Branch("recoMuon_chi2LocalPosition", &b_recoMuon_chi2pos, "recoMuon_chi2LocalPosition/F");
   recottree_->Branch("recoMuon_trkKink", &b_recoMuon_trkKink, "recoMuon_trkKink/F");
