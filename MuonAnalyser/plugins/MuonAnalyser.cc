@@ -51,7 +51,7 @@ private:
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
 
-  bool b_recoMuon_global; bool b_recoMuon_pf; float b_recoMuon_pfIsoR03; float b_recoMuon_pfIsoR04;
+  bool b_recoMuon_global; bool b_recoMuon_pf; float b_recoMuon_IsoR03; float b_recoMuon_IsoR04;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
   float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
   float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
@@ -125,8 +125,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
-  recottree_->Bramch("recoMuon_PFIsolationR03",&b_recoMuon_pfIsoR03,"recoMuon_PFIsolationR03/F");
-  recottree_->Bramch("recoMuon_PFIsolationR04",&b_recoMuon_pfIsoR04,"recoMuon_PFIsolationR04/F");
+  recottree_->Branch("recoMuon_PFIsolationR03",&b_recoMuon_IsoR03,"recoMuon_PFIsolationR03/F");
+  recottree_->Branch("recoMuon_PFIsolationR04",&b_recoMuon_IsoR04,"recoMuon_PFIsolationR04/F");
   recottree_->Branch("recoMuon_normalizedChi2", &b_recoMuon_chi2, "recoMuon_normalizedChi2/F");
   recottree_->Branch("recoMuon_chi2LocalPosition", &b_recoMuon_chi2pos, "recoMuon_chi2LocalPosition/F");
   recottree_->Branch("recoMuon_trkKink", &b_recoMuon_trkKink, "recoMuon_trkKink/F");
@@ -167,6 +167,19 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( ! tpSelector_(*simTP) ) continue;
 
     b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
+
+    TLorentzVector b_genIso;
+    double isopt=0,sumpt=0;
+    for(TrackingParticleCollection::size_type j=0; j<simHandle->size(); j++)
+    {
+      TrackingParticleRef Gen(simHandle, j);
+      b_genIso = TLorentzVector(Gen->momentum().x(), Gen->momentum().y(), Gen->momentum().z(), Gen->energy());
+      double dR = b_genMuon.DeltaR(b_genIso);
+      if(dR<0.3 && dR>0.01) sumpt+=Gen->pt();
+    }
+    isopt=sumpt/simRef->pt();
+    b_genMuon_Iso = isopt;
+
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
@@ -201,11 +214,13 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
 
-    const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt())/mu->pt();
-    const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt())/mu->pt(); 
+//    const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt())/mu->pt();
+//    const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt())/mu->pt(); 
+    const double muIsoR03 = mu->IsolationR03().sumPt/mu->pt();
+    const double muIsoR04 = mu->IsolationR04().sumPt/mu->pt();
 
-    b_recoMuon_pfIsoR03 = muPFIsoBetaR03;
-    b_recoMuon_pfIsoR04 = muPFIsoBetaR04;
+    b_recoMuon_IsoR03 = muIsoR03;
+    b_recoMuon_IsoR04 = muIsoR04;
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
