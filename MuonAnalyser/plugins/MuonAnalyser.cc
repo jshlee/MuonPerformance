@@ -43,7 +43,7 @@ private:
   TTree* recottree_;
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon;
-  int b_genMuon_noRecHitGEM; float b_genMuon_Iso;
+  int b_genMuon_noRecHitGEM;
   
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose, b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
@@ -101,7 +101,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
   genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
-  genttree_->Branch("genMuon_Iso",&b_genMuon_Iso,"genMuon_Iso/F");
 
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
@@ -168,19 +167,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( ! tpSelector_(*simTP) ) continue;
 
     b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
-
-    TLorentzVector b_genIso;
-    double isopt=0,sumpt=0;
-    for(TrackingParticleCollection::size_type j=0; j<simHandle->size(); j++)
-    {
-      TrackingParticleRef Gen(simHandle, j);
-      b_genIso = TLorentzVector(Gen->momentum().x(), Gen->momentum().y(), Gen->momentum().z(), Gen->energy());
-      double dR = b_genMuon.DeltaR(b_genIso);
-      if(dR<0.3 && dR>0.01) sumpt+=Gen->pt();
-    }
-    isopt=sumpt/simRef->pt();
-    b_genMuon_Iso = isopt;
-
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
@@ -215,8 +201,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
 
-//    const double muPFIsoBetaR03 = mu->pfIsolationR03().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt+mu->pfIsolationR03().sumPhotonEt-0.5*mu->pfIsolationR03().sumPUPt())/mu->pt();
-//    const double muPFIsoBetaR04 = mu->pfIsolationR04().sumChargedHadronPt+TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt+mu->pfIsolationR04().sumPhotonEt-0.5*mu->pfIsolationR04().sumPUPt())/mu->pt(); 
     const double muIsoR03 = mu->IsolationR03().sumPt/mu->pt();
     const double muIsoR04 = mu->IsolationR04().sumPt/mu->pt();
 
