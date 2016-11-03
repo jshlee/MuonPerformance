@@ -14,6 +14,10 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/MuonReco/interface/MuonIsolation.h"
+#include "DataFormats/MuonReco/interface/MuonPFIsolation.h"
 
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
