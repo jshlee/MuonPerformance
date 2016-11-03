@@ -51,7 +51,7 @@ private:
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
 
-  bool b_recoMuon_global; bool b_recoMuon_pf; float b_recoMuon_IsoR03; float b_recoMuon_IsoR04;
+  bool b_recoMuon_global; bool b_recoMuon_pf; float b_recoMuon_Iso; float b_recoMuon_PFIso;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
   float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
   float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
@@ -125,8 +125,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
-  recottree_->Branch("recoMuon_IsolationR03",&b_recoMuon_IsoR03,"recoMuon_IsolationR03/F");
-  recottree_->Branch("recoMuon_IsolationR04",&b_recoMuon_IsoR04,"recoMuon_IsolationR04/F");
+  recottree_->Branch("recoMuon_Isolation",&b_recoMuon_Iso,"recoMuon_Isolation/F");
+  recottree_->Branch("recoMuon_PFIsolation",&b_recoMuon_PFIso,"recoMuon_PFIsolation/F");
   recottree_->Branch("recoMuon_normalizedChi2", &b_recoMuon_chi2, "recoMuon_normalizedChi2/F");
   recottree_->Branch("recoMuon_chi2LocalPosition", &b_recoMuon_chi2pos, "recoMuon_chi2LocalPosition/F");
   recottree_->Branch("recoMuon_trkKink", &b_recoMuon_trkKink, "recoMuon_trkKink/F");
@@ -201,11 +201,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
 
-    const double muIsoR03 = mu->IsolationR03().sumPt/mu->pt();
-    const double muIsoR04 = mu->IsolationR04().sumPt/mu->pt();
+    const double muIso = mu->isolationR03().sumPt/mu->pt();
+    const double muPFIso = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
 
-    b_recoMuon_IsoR03 = muIsoR03;
-    b_recoMuon_IsoR04 = muIsoR04;
+    b_recoMuon_Iso = muIso;
+    b_recoMuon_PFIso = muPFIso;
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
