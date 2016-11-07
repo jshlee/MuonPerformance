@@ -225,11 +225,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const double muPFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
     const double muPFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
 
-    b_recoMuon_TrkIso03 = muIso03;
-    b_recoMuon_TrkIso05 = muIso05;
-    b_recoMuon_PFIso04 = muPFIso04;
-    b_recoMuon_PFIso03 = muPFIso03;
-
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
     b_recoMuon_signal = false;
@@ -252,6 +247,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	//      << endl;
       }
     }
+
+    b_recoMuon_TrkIso03 = muIso03;
+    b_recoMuon_TrkIso05 = muIso05;
+    b_recoMuon_PFIso04 = muPFIso04;
+    b_recoMuon_PFIso03 = muPFIso03;
 
     b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
     b_recoMuon_isMedium = muon::isMediumMuon(*mu);
