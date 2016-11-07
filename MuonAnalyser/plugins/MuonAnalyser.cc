@@ -122,8 +122,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_isGEMMuon", &b_recoMuon_isGEMMuon, "recoMuon_isGEMMuon/O");
   recottree_->Branch("recoMuon_noChamberMatch", &b_recoMuon_noChamberMatch, "recoMuon_noChamberMatch/I");
 
-  recottree_->Branch("recoMuon_TrKIsolation03",&b_recoMuon_TrkIso03,"recoMuon_TrkIsolation03/F");
-  recottree_->Branch("recoMuon_TrKIsolation05",&b_recoMuon_TrkIso05,"recoMuon_TrkIsolation05/F");
+  recottree_->Branch("recoMuon_TrkIsolation03",&b_recoMuon_TrkIso03,"recoMuon_TrkIsolation03/F");
+  recottree_->Branch("recoMuon_TrkIsolation05",&b_recoMuon_TrkIso05,"recoMuon_TrkIsolation05/F");
   recottree_->Branch("recoMuon_PFIsolation04",&b_recoMuon_PFIso04,"recoMuon_PFIsolation04/F");
   recottree_->Branch("recoMuon_PFIsolation03",&b_recoMuon_PFIso03,"recoMuon_PFIsolation03/F");
   recottree_->Branch("recoMuon_noSegment", &b_recoMuon_noSegment, "recoMuon_noSegment/I");
@@ -195,6 +195,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
 
+        b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
+        b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
+        b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
+        b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
 	b_genMuon_isMedium = muon::isMediumMuon(*mu);
 	b_genMuon_isLoose = muon::isLooseMuon(*mu);
@@ -221,7 +226,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const double muPFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
 
     b_recoMuon_TrkIso03 = muIso03;
-    b_recoMuon_TrKIso05 = muIso05;
+    b_recoMuon_TrkIso05 = muIso05;
     b_recoMuon_PFIso04 = muPFIso04;
     b_recoMuon_PFIso03 = muPFIso03;
 
