@@ -44,6 +44,8 @@ private:
   TLorentzVector b_genMuon;
   bool b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose, b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon;
   int b_genMuon_noRecHitGEM;
+  float b_genMuon_pfIso03; float b_genMuon_pfIso04;
+  float b_genMuon_TrkIso05; float b_genMuon_TrkIso03;
   
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose, b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
@@ -58,8 +60,9 @@ private:
   float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
   float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
   int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
-  int b_recoMuon_pdgId; float b_recoMuon_Iso; float b_recoMuon_PFIso;
-  
+  int b_recoMuon_pdgId;
+  float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
+  float b_recoMuon_TrkIso05; float b_recoMuon_TrkIso03;
   
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
@@ -103,6 +106,10 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
   genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
+  genttree_->Branch("genMuon_TrkIsolation03",&b_genMuon_TrkIso03,"genMuon_TrkIsolation03/F");
+  genttree_->Branch("genMuon_TrkIsolation05",&b_genMuon_TrkIso05,"genMuon_TrkIsolation05/F");
+  genttree_->Branch("genMuon_PFIsolation03",&b_genMuon_pfIso03,"genMuon_PFIsolation03/F");
+  genttree_->Branch("genMuon_PFIsolation04",&b_genMuon_pfIso04,"genMuon_PFIsolation04/F");
 
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
@@ -115,8 +122,10 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_isGEMMuon", &b_recoMuon_isGEMMuon, "recoMuon_isGEMMuon/O");
   recottree_->Branch("recoMuon_noChamberMatch", &b_recoMuon_noChamberMatch, "recoMuon_noChamberMatch/I");
 
-  recottree_->Branch("recoMuon_Isolation",&b_recoMuon_Iso,"recoMuon_Isolation/F");
-  recottree_->Branch("recoMuon_PFIsolation",&b_recoMuon_PFIso,"recoMuon_PFIsolation/F");
+  recottree_->Branch("recoMuon_TrKIsolation03",&b_recoMuon_TrkIso03,"recoMuon_TrkIsolation03/F");
+  recottree_->Branch("recoMuon_TrKIsolation05",&b_recoMuon_TrkIso05,"recoMuon_TrkIsolation05/F");
+  recottree_->Branch("recoMuon_PFIsolation04",&b_recoMuon_PFIso04,"recoMuon_PFIsolation04/F");
+  recottree_->Branch("recoMuon_PFIsolation03",&b_recoMuon_PFIso03,"recoMuon_PFIsolation03/F");
   recottree_->Branch("recoMuon_noSegment", &b_recoMuon_noSegment, "recoMuon_noSegment/I");
   recottree_->Branch("recoMuon_noSegmentDT", &b_recoMuon_noSegmentDT, "recoMuon_noSegmentDT/I");
   recottree_->Branch("recoMuon_noSegmentCSC", &b_recoMuon_noSegmentCSC, "recoMuon_noSegmentCSC/I");
@@ -206,11 +215,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
 
-    const double muIso = mu->isolationR03().sumPt/mu->pt();
-    const double muPFIso = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+    const double muIso03 = mu->isolationR03().sumPt/mu->pt();
+    const double muIso05 = mu->isolationR05().sumPt/mu->pt();
+    const double muPFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+    const double muPFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
 
-    b_recoMuon_Iso = muIso;
-    b_recoMuon_PFIso = muPFIso;
+    b_recoMuon_TrkIso03 = muIso03;
+    b_recoMuon_TrKIso05 = muIso05;
+    b_recoMuon_PFIso04 = muPFIso04;
+    b_recoMuon_PFIso03 = muPFIso03;
 
     b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
 
