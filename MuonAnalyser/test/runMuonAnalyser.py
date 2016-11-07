@@ -40,7 +40,7 @@ process.source = cms.Source("PoolSource",
 
 
 #run for entire sample
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/my/'
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
 filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 process.source.fileNames = filelst.readlines()
