@@ -63,6 +63,8 @@ private:
   int b_recoMuon_pdgId;
   float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
   float b_recoMuon_TrkIso05; float b_recoMuon_TrkIso03;
+  bool b_recoMuon_isMuon;
+  int b_recoMuon_numberOfValidMuonGEMHits, b_recoMuon_numberOfValidMuonME0Hits;
   
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
@@ -123,6 +125,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_isME0Muon", &b_recoMuon_isME0Muon, "recoMuon_isME0Muon/O");
   recottree_->Branch("recoMuon_isGEMMuon", &b_recoMuon_isGEMMuon, "recoMuon_isGEMMuon/O");
   recottree_->Branch("recoMuon_noChamberMatch", &b_recoMuon_noChamberMatch, "recoMuon_noChamberMatch/I");
+  recottree_->Branch("recoMuon_isMuon", &b_recoMuon_isMuon, "recoMuon_isMuon/O");
+  recottree_->Branch("recoMuon_numberOfValidMuonGEMHits",&b_recoMuon_numberOfValidMuonGEMHits,"recoMuon_numberOfValidMuonGEMHits/I");
+  recottree_->Branch("recoMuon_numberOfValidMuonME0Hits",&b_recoMuon_numberOfValidMuonME0Hits,"recoMuon_numberOfValidMuonME0Hits/I");
 
   recottree_->Branch("recoMuon_TrkIsolation03",&b_recoMuon_TrkIso03,"recoMuon_TrkIsolation03/F");
   recottree_->Branch("recoMuon_TrkIsolation05",&b_recoMuon_TrkIso05,"recoMuon_TrkIsolation05/F");
@@ -264,7 +269,18 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_isLoose = muon::isLooseMuon(*mu);
     b_recoMuon_isME0Muon = mu->isME0Muon();
     b_recoMuon_isGEMMuon = mu->isGEMMuon();
-    b_recoMuon_noRecHitGEM = nGEMhit(mu);
+    b_recoMuon_isMuon = mu->isMuon();
+    b_recoMuon_noRecHitGEM = -1;
+    b_recoMuon_numberOfValidMuonGEMHits = -1;
+    b_recoMuon_numberOfValidMuonME0Hits = -1;
+    const reco::Track* muonTrack = 0;  
+    if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
+    else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
+    if (muonTrack){
+      b_recoMuon_noRecHitGEM = nGEMhit(mu);
+      b_recoMuon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
+      b_recoMuon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
+    }
 
     const vector<MuonChamberMatch>& chambers = mu->matches();
     b_recoMuon_noChamberMatch = chambers.size();
