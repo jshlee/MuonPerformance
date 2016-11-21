@@ -53,7 +53,11 @@ private:
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
-  float b_recoMuon_dXME0, b_recoMuon_dYME0;
+
+  float b_recoMuon_posxME0, b_recoMuon_posyME0;
+  float b_recoMuon_posxErrME0, b_recoMuon_posyErrME0;
+  float b_recoMuon_dxdzME0, b_recoMuon_dydzME0;
+  float b_recoMuon_dxdzErrME0, b_recoMuon_dydzErrME0;
 
   bool b_recoMuon_global; bool b_recoMuon_pf;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
@@ -143,8 +147,14 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
 
-  recottree_->Branch("recoMuon_dXME0", &b_recoMuon_dXME0, "recoMuon_dXME0/F");
-  recottree_->Branch("recoMuon_dYME0", &b_recoMuon_dYME0, "recoMuon_dYME0/F");
+  recottree_->Branch("recoMuon_posxME0", &b_recoMuon_posxME0, "recoMuon_posxME0/F");
+  recottree_->Branch("recoMuon_posyME0", &b_recoMuon_posyME0, "recoMuon_posyME0/F");
+  recottree_->Branch("recoMuon_posxErrME0", &b_recoMuon_posxErrME0, "recoMuon_posxErrME0/F");
+  recottree_->Branch("recoMuon_posyErrME0", &b_recoMuon_posyErrME0, "recoMuon_posyErrME0/F");
+  recottree_->Branch("recoMuon_dxdzME0", &b_recoMuon_dxdzME0, "recoMuon_dxdzME0/F");
+  recottree_->Branch("recoMuon_dydzME0", &b_recoMuon_dydzME0, "recoMuon_dydzME0/F");
+  recottree_->Branch("recoMuon_dxdzErrME0", &b_recoMuon_dxdzErrME0, "recoMuon_dxdzErrME0/F");
+  recottree_->Branch("recoMuon_dydzErrME0", &b_recoMuon_dydzErrME0, "recoMuon_dydzErrME0/F");
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
@@ -290,9 +300,17 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_noSegmentRPC = 0;
     b_recoMuon_noSegmentGEM = 0;
     b_recoMuon_noSegmentME0 = 0;
+
     b_recoMuon_noRecHitME0 = 0;
-    b_recoMuon_dXME0 = 0;
-    b_recoMuon_dYME0 = 0;    
+
+    b_recoMuon_posxME0 = 0;
+    b_recoMuon_posyME0 = 0;
+    b_recoMuon_posxErrME0 = 0;
+    b_recoMuon_posyErrME0 = 0;
+    b_recoMuon_dxdzME0 = 0;
+    b_recoMuon_dydzME0 = 0;    
+    b_recoMuon_dxdzErrME0 = 0;    
+    b_recoMuon_dydzErrME0 = 0;    
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
@@ -330,8 +348,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       auto me0Segment = (*(*segment).me0SegmentRef);
 	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
 
-      b_recoMuon_dXME0 += (*segment).dXdZ;
-      b_recoMuon_dYME0 += (*segment).dYdZ;
+      b_recoMuon_posxME0 += (*segment).x;
+      b_recoMuon_posyME0 += (*segment).y;
+      b_recoMuon_posxErrME0 += (*segment).xErr;
+      b_recoMuon_posyErrME0 += (*segment).yErr;
+      b_recoMuon_dxdzME0 += (*segment).dXdZ;
+      b_recoMuon_dydzME0 += (*segment).dYdZ;
+      b_recoMuon_dxdzErrME0 += (*segment).dXdZErr;
+      b_recoMuon_dydzErrME0 += (*segment).dYdZErr;
+
 	}
       }
       
