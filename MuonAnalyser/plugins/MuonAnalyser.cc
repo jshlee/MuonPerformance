@@ -14,6 +14,7 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/MuonReco/interface/MuonTime.h"
 
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
@@ -54,10 +55,18 @@ private:
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
 
-  float b_recoMuon_posxME0, b_recoMuon_posyME0;
-  float b_recoMuon_posxErrME0, b_recoMuon_posyErrME0;
-  float b_recoMuon_dxdzME0, b_recoMuon_dydzME0;
-  float b_recoMuon_dxdzErrME0, b_recoMuon_dydzErrME0;
+  float b_recoMuon_edgeXME0, b_recoMuon_edgeYME0;
+  float b_recoMuon_chamberMatchXME0, b_recoMuon_chamberMatchYME0;
+  float b_recoMuon_chamberMatchXErrME0, b_recoMuon_chamberMatchYErrME0;
+  float b_recoMuon_chamberMatchDXDZME0, b_recoMuon_chamberMatchDYDZME0;
+  float b_recoMuon_chamberMatchDXDZErrME0, b_recoMuon_chamberMatchDYDZErrME0;
+  float b_recoMuon_distance, b_recoMuon_distErr;
+  float b_recoMuon_segmentMatchXME0, b_recoMuon_segmentMatchYME0;
+  float b_recoMuon_segmentMatchXErrME0, b_recoMuon_segmentMatchYErrME0;
+  float b_recoMuon_segmentMatchDXDZME0, b_recoMuon_segmentMatchDYDZME0;
+  float b_recoMuon_segmentMatchDXDZErrME0, b_recoMuon_segmentMatchDYDZErrME0;
+
+  float b_recoMuon_deltaXME0, b_recoMuon_deltaYME0;
 
   bool b_recoMuon_global; bool b_recoMuon_pf;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
@@ -147,14 +156,31 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
 
-  recottree_->Branch("recoMuon_posxME0", &b_recoMuon_posxME0, "recoMuon_posxME0/F");
-  recottree_->Branch("recoMuon_posyME0", &b_recoMuon_posyME0, "recoMuon_posyME0/F");
-  recottree_->Branch("recoMuon_posxErrME0", &b_recoMuon_posxErrME0, "recoMuon_posxErrME0/F");
-  recottree_->Branch("recoMuon_posyErrME0", &b_recoMuon_posyErrME0, "recoMuon_posyErrME0/F");
-  recottree_->Branch("recoMuon_dxdzME0", &b_recoMuon_dxdzME0, "recoMuon_dxdzME0/F");
-  recottree_->Branch("recoMuon_dydzME0", &b_recoMuon_dydzME0, "recoMuon_dydzME0/F");
-  recottree_->Branch("recoMuon_dxdzErrME0", &b_recoMuon_dxdzErrME0, "recoMuon_dxdzErrME0/F");
-  recottree_->Branch("recoMuon_dydzErrME0", &b_recoMuon_dydzErrME0, "recoMuon_dydzErrME0/F");
+  recottree_->Branch("recoMuon_edgeXME0", &b_recoMuon_edgeXME0, "recoMuon_edgeXME0/F");
+  recottree_->Branch("recoMuon_edgeYME0", &b_recoMuon_edgeXME0, "recoMuon_edgeYME0/F");
+  recottree_->Branch("recoMuon_chamberMatchXME0", &b_recoMuon_chamberMatchXME0, "recoMuon_chamberMatchXME0/F");
+  recottree_->Branch("recoMuon_chamberMatchYME0", &b_recoMuon_chamberMatchYME0, "recoMuon_chamberMatchYME0/F");
+  recottree_->Branch("recoMuon_chamberMatchXErrME0", &b_recoMuon_chamberMatchXErrME0, "recoMuon_chamberMatchXErrME0/F");
+  recottree_->Branch("recoMuon_chamberMatchYErrME0", &b_recoMuon_chamberMatchYErrME0, "recoMuon_chamberMatchYErrME0/F");
+  recottree_->Branch("recoMuon_chamberMatchDXDZME0", &b_recoMuon_chamberMatchDXDZME0, "recoMuon_chamberMatchDXDZME0/F");
+  recottree_->Branch("recoMuon_chamberMatchDYDZME0", &b_recoMuon_chamberMatchDYDZME0, "recoMuon_chamberMatchDYDZME0/F");
+  recottree_->Branch("recoMuon_chamberMatchDXDZErrME0", &b_recoMuon_chamberMatchDXDZErrME0, "recoMuon_chamberMatchDXDZErrME0/F");
+  recottree_->Branch("recoMuon_chamberMatchDYDZErrME0", &b_recoMuon_chamberMatchDYDZErrME0, "recoMuon_chamberMatchDYDZErrME0/F");
+
+  recottree_->Branch("recoMuon_segmentMatchXME0", &b_recoMuon_segmentMatchXME0, "recoMuon_segmentMatchXME0/F");
+  recottree_->Branch("recoMuon_segmentMatchYME0", &b_recoMuon_segmentMatchYME0, "recoMuon_segmentMatchYME0/F");
+  recottree_->Branch("recoMuon_segmentMatchXErrME0", &b_recoMuon_segmentMatchXErrME0, "recoMuon_segmentMatchXErrME0/F");
+  recottree_->Branch("recoMuon_segmentMatchYErrME0", &b_recoMuon_segmentMatchYErrME0, "recoMuon_segmentMatchYErrME0/F");
+  recottree_->Branch("recoMuon_segmentMatchDXDZME0", &b_recoMuon_segmentMatchDXDZME0, "recoMuon_segmentMatchDXDZME0/F");
+  recottree_->Branch("recoMuon_segmentMatchDYDZME0", &b_recoMuon_segmentMatchDYDZME0, "recoMuon_segmentMatchDYDZME0/F");
+  recottree_->Branch("recoMuon_segmentMatchDXDZErrME0", &b_recoMuon_segmentMatchDXDZErrME0, "recoMuon_segmentMatchDXDZErrME0/F");
+  recottree_->Branch("recoMuon_segmentMatchDYDZErrME0", &b_recoMuon_segmentMatchDYDZErrME0, "recoMuon_segmentMatchDYDZErrME0/F");
+
+  recottree_->Branch("recoMuon_deltaXME0", &b_recoMuon_deltaXME0, "recoMuon_deltaXME0/F");
+  recottree_->Branch("recoMuon_deltaYME0", &b_recoMuon_deltaYME0, "recoMuon_deltaYME0/F");
+
+  recottree_->Branch("recoMuon_distance", &b_recoMuon_distance, "recoMuon_distance/F");
+  recottree_->Branch("recoMuon_distErr", &b_recoMuon_distErr, "recoMuon_distErr/F");
 
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
@@ -303,14 +329,31 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     b_recoMuon_noRecHitME0 = 0;
 
-    b_recoMuon_posxME0 = 0;
-    b_recoMuon_posyME0 = 0;
-    b_recoMuon_posxErrME0 = 0;
-    b_recoMuon_posyErrME0 = 0;
-    b_recoMuon_dxdzME0 = 0;
-    b_recoMuon_dydzME0 = 0;    
-    b_recoMuon_dxdzErrME0 = 0;    
-    b_recoMuon_dydzErrME0 = 0;    
+    b_recoMuon_edgeXME0 = 0;
+    b_recoMuon_edgeYME0 = 0;
+    b_recoMuon_chamberMatchXME0 = 0;
+    b_recoMuon_chamberMatchYME0 = 0;
+    b_recoMuon_chamberMatchXErrME0 = 0;
+    b_recoMuon_chamberMatchYErrME0 = 0;
+    b_recoMuon_chamberMatchDXDZME0 = 0;
+    b_recoMuon_chamberMatchDYDZME0 = 0;    
+    b_recoMuon_chamberMatchDXDZErrME0 = 0;    
+    b_recoMuon_chamberMatchDYDZErrME0 = 0;    
+
+    b_recoMuon_segmentMatchXME0 = 0;
+    b_recoMuon_segmentMatchYME0 = 0;
+    b_recoMuon_segmentMatchXErrME0 = 0;
+    b_recoMuon_segmentMatchYErrME0 = 0;
+    b_recoMuon_segmentMatchDXDZME0 = 0;
+    b_recoMuon_segmentMatchDYDZME0 = 0;    
+    b_recoMuon_segmentMatchDXDZErrME0 = 0;    
+    b_recoMuon_segmentMatchDYDZErrME0 = 0;    
+
+    b_recoMuon_distance = 0;
+    b_recoMuon_distErr = 0;
+
+    b_recoMuon_deltaXME0 = 0;
+    b_recoMuon_deltaYME0 = 0;
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
@@ -340,22 +383,50 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  ++b_recoMuon_noSegmentGEM;
 	}
       }
-      
+
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
 	++b_recoMuon_noSegment;      
-	if (chamber->detector() == 5){ //me0
+	if (chamber->detector() == 5){ //me0, chamber->detector() = muonSubdetId
 	  ++b_recoMuon_noSegmentME0;
       auto me0Segment = (*(*segment).me0SegmentRef);
-	  b_recoMuon_noRecHitME0 += me0Segment.nRecHits();
+	  b_recoMuon_noRecHitME0 = me0Segment.nRecHits();
 
-      b_recoMuon_posxME0 += (*segment).x;
-      b_recoMuon_posyME0 += (*segment).y;
-      b_recoMuon_posxErrME0 += (*segment).xErr;
-      b_recoMuon_posyErrME0 += (*segment).yErr;
-      b_recoMuon_dxdzME0 += (*segment).dXdZ;
-      b_recoMuon_dydzME0 += (*segment).dYdZ;
-      b_recoMuon_dxdzErrME0 += (*segment).dXdZErr;
-      b_recoMuon_dydzErrME0 += (*segment).dYdZErr;
+      b_recoMuon_edgeXME0 = chamber->edgeX;
+      b_recoMuon_edgeYME0 = chamber->edgeY;
+      b_recoMuon_chamberMatchXME0 = chamber->x; // x position of the track
+      b_recoMuon_chamberMatchYME0 = chamber->y;
+      b_recoMuon_chamberMatchXErrME0 = chamber->xErr;
+      b_recoMuon_chamberMatchYErrME0 = chamber->yErr;
+      b_recoMuon_chamberMatchDXDZME0 = chamber->dXdZ;
+      b_recoMuon_chamberMatchDYDZME0 = chamber->dYdZ;
+      b_recoMuon_chamberMatchDXDZErrME0 = chamber->dXdZErr;
+      b_recoMuon_chamberMatchDYDZErrME0 = chamber->dYdZErr;
+
+      b_recoMuon_segmentMatchXME0 = segment->x; // x position of the matched segment
+      b_recoMuon_segmentMatchYME0 = segment->y;
+      b_recoMuon_segmentMatchXErrME0 = segment->xErr;
+      b_recoMuon_segmentMatchYErrME0 = segment->yErr;
+      b_recoMuon_segmentMatchDXDZME0 = segment->dXdZ;
+      b_recoMuon_segmentMatchDYDZME0 = segment->dYdZ;
+      b_recoMuon_segmentMatchDXDZErrME0 = segment->dXdZErr;
+      b_recoMuon_segmentMatchDYDZErrME0 = segment->dYdZErr;
+
+      b_recoMuon_distance = chamber->dist();
+      b_recoMuon_distErr = chamber->distErr();
+    
+      //b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) / sqrt(pow(b_recoMuon_chamberMatchXErrME0, 2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
+      b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) );
+      b_recoMuon_deltaYME0 = fabs( (b_recoMuon_chamberMatchYME0-b_recoMuon_segmentMatchYME0) );
+      
+
+      //cout << "station = " << chamber->station() << endl;
+      //cout << "detector = " << chamber->detector() << endl;
+
+      //b_recoMuon_isMaskBestInME0ByDX = segment->isMask((*segment).BestInChamberByDX);
+      //Mask += segment->mask;
+      //cout << "flag:   " << (*segment).BestInChamberByDX << endl;
+      //cout << "mask:   " << (*segment).mask << endl;
+      //cout << "isMask: " << segment->isMask((*segment).BestInChamberByDX) << endl;
 
 	}
       }
