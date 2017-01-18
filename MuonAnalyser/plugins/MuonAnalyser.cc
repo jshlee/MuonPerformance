@@ -67,6 +67,9 @@ private:
   float b_recoMuon_segmentMatchDXDZErrME0, b_recoMuon_segmentMatchDYDZErrME0;
 
   float b_recoMuon_deltaXME0, b_recoMuon_deltaYME0;
+  float b_recoMuon_deltaXErrME0, b_recoMuon_deltaYErrME0;
+  float b_recoMuon_deltaSlopeXME0, b_recoMuon_deltaSlopeYME0;
+  float b_recoMuon_deltaSlopeXErrME0, b_recoMuon_deltaSlopeYErrME0;
 
   bool b_recoMuon_global; bool b_recoMuon_pf;
   float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
@@ -157,7 +160,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
 
   recottree_->Branch("recoMuon_edgeXME0", &b_recoMuon_edgeXME0, "recoMuon_edgeXME0/F");
-  recottree_->Branch("recoMuon_edgeYME0", &b_recoMuon_edgeXME0, "recoMuon_edgeYME0/F");
+  recottree_->Branch("recoMuon_edgeYME0", &b_recoMuon_edgeYME0, "recoMuon_edgeYME0/F");
   recottree_->Branch("recoMuon_chamberMatchXME0", &b_recoMuon_chamberMatchXME0, "recoMuon_chamberMatchXME0/F");
   recottree_->Branch("recoMuon_chamberMatchYME0", &b_recoMuon_chamberMatchYME0, "recoMuon_chamberMatchYME0/F");
   recottree_->Branch("recoMuon_chamberMatchXErrME0", &b_recoMuon_chamberMatchXErrME0, "recoMuon_chamberMatchXErrME0/F");
@@ -178,6 +181,13 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   recottree_->Branch("recoMuon_deltaXME0", &b_recoMuon_deltaXME0, "recoMuon_deltaXME0/F");
   recottree_->Branch("recoMuon_deltaYME0", &b_recoMuon_deltaYME0, "recoMuon_deltaYME0/F");
+  recottree_->Branch("recoMuon_deltaXErrME0", &b_recoMuon_deltaXErrME0, "recoMuon_deltaXErrME0/F");
+  recottree_->Branch("recoMuon_deltaYErrME0", &b_recoMuon_deltaYErrME0, "recoMuon_deltaYErrME0/F");
+
+  recottree_->Branch("recoMuon_deltaSlopeXME0", &b_recoMuon_deltaSlopeXME0, "recoMuon_deltaSlopeXME0/F");
+  recottree_->Branch("recoMuon_deltaSlopeYME0", &b_recoMuon_deltaSlopeYME0, "recoMuon_deltaSlopeYME0/F");
+  recottree_->Branch("recoMuon_deltaSlopeXErrME0", &b_recoMuon_deltaSlopeXErrME0, "recoMuon_deltaSlopeXErrME0/F");
+  recottree_->Branch("recoMuon_deltaSlopeYErrME0", &b_recoMuon_deltaSlopeYErrME0, "recoMuon_deltaSlopeYErrME0/F");
 
   recottree_->Branch("recoMuon_distance", &b_recoMuon_distance, "recoMuon_distance/F");
   recottree_->Branch("recoMuon_distErr", &b_recoMuon_distErr, "recoMuon_distErr/F");
@@ -354,6 +364,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     b_recoMuon_deltaXME0 = 0;
     b_recoMuon_deltaYME0 = 0;
+    b_recoMuon_deltaXErrME0 = 0;
+    b_recoMuon_deltaYErrME0 = 0;
+    b_recoMuon_deltaSlopeXME0 = 0;
+    b_recoMuon_deltaSlopeYME0 = 0;
+    b_recoMuon_deltaSlopeXErrME0 = 0;
+    b_recoMuon_deltaSlopeYErrME0 = 0;
 
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
 
@@ -412,12 +428,18 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       b_recoMuon_segmentMatchDYDZErrME0 = segment->dYdZErr;
 
       b_recoMuon_distance = chamber->dist();
-      b_recoMuon_distErr = chamber->distErr();
-    
+      b_recoMuon_distErr = chamber->distErr();    
+
       //b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) / sqrt(pow(b_recoMuon_chamberMatchXErrME0, 2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
-      b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) );
-      b_recoMuon_deltaYME0 = fabs( (b_recoMuon_chamberMatchYME0-b_recoMuon_segmentMatchYME0) );
-      
+      b_recoMuon_deltaXME0 = fabs( b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0 );
+      b_recoMuon_deltaYME0 = fabs( b_recoMuon_chamberMatchYME0-b_recoMuon_segmentMatchYME0 );
+      b_recoMuon_deltaXErrME0 = fabs( b_recoMuon_chamberMatchXErrME0+b_recoMuon_segmentMatchXErrME0 );
+      b_recoMuon_deltaYErrME0 = fabs( b_recoMuon_chamberMatchYErrME0+b_recoMuon_segmentMatchYErrME0 );
+
+      b_recoMuon_deltaSlopeXME0 = fabs( b_recoMuon_chamberMatchDXDZME0-b_recoMuon_segmentMatchDXDZME0 );
+      b_recoMuon_deltaSlopeYME0 = fabs( b_recoMuon_chamberMatchDYDZME0-b_recoMuon_segmentMatchDYDZME0 );
+      b_recoMuon_deltaSlopeXErrME0 = fabs( b_recoMuon_chamberMatchDXDZErrME0-b_recoMuon_segmentMatchDXDZErrME0 );
+      b_recoMuon_deltaSlopeYErrME0 = fabs( b_recoMuon_chamberMatchDYDZErrME0-b_recoMuon_segmentMatchDYDZErrME0 );
 
       //cout << "station = " << chamber->station() << endl;
       //cout << "detector = " << chamber->detector() << endl;
