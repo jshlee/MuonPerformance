@@ -2,15 +2,15 @@ import FWCore.ParameterSet.Config as cms
 import os
 
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process("MuonAnalyser",eras.Phase2C1)
+process = cms.Process("MuonAnalyser",eras.Phase2C2_timing)
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
-process.load('Configuration.Geometry.GeometryExtended2023D1Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2023D4Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2023_realistic_v1', '')
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
@@ -36,6 +36,7 @@ process.source = cms.Source("PoolSource",
       #'file:/cms/scratch/jlee/muonHisto/TTbar_13TeV_TuneCUETP8M1_2023D1.root' #TTbar
       #'file:/cms/scratch/jlee/muonHisto/QCD_Pt_600_800_13TeV_TuneCUETP8M1_2023D1.root' #QCD
       #'file:/cms/scratch/jlee/muonHisto/TenMuExtendedE_0_200_pythia8_2023D1.root' #pu0 in ~doc/my/QCDandTTbar.txt
+      'file:086EEBBD-67C2-E611-BD7D-0CC47A4D761A.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
@@ -67,29 +68,3 @@ process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3)
 process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3)
 
 process.p = cms.Path(process.muonAssociatorByHitsHelper+process.MuonAnalyser)
-
-
-
-
-
-############## To make a output root file ###############
-
-#process.load('Configuration.StandardSequences.Services_cff')
-#process.load('Configuration.EventContent.EventContent_cff')
-#process.load('Configuration.StandardSequences.EndOfProcess_cff')
-#process.output = cms.OutputModule("PoolOutputModule",
-#    fileName = cms.untracked.string(
-#        'file:out_test.root'
-#    ),
-#    outputCommands = cms.untracked.vstring(
-#        'keep  *_*_*_*',
-#    ),
-#)
-#process.out_step     = cms.EndPath(process.output)
-#process.p = cms.Path(process.gemMuonSel*process.muonAssociatorByHits*process.MuonAnalyser)
-#process.p = cms.Path(process.gemMuonSel)
-#process.out_step = cms.EndPath(process.output)
-#process.schedule = cms.Schedule(
-#    process.p,
-#    process.out_step
-#)
