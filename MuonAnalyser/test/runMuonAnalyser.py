@@ -15,6 +15,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2023_realistic_v1',
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
 
+"""
 #process.MessageLogger.categories.append("MuonAnalyser")
 process.MessageLogger.debugModules = cms.untracked.vstring("*")
 process.MessageLogger.destinations = cms.untracked.vstring("cout","junk")
@@ -25,30 +26,23 @@ process.MessageLogger.cout = cms.untracked.PSet(
     #MuonAnalyser   = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
     #MuonAnalyser_Matching = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
 )
+"""
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      #'file:/cms/scratch/jlee/upgradeMuonReco/reco.root'
-      #'file:/cms/scratch/jlee/upgradeMuonReco/RelValZMM_13_reco.root'
-      #'file:/cms/scratch/jlee/upgradeMuonReco/RelValTenMuExtendedE_0_200_reco.root'
-      #'file:/xrootd/store/user/jlee/RelValTenMuExtendedE_0_200/crab_20161014_004717/161013_154753/0000/*.root' #pu0
-      #'file:/xrootd/store/user/jlee/RelValTenMuExtendedE_0_200/crab_20161014_004624/161013_154703/0000/*.root' #pu200
-      #'file:/cms/scratch/jlee/muonHisto/TTbar_13TeV_TuneCUETP8M1_2023D1.root' #TTbar
-      #'file:/cms/scratch/jlee/muonHisto/QCD_Pt_600_800_13TeV_TuneCUETP8M1_2023D1.root' #QCD
-      #'file:/cms/scratch/jlee/muonHisto/TenMuExtendedE_0_200_pythia8_2023D1.root' #pu0 in ~doc/my/QCDandTTbar.txt
-      'file:086EEBBD-67C2-E611-BD7D-0CC47A4D761A.root'
+      'file:/xrootd/store/relval/CMSSW_9_0_0_pre2/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v1_2023D4Timing-v1/10000/086EEBBD-67C2-E611-BD7D-0CC47A4D761A.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
 
+#to run for entire sample
 """
-#run for entire sample
 dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
 filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 process.source.fileNames = filelst.readlines()
 """
-#process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0/TTbar_pu0.root"))
+
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
@@ -68,3 +62,4 @@ process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3)
 process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3)
 
 process.p = cms.Path(process.muonAssociatorByHitsHelper+process.MuonAnalyser)
+
