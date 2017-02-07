@@ -15,6 +15,7 @@
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "DataFormats/MuonReco/interface/MuonFwd.h"
 #include "DataFormats/MuonReco/interface/MuonTime.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "RecoParticleFlow/PFProducer/interface/PFMuonAlgo.h"
 
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
@@ -34,7 +35,17 @@
 #include <TFile.h>
 #include <TLorentzVector.h>
 
+using namespace std;
+using namespace reco;
+using namespace edm;
+
 class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+  struct puppiIso {
+    double combined;
+    double withLep;
+    double withoutlep;
+  };
+
 public:
   explicit MuonAnalyser(const edm::ParameterSet&);
   ~MuonAnalyser();
@@ -45,6 +56,11 @@ public:
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
   int nGEMhit(const reco::Muon * mu) const;
   void treereset();
+  
+  puppiIso getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs) const;
+  bool isNH( long pdgid );
+  bool isCH( long pdgid );
+  bool isPH( long pdgid );
 
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -106,18 +122,18 @@ private:
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
+  edm::EDGetTokenT <std::vector< pat::PackedCandidate> > tokenPackedCandidate ;
 
   TrackingParticleSelector tpSelector_;
 };
-using namespace std;
-using namespace reco;
-using namespace edm;
+
 MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
   vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
+  tokenPackedCandidate = consumes <std::vector< pat::PackedCandidate> > ( edm::InputTag( std::string("packedPFCandidates"), std::string(""),std::string("") ) );
 
   ParameterSet tpset = pset.getParameter<ParameterSet>("tpSelector");
   tpSelector_ = TrackingParticleSelector(tpset.getParameter<double>("ptMin"),
@@ -256,6 +272,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   Handle<View<Muon> > muonHandle;
   iEvent.getByToken(muonToken_, muonHandle);
+
+  edm::Handle<std::vector< pat::PackedCandidate> > Candidates_Collection ;
+  iEvent.getByToken( tokenPackedCandidate , Candidates_Collection ) ; 
+  const std::vector<pat::PackedCandidate> * candidates = Candidates_Collection.product();
   
   reco::MuonToSimCollection muonToSimColl; reco::SimToMuonCollection simToMuonColl;  
   Handle<MuonToTrackingParticleAssociator> associatorBase;
@@ -289,13 +309,16 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if ( !MuRefV.empty()) {
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
-    b_genMuon_signal = true;
+	b_genMuon_signal = true;
 
-    b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
-    b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
-    b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
-    b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+	b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
+	b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
+	b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
+	b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
 
+	puppiIso pIso = getPuppiIso( mu, candidates);
+	cout << "pIso.combined "<< pIso.combined  <<endl;
+	
 	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
 	b_genMuon_isMedium = muon::isMediumMuon(*mu);
@@ -303,7 +326,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isME0Muon = mu->isME0Muon();
 	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_isMuon = mu->isMuon();
-
+	
 	const reco::Track* muonTrack = 0;  
 	if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
 	else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
@@ -313,10 +336,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  b_genMuon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
 	}
 
-    tmvaValues.clear();
-    tmvaValues = collectTMVAvalues(*mu, pv0);
-    b_genMuon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
-    b_genMuon_tmva_mlp = mlp_->GetMvaValue(tmvaValues);
+	tmvaValues.clear();
+	tmvaValues = collectTMVAvalues(*mu, pv0);
+	b_genMuon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
+	b_genMuon_tmva_mlp = mlp_->GetMvaValue(tmvaValues);
       }
     }
     
@@ -457,55 +480,55 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	++b_recoMuon_noSegment;      
 	if (chamber->detector() == 5){ //me0, chamber->detector() = muonSubdetId
 	  ++b_recoMuon_noSegmentME0;
-      auto me0Segment = (*(*segment).me0SegmentRef);
+	  auto me0Segment = (*(*segment).me0SegmentRef);
 	  b_recoMuon_noRecHitME0 = me0Segment.nRecHits();
 
-      b_recoMuon_edgeXME0 = chamber->edgeX;
-      b_recoMuon_edgeYME0 = chamber->edgeY;
-      b_recoMuon_chamberMatchXME0 = chamber->x; // x position of the track
-      b_recoMuon_chamberMatchYME0 = chamber->y;
-      b_recoMuon_chamberMatchXErrME0 = chamber->xErr;
-      b_recoMuon_chamberMatchYErrME0 = chamber->yErr;
-      b_recoMuon_chamberMatchDXDZME0 = chamber->dXdZ;
-      b_recoMuon_chamberMatchDYDZME0 = chamber->dYdZ;
-      b_recoMuon_chamberMatchDXDZErrME0 = chamber->dXdZErr;
-      b_recoMuon_chamberMatchDYDZErrME0 = chamber->dYdZErr;
+	  b_recoMuon_edgeXME0 = chamber->edgeX;
+	  b_recoMuon_edgeYME0 = chamber->edgeY;
+	  b_recoMuon_chamberMatchXME0 = chamber->x; // x position of the track
+	  b_recoMuon_chamberMatchYME0 = chamber->y;
+	  b_recoMuon_chamberMatchXErrME0 = chamber->xErr;
+	  b_recoMuon_chamberMatchYErrME0 = chamber->yErr;
+	  b_recoMuon_chamberMatchDXDZME0 = chamber->dXdZ;
+	  b_recoMuon_chamberMatchDYDZME0 = chamber->dYdZ;
+	  b_recoMuon_chamberMatchDXDZErrME0 = chamber->dXdZErr;
+	  b_recoMuon_chamberMatchDYDZErrME0 = chamber->dYdZErr;
 
-      b_recoMuon_segmentMatchXME0 = segment->x; // x position of the matched segment
-      b_recoMuon_segmentMatchYME0 = segment->y;
-      b_recoMuon_segmentMatchXErrME0 = segment->xErr;
-      b_recoMuon_segmentMatchYErrME0 = segment->yErr;
-      b_recoMuon_segmentMatchDXDZME0 = segment->dXdZ;
-      b_recoMuon_segmentMatchDYDZME0 = segment->dYdZ;
-      b_recoMuon_segmentMatchDXDZErrME0 = segment->dXdZErr;
-      b_recoMuon_segmentMatchDYDZErrME0 = segment->dYdZErr;
+	  b_recoMuon_segmentMatchXME0 = segment->x; // x position of the matched segment
+	  b_recoMuon_segmentMatchYME0 = segment->y;
+	  b_recoMuon_segmentMatchXErrME0 = segment->xErr;
+	  b_recoMuon_segmentMatchYErrME0 = segment->yErr;
+	  b_recoMuon_segmentMatchDXDZME0 = segment->dXdZ;
+	  b_recoMuon_segmentMatchDYDZME0 = segment->dYdZ;
+	  b_recoMuon_segmentMatchDXDZErrME0 = segment->dXdZErr;
+	  b_recoMuon_segmentMatchDYDZErrME0 = segment->dYdZErr;
 
-      b_recoMuon_distance = chamber->dist();
-      b_recoMuon_distErr = chamber->distErr();    
+	  b_recoMuon_distance = chamber->dist();
+	  b_recoMuon_distErr = chamber->distErr();    
 
-      //b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) / sqrt(pow(b_recoMuon_chamberMatchXErrME0, 2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
-      b_recoMuon_deltaXME0 = fabs( b_recoMuon_chamberMatchXME0 - b_recoMuon_segmentMatchXME0 );
-      b_recoMuon_deltaYME0 = fabs( b_recoMuon_chamberMatchYME0 - b_recoMuon_segmentMatchYME0 );
-      b_recoMuon_deltaXDivBySegErrME0 = fabs( b_recoMuon_deltaXME0 / b_recoMuon_segmentMatchXErrME0 );
-      b_recoMuon_deltaYDivBySegErrME0 = fabs( b_recoMuon_deltaYME0 / b_recoMuon_segmentMatchYErrME0 );
-      b_recoMuon_deltaXDivByChamErrME0 = fabs( b_recoMuon_deltaXME0 / sqrt(pow(b_recoMuon_chamberMatchXErrME0,2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
-      b_recoMuon_deltaYDivByChamErrME0 = fabs( b_recoMuon_deltaYME0 / sqrt(pow(b_recoMuon_chamberMatchYErrME0,2)+pow(b_recoMuon_segmentMatchYErrME0,2)) );
+	  //b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) / sqrt(pow(b_recoMuon_chamberMatchXErrME0, 2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
+	  b_recoMuon_deltaXME0 = fabs( b_recoMuon_chamberMatchXME0 - b_recoMuon_segmentMatchXME0 );
+	  b_recoMuon_deltaYME0 = fabs( b_recoMuon_chamberMatchYME0 - b_recoMuon_segmentMatchYME0 );
+	  b_recoMuon_deltaXDivBySegErrME0 = fabs( b_recoMuon_deltaXME0 / b_recoMuon_segmentMatchXErrME0 );
+	  b_recoMuon_deltaYDivBySegErrME0 = fabs( b_recoMuon_deltaYME0 / b_recoMuon_segmentMatchYErrME0 );
+	  b_recoMuon_deltaXDivByChamErrME0 = fabs( b_recoMuon_deltaXME0 / sqrt(pow(b_recoMuon_chamberMatchXErrME0,2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
+	  b_recoMuon_deltaYDivByChamErrME0 = fabs( b_recoMuon_deltaYME0 / sqrt(pow(b_recoMuon_chamberMatchYErrME0,2)+pow(b_recoMuon_segmentMatchYErrME0,2)) );
 
-      b_recoMuon_deltaDXDZME0 = fabs( b_recoMuon_chamberMatchDXDZME0-b_recoMuon_segmentMatchDXDZME0 );
-      b_recoMuon_deltaDYDZME0 = fabs( b_recoMuon_chamberMatchDYDZME0-b_recoMuon_segmentMatchDYDZME0 );
-      b_recoMuon_deltaDXDZDivBySegErrME0 = fabs( b_recoMuon_deltaDXDZME0 / b_recoMuon_segmentMatchDXDZErrME0 );
-      b_recoMuon_deltaDYDZDivBySegErrME0 = fabs( b_recoMuon_deltaDYDZME0 / b_recoMuon_segmentMatchDYDZErrME0 );
-      b_recoMuon_deltaDXDZDivByChamErrME0 = fabs( b_recoMuon_deltaDXDZME0 / sqrt(pow(b_recoMuon_chamberMatchDXDZErrME0,2)+pow(b_recoMuon_segmentMatchDXDZErrME0,2)) );
-      b_recoMuon_deltaDYDZDivByChamErrME0 = fabs( b_recoMuon_deltaDYDZME0 / sqrt(pow(b_recoMuon_chamberMatchDYDZErrME0,2)+pow(b_recoMuon_segmentMatchDYDZErrME0,2)) );
+	  b_recoMuon_deltaDXDZME0 = fabs( b_recoMuon_chamberMatchDXDZME0-b_recoMuon_segmentMatchDXDZME0 );
+	  b_recoMuon_deltaDYDZME0 = fabs( b_recoMuon_chamberMatchDYDZME0-b_recoMuon_segmentMatchDYDZME0 );
+	  b_recoMuon_deltaDXDZDivBySegErrME0 = fabs( b_recoMuon_deltaDXDZME0 / b_recoMuon_segmentMatchDXDZErrME0 );
+	  b_recoMuon_deltaDYDZDivBySegErrME0 = fabs( b_recoMuon_deltaDYDZME0 / b_recoMuon_segmentMatchDYDZErrME0 );
+	  b_recoMuon_deltaDXDZDivByChamErrME0 = fabs( b_recoMuon_deltaDXDZME0 / sqrt(pow(b_recoMuon_chamberMatchDXDZErrME0,2)+pow(b_recoMuon_segmentMatchDXDZErrME0,2)) );
+	  b_recoMuon_deltaDYDZDivByChamErrME0 = fabs( b_recoMuon_deltaDYDZME0 / sqrt(pow(b_recoMuon_chamberMatchDYDZErrME0,2)+pow(b_recoMuon_segmentMatchDYDZErrME0,2)) );
 
-      //cout << "station = " << chamber->station() << endl;
-      //cout << "detector = " << chamber->detector() << endl;
+	  //cout << "station = " << chamber->station() << endl;
+	  //cout << "detector = " << chamber->detector() << endl;
 
-      //b_recoMuon_isMaskBestInME0ByDX = segment->isMask((*segment).BestInChamberByDX);
-      //Mask += segment->mask;
-      //cout << "flag:   " << (*segment).BestInChamberByDX << endl;
-      //cout << "mask:   " << (*segment).mask << endl;
-      //cout << "isMask: " << segment->isMask((*segment).BestInChamberByDX) << endl;
+	  //b_recoMuon_isMaskBestInME0ByDX = segment->isMask((*segment).BestInChamberByDX);
+	  //Mask += segment->mask;
+	  //cout << "flag:   " << (*segment).BestInChamberByDX << endl;
+	  //cout << "mask:   " << (*segment).mask << endl;
+	  //cout << "isMask: " << segment->isMask((*segment).BestInChamberByDX) << endl;
 
 	}
       }
@@ -537,40 +560,40 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 std::vector<double> MuonAnalyser::collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const
 {
-    std::vector<double> values;
-    int dummyVal = -9;
+  std::vector<double> values;
+  int dummyVal = -9;
 
-    //Loose
-    values.push_back(mu.isGlobalMuon());
-    values.push_back(mu.isPFMuon());
-    //Medium
-    if ( mu.globalTrack().isNonnull() ){ values.push_back(mu.globalTrack()->normalizedChi2()); }
-    else { values.push_back(dummyVal); }
-    values.push_back(mu.combinedQuality().chi2LocalPosition);
-    values.push_back(mu.combinedQuality().trkKink);
-    values.push_back(muon::segmentCompatibility(mu));
-    //Tight
-    values.push_back(mu.numberOfMatchedStations());
-    if ( mu.globalTrack().isNonnull() ){ values.push_back(mu.globalTrack()->hitPattern().numberOfValidMuonHits()); }
-    else { values.push_back(dummyVal); }
-    if ( mu.muonBestTrack().isNonnull() ){
-      values.push_back(fabs(mu.muonBestTrack()->dxy(pv0.position())));
-      values.push_back(fabs(mu.muonBestTrack()->dz(pv0.position())));
-    }
-    else {
-      values.push_back(dummyVal);
-      values.push_back(dummyVal);
-    }
-    if ( mu.innerTrack().isNonnull() ){
-      values.push_back(mu.innerTrack()->hitPattern().numberOfValidPixelHits());
-      values.push_back(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement());
-    }
-    else {
-      values.push_back(dummyVal);
-      values.push_back(dummyVal);
-    }
+  //Loose
+  values.push_back(mu.isGlobalMuon());
+  values.push_back(mu.isPFMuon());
+  //Medium
+  if ( mu.globalTrack().isNonnull() ){ values.push_back(mu.globalTrack()->normalizedChi2()); }
+  else { values.push_back(dummyVal); }
+  values.push_back(mu.combinedQuality().chi2LocalPosition);
+  values.push_back(mu.combinedQuality().trkKink);
+  values.push_back(muon::segmentCompatibility(mu));
+  //Tight
+  values.push_back(mu.numberOfMatchedStations());
+  if ( mu.globalTrack().isNonnull() ){ values.push_back(mu.globalTrack()->hitPattern().numberOfValidMuonHits()); }
+  else { values.push_back(dummyVal); }
+  if ( mu.muonBestTrack().isNonnull() ){
+    values.push_back(fabs(mu.muonBestTrack()->dxy(pv0.position())));
+    values.push_back(fabs(mu.muonBestTrack()->dz(pv0.position())));
+  }
+  else {
+    values.push_back(dummyVal);
+    values.push_back(dummyVal);
+  }
+  if ( mu.innerTrack().isNonnull() ){
+    values.push_back(mu.innerTrack()->hitPattern().numberOfValidPixelHits());
+    values.push_back(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement());
+  }
+  else {
+    values.push_back(dummyVal);
+    values.push_back(dummyVal);
+  }
 
-    return values;
+  return values;
 }
 
 bool MuonAnalyser::isLooseMuonCustom(const reco::Muon& mu) const
@@ -662,6 +685,40 @@ void MuonAnalyser::treereset()
   b_recoMuon_nglobalhits = -9; b_recoMuon_nstations = -9;
   b_recoMuon_trackdxy = -9; b_recoMuon_trackdz = -9;
   b_recoMuon_ninnerhits = -9; b_recoMuon_trackerlayers = -9;
+}
+
+MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs) const
+{
+  puppiIso puppivalues;
+  for (auto pc : *pcs){
+    cout << " pc.puppiWeight() "<< pc.puppiWeight()  <<endl;
+    puppivalues.combined += pc.puppiWeight();
+  }
+  return puppivalues;
+}
+
+bool MuonAnalyser::isNH( long pdgid ){
+  const long id = abs( pdgid );
+  //     pdgId = cms.vint32(111,130,310,2112),
+  if( id == 111 ) return true ; 
+  if( id == 130 ) return true ; 
+  if( id == 310 ) return true ; 
+  if( id == 2112 ) return true ; 
+  return false;
+}
+bool MuonAnalyser::isCH( long pdgid ){
+  const long id = abs( pdgid );
+  //  pdgId = cms.vint32(211,-211,321,-321,999211,2212,-2212),
+  if( id == 211    ) return true ; 
+  if( id == 321    ) return true ; 
+  if( id == 999211 ) return true ; 
+  if( id == 2212   ) return true ; 
+  return false;
+}
+bool MuonAnalyser::isPH( long pdgid ){
+  const long id = abs( pdgid );
+  if( id == 22 ) return true ; 
+  return false;
 }
 
 DEFINE_FWK_MODULE(MuonAnalyser);
