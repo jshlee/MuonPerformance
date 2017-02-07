@@ -36,7 +36,7 @@ process.source = cms.Source("PoolSource",
       #'file:/cms/scratch/jlee/muonHisto/TTbar_13TeV_TuneCUETP8M1_2023D1.root' #TTbar
       #'file:/cms/scratch/jlee/muonHisto/QCD_Pt_600_800_13TeV_TuneCUETP8M1_2023D1.root' #QCD
       #'file:/cms/scratch/jlee/muonHisto/TenMuExtendedE_0_200_pythia8_2023D1.root' #pu0 in ~doc/my/QCDandTTbar.txt
-      'file:086EEBBD-67C2-E611-BD7D-0CC47A4D761A.root'
+      'file:/xrootd/store/relval/CMSSW_9_0_0_pre2/RelValQCD_Pt-20toInf_MuEnrichedPt15_14TeV/GEN-SIM-RECO/90X_upgrade2023_realistic_v1_2023D4Timing-v1/10000/442A9B3F-56C3-E611-A341-0CC47A4D75F4.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )

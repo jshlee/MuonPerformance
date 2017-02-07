@@ -58,6 +58,7 @@ private:
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_TrkIso05; float b_genMuon_TrkIso03;
   int b_genMuon_numberOfValidMuonGEMHits, b_genMuon_numberOfValidMuonME0Hits;
+  float b_genMuon_tmva_bdt, b_genMuon_tmva_mlp;
   
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal;
