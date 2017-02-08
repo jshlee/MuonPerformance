@@ -33,13 +33,20 @@ binning_l = [[10,5,105],[8,0,2.4],[12,-3,3],[10,5,105],[8,0,2.4],[12,-3,3]]
 
 for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi()", "recoMuon.Pt()", "abs(recoMuon.Eta())", "recoMuon.Phi()"]):
     #Get histos
+    cut = 0
     if "genMuon" in plotvar:
+        #h_ph2pu0   = getEff(datadir+"pu0.root",   "MuonAnalyser/gen", "PhaseII PU0",   binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_tmva_bdt>%d"%cut)
+        #h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_tmva_bdt>%d"%cut)
+        #h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_tmva_bdt>%f"%cut)
         h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/gen", "PhaseII PU0", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
         h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
         h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     if "recoMuon" in plotvar:
+        #h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_tmva_bdt>%f"%cut, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_tmva_bdt>%f"%cut)
+        #h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_tmva_bdt>%f"%cut, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_tmva_bdt>%f"%cut)
+        #h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_tmva_bdt>%f"%cut, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_tmva_bdt>%f"%cut)
         h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
         h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
         h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)

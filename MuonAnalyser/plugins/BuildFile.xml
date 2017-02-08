@@ -11,6 +11,7 @@
 <use name="DataFormats/MuonReco"/>
 <use name="DataFormats/HepMCCandidate"/>
 <use name="DataFormats/TrackReco"/>
+<use name="DataFormats/PatCandidates"/>
 <use name="SimMuon/MCTruth"/>
 <use name="SimTracker/Records"/>
 <use name="SimDataFormats/TrackingAnalysis"/>
