@@ -36,12 +36,10 @@ process.source = cms.Source("PoolSource",
 )
 
 #to run for entire sample
-"""
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/'
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_0_0_pre2/TenMu_'
 filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 process.source.fileNames = filelst.readlines()
-"""
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
