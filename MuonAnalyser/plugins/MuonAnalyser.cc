@@ -75,7 +75,12 @@ private:
   float b_genMuon_TrkIso05; float b_genMuon_TrkIso03;
   int b_genMuon_numberOfValidMuonGEMHits, b_genMuon_numberOfValidMuonME0Hits;
   float b_genMuon_tmva_bdt, b_genMuon_tmva_mlp;
-  
+
+  float b_genMuon_deltaXME0, b_genMuon_deltaYME0;
+  float b_genMuon_deltaXErrME0, b_genMuon_deltaYErrME0;
+  float b_genMuon_deltaDXDZME0, b_genMuon_deltaDYDZME0;
+  float b_genMuon_deltaDXDZErrME0, b_genMuon_deltaDYDZErrME0;
+
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal;
   bool b_recoMuon_isTightOptimized, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
@@ -170,6 +175,15 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_signal", &b_genMuon_signal, "genMuon_signal/O");
   genttree_->Branch("genMuon_tmva_bdt", &b_genMuon_tmva_bdt, "genMuon_tmva_bdt/F");
   genttree_->Branch("genMuon_tmva_mlp", &b_genMuon_tmva_mlp, "genMuon_tmva_mlp/F");
+
+  genttree_->Branch("genMuon_deltaXME0", &b_genMuon_deltaXME0, "genMuon_deltaXME0/F");
+  genttree_->Branch("genMuon_deltaYME0", &b_genMuon_deltaYME0, "genMuon_deltaYME0/F");
+  genttree_->Branch("genMuon_deltaXErrME0", &b_genMuon_deltaXErrME0, "genMuon_deltaXErrME0/F");
+  genttree_->Branch("genMuon_deltaYErrME0", &b_genMuon_deltaYErrME0, "genMuon_deltaYErrME0/F");
+  genttree_->Branch("genMuon_deltaDXDZME0", &b_genMuon_deltaDXDZME0, "genMuon_deltaDXDZME0/F");
+  genttree_->Branch("genMuon_deltaDYDZME0", &b_genMuon_deltaDYDZME0, "genMuon_deltaDYDZME0/F");
+  genttree_->Branch("genMuon_deltaDXDZErrME0", &b_genMuon_deltaDXDZErrME0, "genMuon_deltaDXDZErrME0/F");
+  genttree_->Branch("genMuon_deltaDYDZErrME0", &b_genMuon_deltaDYDZErrME0, "genMuon_deltaDYDZErrME0/F");
 
   recottree_ = fs->make<TTree>("reco", "reco");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
@@ -304,6 +318,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_numberOfValidMuonGEMHits = -1;
     b_genMuon_numberOfValidMuonME0Hits = -1;
 
+    b_genMuon_deltaXME0 = 0;
+    b_genMuon_deltaYME0 = 0;
+    b_genMuon_deltaXErrME0 = 0;
+    b_genMuon_deltaYErrME0 = 0;
+    b_genMuon_deltaDXDZME0 = 0;
+    b_genMuon_deltaDYDZME0 = 0;
+    b_genMuon_deltaDXDZErrME0 = 0;
+    b_genMuon_deltaDYDZErrME0 = 0;
+
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
@@ -326,6 +349,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isME0Muon = mu->isME0Muon();
 	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_isMuon = mu->isMuon();
+
+    b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
+    b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
+    b_genMuon_deltaXErrME0 = mu->pullX(0,5, mu->ME0SegmentAndTrackArbitration); // delta X divided by segment error and propagation error
+    b_genMuon_deltaYErrME0 = mu->pullY(0,5, mu->ME0SegmentAndTrackArbitration);
+    b_genMuon_deltaDXDZME0 = mu->dDxDz(0,5, mu->ME0SegmentAndTrackArbitration); // slope difference of track and segment
+    b_genMuon_deltaDYDZME0 = mu->dDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
+    b_genMuon_deltaDXDZErrME0 = mu->pullDxDz(0,5, mu->ME0SegmentAndTrackArbitration); //delta dXdZ divided by segment error and propagation error
+    b_genMuon_deltaDYDZErrME0 = mu->pullDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
 	
 	const reco::Track* muonTrack = 0;  
 	if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
@@ -691,7 +723,7 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
 {
   puppiIso puppivalues;
   for (auto pc : *pcs){
-    cout << " pc.puppiWeight() "<< pc.puppiWeight()  <<endl;
+    //cout << " pc.puppiWeight() "<< pc.puppiWeight()  <<endl;
     puppivalues.combined += pc.puppiWeight();
   }
   return puppivalues;
