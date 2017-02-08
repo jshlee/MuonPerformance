@@ -59,5 +59,16 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
 process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3)
 process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3)
 
-process.p = cms.Path(process.muonAssociatorByHitsHelper+process.MuonAnalyser)
+process.load('CommonTools.PileupAlgos.Puppi_cff')
+process.pfNoLepPUPPI = cms.EDFilter("PdgIdCandViewSelector",
+                                    src = cms.InputTag("particleFlow"), 
+                                    pdgId = cms.vint32( 1,2,22,111,130,310,2112,211,-211,321,-321,999211,2212,-2212 )
+                                    )
+process.puppiNoLep = process.puppi.clone()
+process.puppiNoLep.candName = cms.InputTag('pfNoLepPUPPI') 
+process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.offlineSlimmedPrimaryVertices_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.packedPFCandidates_cfi")
 
+process.p = cms.Path(process.packedPFCandidates+process.muonAssociatorByHitsHelper+process.MuonAnalyser)
