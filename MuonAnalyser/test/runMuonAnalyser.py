@@ -28,6 +28,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 )
 """
 
+# Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
       'file:/xrootd/store/relval/CMSSW_9_0_0_pre2/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v1_2023D4Timing-v1/10000/086EEBBD-67C2-E611-BD7D-0CC47A4D761A.root'
