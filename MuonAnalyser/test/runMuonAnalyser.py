@@ -28,25 +28,17 @@ process.MessageLogger.cout = cms.untracked.PSet(
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      #'file:/cms/scratch/jlee/upgradeMuonReco/reco.root'
-      #'file:/cms/scratch/jlee/upgradeMuonReco/RelValZMM_13_reco.root'
-      #'file:/cms/scratch/jlee/upgradeMuonReco/RelValTenMuExtendedE_0_200_reco.root'
-      #'file:/xrootd/store/user/jlee/RelValTenMuExtendedE_0_200/crab_20161014_004717/161013_154753/0000/*.root' #pu0
-      #'file:/xrootd/store/user/jlee/RelValTenMuExtendedE_0_200/crab_20161014_004624/161013_154703/0000/*.root' #pu200
-      #'file:/cms/scratch/jlee/muonHisto/TTbar_13TeV_TuneCUETP8M1_2023D1.root' #TTbar
-      #'file:/cms/scratch/jlee/muonHisto/QCD_Pt_600_800_13TeV_TuneCUETP8M1_2023D1.root' #QCD
-      #'file:/cms/scratch/jlee/muonHisto/TenMuExtendedE_0_200_pythia8_2023D1.root' #pu0 in ~doc/my/QCDandTTbar.txt
-      #'file:/xrootd/store/relval/CMSSW_9_0_0_pre2/RelValQCD_Pt-20toInf_MuEnrichedPt15_14TeV/GEN-SIM-RECO/90X_upgrade2023_realistic_v1_2023D4Timing-v1/10000/442A9B3F-56C3-E611-A341-0CC47A4D75F4.root'
+      'file:/cms/home/jlee/scratch/pfmuon/src/22811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4Timing_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4Timing+RecoFullGlobal_2023D4Timing+HARVESTFullGlobal_2023D4Timing/step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
 
 
 #run for entire sample
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/my/'
-filelst = open(dir+"TenMuPU0.txt", "r")
+#dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/my/'
+#filelst = open(dir+"TenMuPU0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
-process.source.fileNames = filelst.readlines()
+#process.source.fileNames = filelst.readlines()
 
 #process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0/TTbar_pu0.root"))
 process.TFileService = cms.Service("TFileService",fileName = cms.string("TenMuPU0.root"))
