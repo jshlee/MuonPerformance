@@ -58,9 +58,9 @@ public:
   void treereset();
   
   puppiIso getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs) const;
-  bool isNH( long pdgid );
-  bool isCH( long pdgid );
-  bool isPH( long pdgid );
+  bool isNH( long pdgid ) const;
+  bool isCH( long pdgid ) const;
+  bool isPH( long pdgid ) const;
 
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -73,6 +73,7 @@ private:
   int b_genMuon_noRecHitGEM;
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_TrkIso05; float b_genMuon_TrkIso03;
+  float b_genMuon_puppiIsoWithLep, b_genMuon_puppiIsoWithoutLep, b_genMuon_puppiIsoCombined;
   int b_genMuon_numberOfValidMuonGEMHits, b_genMuon_numberOfValidMuonME0Hits;
   float b_genMuon_tmva_bdt, b_genMuon_tmva_mlp;
 
@@ -113,6 +114,7 @@ private:
   int b_recoMuon_pdgId;
   float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
   float b_recoMuon_TrkIso05; float b_recoMuon_TrkIso03;
+  float b_recoMuon_puppiIsoWithLep, b_recoMuon_puppiIsoWithoutLep, b_recoMuon_puppiIsoCombined;
   bool b_recoMuon_isMuon;
   int b_recoMuon_numberOfValidMuonGEMHits, b_recoMuon_numberOfValidMuonME0Hits;
 
@@ -170,6 +172,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_TrkIsolation05",&b_genMuon_TrkIso05,"genMuon_TrkIsolation05/F");
   genttree_->Branch("genMuon_PFIsolation03",&b_genMuon_pfIso03,"genMuon_PFIsolation03/F");
   genttree_->Branch("genMuon_PFIsolation04",&b_genMuon_pfIso04,"genMuon_PFIsolation04/F");
+  genttree_->Branch("genMuon_puppiIsoWithLep",&b_genMuon_puppiIsoWithLep,"genMuon_puppiIsoWithLep/F");
+  genttree_->Branch("genMuon_puppiIsoWithoutLep",&b_genMuon_puppiIsoWithoutLep,"genMuon_puppiIsoWithoutLep/F");
+  genttree_->Branch("genMuon_puppiIsoCombined",&b_genMuon_puppiIsoCombined,"genMuon_puppiIsoCombined/F");
   genttree_->Branch("genMuon_numberOfValidMuonGEMHits",&b_genMuon_numberOfValidMuonGEMHits,"genMuon_numberOfValidMuonGEMHits/I");
   genttree_->Branch("genMuon_numberOfValidMuonME0Hits",&b_genMuon_numberOfValidMuonME0Hits,"genMuon_numberOfValidMuonME0Hits/I");
   genttree_->Branch("genMuon_signal", &b_genMuon_signal, "genMuon_signal/O");
@@ -203,6 +208,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_TrkIsolation05",&b_recoMuon_TrkIso05,"recoMuon_TrkIsolation05/F");
   recottree_->Branch("recoMuon_PFIsolation04",&b_recoMuon_PFIso04,"recoMuon_PFIsolation04/F");
   recottree_->Branch("recoMuon_PFIsolation03",&b_recoMuon_PFIso03,"recoMuon_PFIsolation03/F");
+  recottree_->Branch("recoMuon_puppiIsoWithLep",&b_recoMuon_puppiIsoWithLep,"recoMuon_puppiIsoWithLep/F");
+  recottree_->Branch("recoMuon_puppiIsoWithoutLep",&b_recoMuon_puppiIsoWithoutLep,"recoMuon_puppiIsoWithoutLep/F");
+  recottree_->Branch("recoMuon_puppiIsoCombined",&b_recoMuon_puppiIsoCombined,"recoMuon_puppiIsoCombined/F");
   recottree_->Branch("recoMuon_noChamberMatch", &b_recoMuon_noChamberMatch, "recoMuon_noChamberMatch/I");
   recottree_->Branch("recoMuon_noSegment", &b_recoMuon_noSegment, "recoMuon_noSegment/I");
   recottree_->Branch("recoMuon_noSegmentDT", &b_recoMuon_noSegmentDT, "recoMuon_noSegmentDT/I");
@@ -339,8 +347,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
 	b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
 
-	puppiIso pIso = getPuppiIso( mu, candidates);
-	cout << "pIso.combined "<< pIso.combined  <<endl;
+	puppiIso puppiIsoGen = getPuppiIso( mu, candidates);
+	//cout << "pIso.combined "<< pIso.combined  <<endl;
+  
+  b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
+  b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
+  b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
 	
 	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
@@ -411,6 +423,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
     b_recoMuon_PFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
     b_recoMuon_PFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
+    
+	  puppiIso puppiIsoRec = getPuppiIso( mu, candidates);
+    
+    b_recoMuon_puppiIsoWithLep    = puppiIsoRec.withLep;
+    b_recoMuon_puppiIsoWithoutLep = puppiIsoRec.withoutlep;
+    b_recoMuon_puppiIsoCombined   = puppiIsoRec.combined;
 
     b_recoMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
     b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
@@ -722,14 +740,111 @@ void MuonAnalyser::treereset()
 MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs) const
 {
   puppiIso puppivalues;
-  for (auto pc : *pcs){
+  
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // 
+  // 
+  // ATENTION : in the source, this value is taken via configuration; 
+  //     "mixFraction" and "dR".
+  //     They should be get via configuration.
+  // 
+  // 
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  const double _mix_fraction_ = 0.5;
+  const double dR_threshold = 0.4;
+  
+  double dR2_threshold = dR_threshold * dR_threshold;
+  
+  /*for (auto pc : *pcs){
     //cout << " pc.puppiWeight() "<< pc.puppiWeight()  <<endl;
     puppivalues.combined += pc.puppiWeight();
-  }
+  }*/
+  //edm::Ptr<reco::RecoCandidate> lepPtr = leptons->ptrAt(i);
+
+  double val_PuppiWithLep    [3]= {0,0,0} ;
+  double val_PuppiWithoutLep [3]= {0,0,0} ;
+
+  enum particleType{
+    CH = 0, 
+    NH = 1,
+    PH = 2,
+    OTHER = 100000
+  };
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  // loop ever all the candidates, and accumulate PT deposit around the lepton.
+  for( std::vector<pat::PackedCandidate>::const_iterator cand = pcs -> begin();
+    cand != pcs->end();
+    cand ++ )
+  {
+
+    // check particleTyple (CH/NH/PH or other). remove 'other'.
+    const particleType pType =
+      isCH( cand -> pdgId() ) ? CH :
+      isNH( cand -> pdgId() ) ? NH :
+      isPH( cand -> pdgId() ) ? PH : OTHER ;
+    if( pType == OTHER ) {
+      if( cand -> pdgId() != 1 && cand -> pdgId() != 2 
+        && abs( cand -> pdgId() ) != 11
+        && abs( cand -> pdgId() ) != 13)
+      {
+        std::cout <<"candidate with PDGID = " << cand -> pdgId() << " is not CH/NH/PH/e/mu or 1/2 (and this is removed from isolation calculation)"  << std::endl ; 
+      }
+      continue ;
+    }
+
+
+    {
+      // calc DR
+
+      //double d_eta = fabs( cand->eta() - lepPtr->eta() ) ;
+      double d_eta = fabs( cand->eta() - mu->eta() ) ;
+      if( d_eta > dR_threshold ) continue ; 
+
+      //double d_phi = fabs( cand->phi() - lepPtr->phi() ) ; 
+      double d_phi = fabs( cand->phi() - mu->phi() ) ; 
+      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+      if( d_phi > dR_threshold ) continue ; 
+
+      // check common DR cut
+      double dR2 = d_eta * d_eta  + d_phi * d_phi ;
+      if(  dR2 > dR2_threshold ) continue ;
+
+      // Check particleType dependent DR cut (remove overlapped candiadte)
+      // The threshold values were taken from 'MuonPFIsolationSequence_cff.py'.
+      if( pType == CH && dR2 < 0.0001*0.0001 ) continue ;
+      if( pType == NH && dR2 < 0.01  *0.01   ) continue ;
+      if( pType == PH && dR2 < 0.01  *0.01   ) continue ;
+
+    }
+
+    // The candidate passed all the selection.
+    // Now, add its PT to the variable with weight.
+
+    val_PuppiWithLep   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
+    val_PuppiWithoutLep[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+
+   
+  }// end of candidate LOOP.
+
+  //const double reliso_Puppi_withLep    = ( val_PuppiWithLep   [CH] + val_PuppiWithLep   [NH] + val_PuppiWithLep   [PH] ) / lepPtr->pt() ;
+  //const double reliso_Puppi_withoutlep = ( val_PuppiWithoutLep[CH] + val_PuppiWithoutLep[NH] + val_PuppiWithoutLep[PH] ) / lepPtr->pt() ;
+  const double reliso_Puppi_withLep    = ( val_PuppiWithLep   [CH] + val_PuppiWithLep   [NH] + val_PuppiWithLep   [PH] ) / mu->pt() ;
+  const double reliso_Puppi_withoutlep = ( val_PuppiWithoutLep[CH] + val_PuppiWithoutLep[NH] + val_PuppiWithoutLep[PH] ) / mu->pt() ;
+
+  /*reliso_puppi_withLep    .push_back( reliso_Puppi_withLep    ); 
+  reliso_puppi_withoutLep .push_back( reliso_Puppi_withoutlep );
+  reliso_puppi_combined   .push_back( _mix_fraction_ * reliso_Puppi_withLep + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep ); */
+  puppivalues.withLep    = reliso_Puppi_withLep;
+  puppivalues.withoutlep = reliso_Puppi_withoutlep;
+  puppivalues.combined   = _mix_fraction_ * reliso_Puppi_withLep + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep;
+  
   return puppivalues;
 }
 
-bool MuonAnalyser::isNH( long pdgid ){
+bool MuonAnalyser::isNH( long pdgid ) const{
   const long id = abs( pdgid );
   //     pdgId = cms.vint32(111,130,310,2112),
   if( id == 111 ) return true ; 
@@ -738,7 +853,7 @@ bool MuonAnalyser::isNH( long pdgid ){
   if( id == 2112 ) return true ; 
   return false;
 }
-bool MuonAnalyser::isCH( long pdgid ){
+bool MuonAnalyser::isCH( long pdgid ) const{
   const long id = abs( pdgid );
   //  pdgId = cms.vint32(211,-211,321,-321,999211,2212,-2212),
   if( id == 211    ) return true ; 
@@ -747,7 +862,7 @@ bool MuonAnalyser::isCH( long pdgid ){
   if( id == 2212   ) return true ; 
   return false;
 }
-bool MuonAnalyser::isPH( long pdgid ){
+bool MuonAnalyser::isPH( long pdgid ) const{
   const long id = abs( pdgid );
   if( id == 22 ) return true ; 
   return false;
