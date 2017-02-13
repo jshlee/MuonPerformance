@@ -21,7 +21,7 @@ def getH1_Normalized(filename,treename,title,binning,plotvar,cut):
     h1 = makeTH1(filename,treename,title,binning,plotvar,cut)
     
     normfactor = h1.GetEntries()
-    #h1.Scale(1.0 / normfactor)
+    h1.Scale(1.0 / normfactor)
     
     h1.SetTitle(title)
     
@@ -47,19 +47,9 @@ def drawSampleName(samplename):
 
 datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
 #datadir = "TenMuExtendedE_"
-#id = sys.argv[1]
-#isotype = sys.argv[2]
 isotype = sys.argv[1]
-#isotype = "Trk"
 
-listID = ["Tight", "Loose"]
 listIso = ["Trk", "PF"]
-
-"""
-if id not in listID:
-    print "Error : ID (first arg) should be Tight or Loose"
-    exit(1)
-"""
 
 if isotype not in listIso:
     print "Error : Isolation condition (second arg) should be Trk or PF"
@@ -70,25 +60,53 @@ arrPlotvar = [
     {"plotvar": "abs(genMuon.Eta())",  "binning": [15,0,2.4]}, 
     #{"plotvar": "genMuon.Phi()",       "binning": [12,-3,3]}, 
     
-    #{"plotvar": "recoMuon.Pt()",       "binning": [10,5,105]}, 
-    #{"plotvar": "abs(recoMuon.Eta())", "binning": [8,0,2.4]}, 
+    {"plotvar": "recoMuon.Pt()",       "binning": [10,5,105]}, 
+    {"plotvar": "abs(recoMuon.Eta())", "binning": [8,0,2.4]}, 
     #{"plotvar": "recoMuon.Phi()",      "binning": [12,-3,3]}, 
     
-    #{"plotvar": "recoMuon_TrkIsolation03", "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
-    #{"plotvar": "recoMuon_PFIsolation04",  "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_TrkIsolation03", "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_PFIsolation04",  "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
     
-    #{"plotvar": "recoMuon_TrkIsolation03", "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
-    #{"plotvar": "recoMuon_PFIsolation04",  "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_TrkIsolation03", "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_PFIsolation04",  "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    
+    {"plotvar": "genMuon_puppiIsoWithLep",     "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    {"plotvar": "genMuon_puppiIsoWithoutLep",  "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    {"plotvar": "genMuon_puppiIsoCombined",    "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    
+    {"plotvar": "genMuon_puppiIsoWithLep",     "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    {"plotvar": "genMuon_puppiIsoWithoutLep",  "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    {"plotvar": "genMuon_puppiIsoCombined",    "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    
+    {"plotvar": "recoMuon_puppiIsoWithLep",    "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_puppiIsoWithoutLep", "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_puppiIsoCombined",   "binning": [20,0,1], "id": "Tight", "ylog": True, "type": "all"}, 
+    
+    {"plotvar": "recoMuon_puppiIsoWithLep",    "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_puppiIsoWithoutLep", "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
+    {"plotvar": "recoMuon_puppiIsoCombined",   "binning": [20,0,1], "id": "Loose", "ylog": True, "type": "all"}, 
 ]
 
+"""
 arrSampleType = [
-    {"title": "Phase II PU0",   "filename": "out_PU0.root",   "id": "Tight", "color": 4, "shape": 20}, # blue,  circle
-    {"title": "Phase II PU200", "filename": "out_PU200.root", "id": "Tight", "color": 2, "shape": 21}, # red,   square
-    {"title": "Phase II QCD",   "filename": "out_QCD.root",   "id": "Tight", "color": 1, "shape": 34}, # black, cross
+    {"title": "Phase II PU0",   "filename": "out_PU0.root",   "id": "Tight", "color": 4, "shape": 20}, # blue,  filled circle
+    {"title": "Phase II PU200", "filename": "out_PU200.root", "id": "Tight", "color": 2, "shape": 21}, # red,   filled square
+    {"title": "Phase II QCD",   "filename": "out_QCD.root",   "id": "Tight", "color": 1, "shape": 34}, # black, filled cross
     
-    {"title": "Phase II PU0",   "filename": "out_PU0.root",   "id": "Loose", "color": 4, "shape": 20}, # blue,  circle
-    {"title": "Phase II PU200", "filename": "out_PU200.root", "id": "Loose", "color": 2, "shape": 21}, # red,   square
-    {"title": "Phase II QCD",   "filename": "out_QCD.root",   "id": "Loose", "color": 1, "shape": 34}, # black, cross
+    {"title": "Phase II PU0",   "filename": "out_PU0.root",   "id": "Loose", "color": 3, "shape": 24}, # green, unfilled circle
+    {"title": "Phase II PU200", "filename": "out_PU200.root", "id": "Loose", "color": 6, "shape": 25}, # pink,  unfilled square
+    {"title": "Phase II QCD",   "filename": "out_QCD.root",   "id": "Loose", "color": 7, "shape": 28}, # cyan,  unfilled cross
+];
+"""
+
+arrSampleType = [
+    {"title": "Phase II PU0",   "filename": "puppi_PU0.root",   "id": "Tight", "color": 4, "shape": 20}, # blue,  filled circle
+    #{"title": "Phase II PU200", "filename": "puppi_PU200.root", "id": "Tight", "color": 2, "shape": 21}, # red,   filled square
+    {"title": "Phase II QCD",   "filename": "puppi_QCD.root",   "id": "Tight", "color": 1, "shape": 34}, # black, filled cross
+    
+    {"title": "Phase II PU0",   "filename": "puppi_PU0.root",   "id": "Loose", "color": 3, "shape": 24}, # green, unfilled circle
+    #{"title": "Phase II PU200", "filename": "puppi_PU200.root", "id": "Loose", "color": 6, "shape": 25}, # pink,  unfilled square
+    {"title": "Phase II QCD",   "filename": "puppi_QCD.root",   "id": "Loose", "color": 7, "shape": 28}, # cyan,  unfilled cross
 ];
 
 listIDCfg = {
@@ -98,10 +116,12 @@ listIDCfg = {
 
 strCutGenNor = "genMuon.Pt() > 5"
 strCutGenDen = strCutGenNor
-strCutGenNum = strCutGenDen + " && genMuon_is%(ID)s && genMuon_%(iso)s"
+#strCutGenNum = strCutGenDen + " && genMuon_is%(ID)s && genMuon_%(iso)s" # ID is held
+strCutGenNum = strCutGenDen + " && genMuon_isMuon && genMuon_%(iso)s"
 
 strCutRecNor = "recoMuon.Pt() > 5"
-strCutRecDen = strCutRecNor + " && recoMuon_is%(ID)s && recoMuon_%(iso)s"
+#strCutRecDen = strCutRecNor + " && recoMuon_is%(ID)s && recoMuon_%(iso)s" # ID is held
+strCutRecDen = strCutRecNor + " && recoMuon_isMuon && recoMuon_%(iso)s"
 strCutRecNum = strCutRecDen + " && !recoMuon_signal"
 
 strCutGenIso = ""
@@ -109,10 +129,6 @@ strCutRecIso = ""
 
 
 for i, dicPlotvar in enumerate(arrPlotvar):
-    print "######################"
-    print "plotvar : " + dicPlotvar[ "plotvar" ]
-    print "######################"
-    
     plotvar = dicPlotvar[ "plotvar" ]
     binCurr = dicPlotvar[ "binning" ]
     
@@ -135,12 +151,6 @@ for i, dicPlotvar in enumerate(arrPlotvar):
         
         strTree = "MuonAnalyser/reco"
     
-    """
-    if "Isolation" not in plotvar: 
-        strCutDen = strCutDen + ( " && " + strCutIso if "genMuon" in plotvat else "" )
-        strCutNum = strCutNum + " && " + strCutIso
-    """
-    
     arrHist = []
     
     #Get histos
@@ -158,18 +168,10 @@ for i, dicPlotvar in enumerate(arrPlotvar):
         
         if "Isolation" not in plotvar: 
             # Drawing efficiency / fake rate plot
-            sampHead[ "hist" ] = getH1_Normalized(datadir + sampHead[ "filename" ], strTree, 
-                sampHead[ "title" ] + " - " + strIDCurr, binCurr, plotvar, 
-                strCutDen%{"ID": strIDCurr, "iso": strCutIso}) # cut for normal
-            """
             sampHead[ "hist" ] = getEff(datadir + sampHead[ "filename" ], strTree, 
                 sampHead[ "title" ] + " - " + strIDCurr, binCurr, plotvar, 
                 strCutDen%{"ID": strIDCurr, "iso": strCutIso}, # cut for denominator
                 strCutNum%{"ID": strIDCurr, "iso": strCutIso}) # cut for nominator
-            """
-            
-            print "  " + sampHead[ "title" ] + " - " + strIDCurr
-            print "    (" + strCutDen%{"ID": strIDCurr, "iso": strCutIso} + ", " + strCutNum%{"ID": strIDCurr, "iso": strCutIso} + ")"
         else:
             if strIDCurr != dicPlotvar[ "id" ]:
                 continue
@@ -178,9 +180,6 @@ for i, dicPlotvar in enumerate(arrPlotvar):
             sampHead[ "hist" ] = getH1_Normalized(datadir + sampHead[ "filename" ], strTree, 
                 sampHead[ "title" ], binCurr, plotvar, 
                 strCutNor%{"ID": dicPlotvar[ "id" ], "iso": strCutIso}) # cut for normal
-            
-            print "  " + sampHead[ "title" ] + " - " + strIDCurr
-            print "    (" + strCutNor%{"ID": dicPlotvar[ "id" ], "iso": strCutIso} + ")"
         
         setMarkerStyle(sampHead[ "hist" ], sampHead[ "color" ], sampHead[ "shape" ])
         arrHist.append(sampHead)
@@ -197,8 +196,8 @@ for i, dicPlotvar in enumerate(arrPlotvar):
     y_name = "Muon "
     
     if "genMuon" in plotvar:
-        #h_init.SetMaximum(1.1)
-        #h_init.SetMinimum(0.6)
+        h_init.SetMaximum(1.1)
+        h_init.SetMinimum(0.6)
         y_name = y_name+"Efficiency"
     
     if "recoMuon" in plotvar:
@@ -217,7 +216,8 @@ for i, dicPlotvar in enumerate(arrPlotvar):
     canv = makeCanvas(name, False)
     setMargins(canv, False)
     h_init.Draw()
-    drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV")
+    #drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV")
+    drawSampleName("10 #mu per event and QCD events, p_{T} > 5 GeV")
     
     if "ylog" in dicPlotvar and dicPlotvar[ "ylog" ]:
         ROOT.gPad.SetLogy()

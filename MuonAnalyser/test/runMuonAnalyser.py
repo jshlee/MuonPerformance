@@ -26,6 +26,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
     #MuonAnalyser_Matching = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
 )
 
+# Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
       'file:/cms/home/jlee/scratch/pfmuon/src/1000/22811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4Timing_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4Timing+RecoFullGlobal_2023D4Timing+HARVESTFullGlobal_2023D4Timing/step3.root'
