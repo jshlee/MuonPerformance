@@ -350,9 +350,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	puppiIso puppiIsoGen = getPuppiIso( mu, candidates);
 	//cout << "pIso.combined "<< pIso.combined  <<endl;
   
-  b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
-  b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
-  b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
+	b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
+	b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
+	b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
 	
 	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
@@ -362,14 +362,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_isMuon = mu->isMuon();
 
-    b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
-    b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
-    b_genMuon_deltaXErrME0 = mu->pullX(0,5, mu->ME0SegmentAndTrackArbitration); // delta X divided by segment error and propagation error
-    b_genMuon_deltaYErrME0 = mu->pullY(0,5, mu->ME0SegmentAndTrackArbitration);
-    b_genMuon_deltaDXDZME0 = mu->dDxDz(0,5, mu->ME0SegmentAndTrackArbitration); // slope difference of track and segment
-    b_genMuon_deltaDYDZME0 = mu->dDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
-    b_genMuon_deltaDXDZErrME0 = mu->pullDxDz(0,5, mu->ME0SegmentAndTrackArbitration); //delta dXdZ divided by segment error and propagation error
-    b_genMuon_deltaDYDZErrME0 = mu->pullDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
+	b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaXErrME0 = mu->pullX(0,5, mu->ME0SegmentAndTrackArbitration); // delta X divided by segment error and propagation error
+	b_genMuon_deltaYErrME0 = mu->pullY(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaDXDZME0 = mu->dDxDz(0,5, mu->ME0SegmentAndTrackArbitration); // slope difference of track and segment
+	b_genMuon_deltaDYDZME0 = mu->dDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaDXDZErrME0 = mu->pullDxDz(0,5, mu->ME0SegmentAndTrackArbitration); //delta dXdZ divided by segment error and propagation error
+	b_genMuon_deltaDYDZErrME0 = mu->pullDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
 	
 	const reco::Track* muonTrack = 0;  
 	if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
@@ -424,7 +424,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_PFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
     b_recoMuon_PFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
     
-	  puppiIso puppiIsoRec = getPuppiIso( mu, candidates);
+    puppiIso puppiIsoRec = getPuppiIso( mu, candidates);
     
     b_recoMuon_puppiIsoWithLep    = puppiIsoRec.withLep;
     b_recoMuon_puppiIsoWithoutLep = puppiIsoRec.withoutlep;
@@ -758,8 +758,8 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
   double dR2_threshold = dR_threshold * dR_threshold;
   
   /*for (auto pc : *pcs){
-    //cout << " pc.puppiWeight() "<< pc.puppiWeight()  <<endl;
-    puppivalues.combined += pc.puppiWeight();
+  //cout << " pc.puppiWeight() "<< pc.puppiWeight()  <<endl;
+  puppivalues.combined += pc.puppiWeight();
   }*/
   //edm::Ptr<reco::RecoCandidate> lepPtr = leptons->ptrAt(i);
 
@@ -776,58 +776,58 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   // loop ever all the candidates, and accumulate PT deposit around the lepton.
   for( std::vector<pat::PackedCandidate>::const_iterator cand = pcs -> begin();
-    cand != pcs->end();
-    cand ++ )
-  {
-
-    // check particleTyple (CH/NH/PH or other). remove 'other'.
-    const particleType pType =
-      isCH( cand -> pdgId() ) ? CH :
-      isNH( cand -> pdgId() ) ? NH :
-      isPH( cand -> pdgId() ) ? PH : OTHER ;
-    if( pType == OTHER ) {
-      if( cand -> pdgId() != 1 && cand -> pdgId() != 2 
-        && abs( cand -> pdgId() ) != 11
-        && abs( cand -> pdgId() ) != 13)
-      {
-        std::cout <<"candidate with PDGID = " << cand -> pdgId() << " is not CH/NH/PH/e/mu or 1/2 (and this is removed from isolation calculation)"  << std::endl ; 
-      }
-      continue ;
-    }
-
-
+       cand != pcs->end();
+       cand ++ )
     {
-      // calc DR
 
-      //double d_eta = fabs( cand->eta() - lepPtr->eta() ) ;
-      double d_eta = fabs( cand->eta() - mu->eta() ) ;
-      if( d_eta > dR_threshold ) continue ; 
+      // check particleTyple (CH/NH/PH or other). remove 'other'.
+      const particleType pType =
+	isCH( cand -> pdgId() ) ? CH :
+	isNH( cand -> pdgId() ) ? NH :
+	isPH( cand -> pdgId() ) ? PH : OTHER ;
+      if( pType == OTHER ) {
+	if( cand -> pdgId() != 1 && cand -> pdgId() != 2 
+	    && abs( cand -> pdgId() ) != 11
+	    && abs( cand -> pdgId() ) != 13)
+	  {
+	    std::cout <<"candidate with PDGID = " << cand -> pdgId() << " is not CH/NH/PH/e/mu or 1/2 (and this is removed from isolation calculation)"  << std::endl ; 
+	  }
+	continue ;
+      }
 
-      //double d_phi = fabs( cand->phi() - lepPtr->phi() ) ; 
-      double d_phi = fabs( cand->phi() - mu->phi() ) ; 
-      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
-      if( d_phi > dR_threshold ) continue ; 
 
-      // check common DR cut
-      double dR2 = d_eta * d_eta  + d_phi * d_phi ;
-      if(  dR2 > dR2_threshold ) continue ;
+      {
+	// calc DR
 
-      // Check particleType dependent DR cut (remove overlapped candiadte)
-      // The threshold values were taken from 'MuonPFIsolationSequence_cff.py'.
-      if( pType == CH && dR2 < 0.0001*0.0001 ) continue ;
-      if( pType == NH && dR2 < 0.01  *0.01   ) continue ;
-      if( pType == PH && dR2 < 0.01  *0.01   ) continue ;
+	//double d_eta = fabs( cand->eta() - lepPtr->eta() ) ;
+	double d_eta = fabs( cand->eta() - mu->eta() ) ;
+	if( d_eta > dR_threshold ) continue ; 
 
-    }
+	//double d_phi = fabs( cand->phi() - lepPtr->phi() ) ; 
+	double d_phi = fabs( cand->phi() - mu->phi() ) ; 
+	d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+	if( d_phi > dR_threshold ) continue ; 
 
-    // The candidate passed all the selection.
-    // Now, add its PT to the variable with weight.
+	// check common DR cut
+	double dR2 = d_eta * d_eta  + d_phi * d_phi ;
+	if(  dR2 > dR2_threshold ) continue ;
 
-    val_PuppiWithLep   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
-    val_PuppiWithoutLep[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+	// Check particleType dependent DR cut (remove overlapped candiadte)
+	// The threshold values were taken from 'MuonPFIsolationSequence_cff.py'.
+	if( pType == CH && dR2 < 0.0001*0.0001 ) continue ;
+	if( pType == NH && dR2 < 0.01  *0.01   ) continue ;
+	if( pType == PH && dR2 < 0.01  *0.01   ) continue ;
+
+      }
+
+      // The candidate passed all the selection.
+      // Now, add its PT to the variable with weight.
+
+      val_PuppiWithLep   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
+      val_PuppiWithoutLep[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
 
    
-  }// end of candidate LOOP.
+    }// end of candidate LOOP.
 
   //const double reliso_Puppi_withLep    = ( val_PuppiWithLep   [CH] + val_PuppiWithLep   [NH] + val_PuppiWithLep   [PH] ) / lepPtr->pt() ;
   //const double reliso_Puppi_withoutlep = ( val_PuppiWithoutLep[CH] + val_PuppiWithoutLep[NH] + val_PuppiWithoutLep[PH] ) / lepPtr->pt() ;
@@ -835,8 +835,8 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
   const double reliso_Puppi_withoutlep = ( val_PuppiWithoutLep[CH] + val_PuppiWithoutLep[NH] + val_PuppiWithoutLep[PH] ) / mu->pt() ;
 
   /*reliso_puppi_withLep    .push_back( reliso_Puppi_withLep    ); 
-  reliso_puppi_withoutLep .push_back( reliso_Puppi_withoutlep );
-  reliso_puppi_combined   .push_back( _mix_fraction_ * reliso_Puppi_withLep + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep ); */
+    reliso_puppi_withoutLep .push_back( reliso_Puppi_withoutlep );
+    reliso_puppi_combined   .push_back( _mix_fraction_ * reliso_Puppi_withLep + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep ); */
   puppivalues.withLep    = reliso_Puppi_withLep;
   puppivalues.withoutlep = reliso_Puppi_withoutlep;
   puppivalues.combined   = _mix_fraction_ * reliso_Puppi_withLep + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep;
