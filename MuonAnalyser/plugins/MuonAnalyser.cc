@@ -356,10 +356,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 	puppiIso puppiIsoGen = getPuppiIso( mu, candidates);
 	//cout << "pIso.combined "<< pIso.combined  <<endl;
-  
-    b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
-    b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
-    b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
+
+	b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
+	b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
+	b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
 	
 	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
@@ -369,14 +369,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_isMuon = mu->isMuon();
 
-    b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
-    b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
-    b_genMuon_deltaXErrME0 = mu->pullX(0,5, mu->ME0SegmentAndTrackArbitration); // delta X divided by segment error and propagation error
-    b_genMuon_deltaYErrME0 = mu->pullY(0,5, mu->ME0SegmentAndTrackArbitration);
-    b_genMuon_deltaDXDZME0 = mu->dDxDz(0,5, mu->ME0SegmentAndTrackArbitration); // slope difference of track and segment
-    b_genMuon_deltaDYDZME0 = mu->dDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
-    b_genMuon_deltaDXDZErrME0 = mu->pullDxDz(0,5, mu->ME0SegmentAndTrackArbitration); //delta dXdZ divided by segment error and propagation error
-    b_genMuon_deltaDYDZErrME0 = mu->pullDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
+	b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaXErrME0 = mu->pullX(0,5, mu->ME0SegmentAndTrackArbitration); // delta X divided by segment error and propagation error
+	b_genMuon_deltaYErrME0 = mu->pullY(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaDXDZME0 = mu->dDxDz(0,5, mu->ME0SegmentAndTrackArbitration); // slope difference of track and segment
+	b_genMuon_deltaDYDZME0 = mu->dDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
+	b_genMuon_deltaDXDZErrME0 = mu->pullDxDz(0,5, mu->ME0SegmentAndTrackArbitration); //delta dXdZ divided by segment error and propagation error
+	b_genMuon_deltaDYDZErrME0 = mu->pullDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
 	
 	const reco::Track* muonTrack = 0;  
 	if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
@@ -431,7 +431,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_PFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
     b_recoMuon_PFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
     
-	puppiIso puppiIsoRec = getPuppiIso( mu, candidates);
+    puppiIso puppiIsoRec = getPuppiIso( mu, candidates);
     
     b_recoMuon_puppiIsoWithLep    = puppiIsoRec.withLep;
     b_recoMuon_puppiIsoWithoutLep = puppiIsoRec.withoutlep;
@@ -810,11 +810,11 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
     if( pType == NH && dR2 < 0.01  *0.01   ) continue ;
     if( pType == PH && dR2 < 0.01  *0.01   ) continue ;
 
-    // The candidate passed all the selection.
-    // Now, add its PT to the variable with weight.
+      // The candidate passed all the selection.
+      // Now, add its PT to the variable with weight.
 
-    val_PuppiWithLep   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
-    val_PuppiWithoutLep[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+      val_PuppiWithLep   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
+      val_PuppiWithoutLep[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
 
    
   }// end of candidate LOOP.
