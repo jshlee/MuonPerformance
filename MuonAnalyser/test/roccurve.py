@@ -15,9 +15,9 @@ def setMarkerStyle(h,color,style):
     h.SetLineWidth(2)
 
 
-def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cut):
-    hSig = makeTH1(fileSig,treename,title,binning,plotvar,cut)
-    hBkg = makeTH1(fileBkg,treename,title,binning,plotvar,cut)
+def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg):
+    hSig = makeTH1(fileSig,treename,title,binning,plotvar,cutSig)
+    hBkg = makeTH1(fileBkg,treename,title,binning,plotvar,cutBkg)
     
     arrSigEff = []
     arrBkgRej = []
@@ -39,26 +39,32 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cut):
     arrX = array.array("d", arrSigEff)
     arrY = array.array("d", arrBkgRej)
     
-    graphROC = ROOT.TGraph(binning[ 0 ] + 1, arrX, arrY)
+    graphROC = ROOT.TGraph(binning[ 0 ] + 2, arrX, arrY)
     graphROC.SetTitle(title)
     
     return copy.deepcopy(graphROC)
 
 
 def drawSampleName(samplename):
+    fX = 0.22
+    fY = 0.58
+    fSizeTex = 0.038
+    
     tex2 = ROOT.TLatex()
+    
     tex2.SetNDC()
     tex2.SetTextFont(42)
-    tex2.SetTextSize(0.038)
-    tex2.DrawLatex(0.15, 0.68, samplename)
+    tex2.SetTextSize(fSizeTex)
+    
+    for i, strLine in enumerate(samplename.split("\n")): 
+        tex2.DrawLatex(fX, fY - i * 1.1 * fSizeTex, strLine)
 
 
 datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
-#datadir = "TenMuExtendedE_"
-id = sys.argv[1]
 
-binMain = [500, 0, 2.0]
+binMain = [1500, 0, 6.0]
 
+"""
 arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoWithLep",    "title": "PUPPI - with lepton, R = 0.4", 
         "color": 4, "shape": 20}, # blue,  filled circle
@@ -72,47 +78,92 @@ arrPlotvar = [
     {"plotvar": "recoMuon_PFIsolation04",      "title": "PF Isolation, R = 0.4", 
         "color": 6, "shape": 25}, # pink,  unfilled square
 ]
-
 """
-arrSampleType = [
-    {"title": "Phase II PU0",   "filename": "out_PU0.root",   "id": "Tight", "color": 4, "shape": 20}, # blue,  filled circle
-    {"title": "Phase II PU200", "filename": "out_PU200.root", "id": "Tight", "color": 2, "shape": 21}, # red,   filled square
-    {"title": "Phase II QCD",   "filename": "out_QCD.root",   "id": "Tight", "color": 1, "shape": 34}, # black, filled cross
+"""
+arrPlotvar = [
+    {"plotvar": "recoMuon_puppiIsoWithLep03",    "title": "PUPPI - with lepton, R = 0.3", 
+        "color": 4, "shape": 20}, # blue,  filled circle
+    {"plotvar": "recoMuon_puppiIsoWithoutLep03", "title": "PUPPI - without lepton, R = 0.3", 
+        "color": 2, "shape": 21}, # red,   filled square
+    {"plotvar": "recoMuon_puppiIsoCombined03",   "title": "PUPPI - combined (ratio : 0.5)", 
+        "color": 3, "shape": 34}, # green, filled cross
     
-    {"title": "Phase II PU0",   "filename": "out_PU0.root",   "id": "Loose", "color": 3, "shape": 24}, # green, unfilled circle
-    {"title": "Phase II PU200", "filename": "out_PU200.root", "id": "Loose", "color": 6, "shape": 25}, # pink,  unfilled square
-    {"title": "Phase II QCD",   "filename": "out_QCD.root",   "id": "Loose", "color": 7, "shape": 28}, # cyan,  unfilled cross
-]
-
-arrSampleType = [
-    {"title": "Phase II PU0",   "filename": "puppi_PU0.root",   "id": "Tight", "color": 4, "shape": 20}, # blue,  filled circle
-    #{"title": "Phase II PU200", "filename": "puppi_PU200.root", "id": "Tight", "color": 2, "shape": 21}, # red,   filled square
-    {"title": "Phase II QCD",   "filename": "puppi_QCD.root",   "id": "Tight", "color": 1, "shape": 34}, # black, filled cross
-    
-    {"title": "Phase II PU0",   "filename": "puppi_PU0.root",   "id": "Loose", "color": 3, "shape": 24}, # green, unfilled circle
-    #{"title": "Phase II PU200", "filename": "puppi_PU200.root", "id": "Loose", "color": 6, "shape": 25}, # pink,  unfilled square
-    {"title": "Phase II QCD",   "filename": "puppi_QCD.root",   "id": "Loose", "color": 7, "shape": 28}, # cyan,  unfilled cross
+    {"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
+        "color": 1, "shape": 24}, # black, unfilled circle
+    {"plotvar": "recoMuon_PFIsolation03",      "title": "PF Isolation, R = 0.3", 
+        "color": 6, "shape": 25}, # pink,  unfilled square
 ]
 """
-strSampleSig = "puppi_PU200.root"
-strSampleBkg = "puppi_QCD.root"
+arrPlotvar = [
+    {"plotvar": "recoMuon_puppiIsoWithLep05",    "title": "PUPPI - with lepton, R = 0.5", 
+        "color": 4, "shape": 20}, # blue,  filled circle
+    {"plotvar": "recoMuon_puppiIsoWithoutLep05", "title": "PUPPI - without lepton, R = 0.5", 
+        "color": 2, "shape": 21}, # red,   filled square
+    {"plotvar": "recoMuon_puppiIsoCombined05",   "title": "PUPPI - combined (ratio : 0.5)", 
+        "color": 3, "shape": 34}, # green, filled cross
+    
+    {"plotvar": "recoMuon_TrkIsolation05",     "title": "Track Isolation, R = 0.5", 
+        "color": 1, "shape": 24}, # black, unfilled circle
+]
 
-strPUTitle = "PU 200"
+"""
+dicSampleType = {
+    "PU0":   {"title": "PU 0",   "file_signal": "puppi_PU0.root"}, 
+    "PU200": {"title": "PU 200", "file_signal": "puppi_PU200.root"}, 
+}
+"""
+dicSampleType = {
+    "PU0":   {"title": "PU 0",   
+        "file_sig": "puppi_ZMM_PU0_pre4_fixed01_ver2.root",   "file_bkg": "puppi_QCD_PU0_pre4_fixed01_ver2.root"}, 
+    "PU140": {"title": "PU 140", 
+        "file_sig": "puppi_ZMM_PU140_pre4_fixed01_ver2.root", "file_bkg": "puppi_QCD_PU140_pre4_fixed01_ver2.root"}, 
+}
+
+arrListID = ["Tight", "Loose"]
+
+
+strTypePU = sys.argv[1]
+id = sys.argv[2]
+
+if strTypePU not in dicSampleType: 
+    print "Error : " + strTypePU + " is not in option: "
+    print dicSampleType.keys()
+    exit(1)
+
+if id not in arrListID: 
+    print "Error : " + id + " is not in option: "
+    print arrListID
+    exit(1)
+
+strPUTitle = dicSampleType[ strTypePU ][ "title" ]
+
+strSampleSig = dicSampleType[ strTypePU ][ "file_sig" ]
+strSampleBkg = dicSampleType[ strTypePU ][ "file_bkg" ]
+
+strCutPT  = "5"
+strCutEta = "2.4"
 
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
-strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
+#strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
+#strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
+#strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
+strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s && recoMuon_is%(ID)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id}
+strCutSig = strCutDef + " && recoMuon_signal"
+strCutBkg = strCutDef
 
 
 for dicPlotvar in arrPlotvar: 
     plotvar = dicPlotvar[ "plotvar" ]
     
     dicPlotvar[ "graph" ] = getROC(strSampleSig, strSampleBkg, "MuonAnalyser/reco", 
-        dicPlotvar[ "title" ], binMain, plotvar, strCutRecNor)
+        dicPlotvar[ "title" ], binMain, plotvar, strCutSig, strCutBkg)
     
     setMarkerStyle(dicPlotvar[ "graph" ], dicPlotvar[ "color" ], dicPlotvar[ "shape" ])
     
     dicPlotvar[ "graph" ].GetXaxis().SetLimits(0.0, 1.1)
     dicPlotvar[ "graph" ].SetMaximum(1.1)
+    
+    print "%s is done"%dicPlotvar[ "title" ]
 
 #Set canvas
 canv = makeCanvas("canv1", False)
@@ -125,8 +176,6 @@ x_name = "Signal Efficiency"
 y_name = "Background Rejection"
 
 for i, dicPlotvar in enumerate(arrPlotvar): 
-    #if "Trk" not in dicPlotvar[ "plotvar" ]: continue
-    #i = 0
     if i == 0: 
         dicPlotvar[ "graph" ].GetXaxis().SetTitle(x_name)
         dicPlotvar[ "graph" ].GetYaxis().SetTitle(y_name)
@@ -135,9 +184,11 @@ for i, dicPlotvar in enumerate(arrPlotvar):
         dicPlotvar[ "graph" ].Draw("")
     else :
         dicPlotvar[ "graph" ].Draw("same")
+
     leg.AddEntry(dicPlotvar[ "graph" ], dicPlotvar[ "graph" ].GetTitle(), "pl")
 
-drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%s) and QCD events, \np_{T} > 5 GeV, |#eta| < 2.4"%strPUTitle)
+drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%(PU)s) and QCD events\n"
+    "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id})
 
 leg.SetTextFont(61)
 leg.SetTextSize(0.04)
@@ -154,6 +205,6 @@ CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
 
 canv.Modified()
 canv.Update()
-canv.SaveAs("roccurves_%s.png"%id)
+canv.SaveAs("roccurves_%s_%s.png"%(strPUTitle.replace(" ", ""), id))
     
 
