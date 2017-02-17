@@ -51,6 +51,14 @@ class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
     double combined;
     double withLep;
     double withoutlep;
+    
+    double combined03;
+    double withLep03;
+    double withoutlep03;
+    
+    double combined05;
+    double withLep05;
+    double withoutlep05;
   };
 
 public:
@@ -81,6 +89,8 @@ private:
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_TrkIso05; float b_genMuon_TrkIso03;
   float b_genMuon_puppiIsoWithLep, b_genMuon_puppiIsoWithoutLep, b_genMuon_puppiIsoCombined;
+  float b_genMuon_puppiIsoWithLep03, b_genMuon_puppiIsoWithoutLep03, b_genMuon_puppiIsoCombined03;
+  float b_genMuon_puppiIsoWithLep05, b_genMuon_puppiIsoWithoutLep05, b_genMuon_puppiIsoCombined05;
   int b_genMuon_numberOfValidMuonGEMHits, b_genMuon_numberOfValidMuonME0Hits;
   float b_genMuon_tmva_bdt, b_genMuon_tmva_mlp;
 
@@ -122,6 +132,8 @@ private:
   float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
   float b_recoMuon_TrkIso05; float b_recoMuon_TrkIso03;
   float b_recoMuon_puppiIsoWithLep, b_recoMuon_puppiIsoWithoutLep, b_recoMuon_puppiIsoCombined;
+  float b_recoMuon_puppiIsoWithLep03, b_recoMuon_puppiIsoWithoutLep03, b_recoMuon_puppiIsoCombined03;
+  float b_recoMuon_puppiIsoWithLep05, b_recoMuon_puppiIsoWithoutLep05, b_recoMuon_puppiIsoCombined05;
   bool b_recoMuon_isMuon;
   int b_recoMuon_numberOfValidMuonGEMHits, b_recoMuon_numberOfValidMuonME0Hits;
 
@@ -182,6 +194,12 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_puppiIsoWithLep",&b_genMuon_puppiIsoWithLep,"genMuon_puppiIsoWithLep/F");
   genttree_->Branch("genMuon_puppiIsoWithoutLep",&b_genMuon_puppiIsoWithoutLep,"genMuon_puppiIsoWithoutLep/F");
   genttree_->Branch("genMuon_puppiIsoCombined",&b_genMuon_puppiIsoCombined,"genMuon_puppiIsoCombined/F");
+  genttree_->Branch("genMuon_puppiIsoWithLep03",&b_genMuon_puppiIsoWithLep03,"genMuon_puppiIsoWithLep03/F");
+  genttree_->Branch("genMuon_puppiIsoWithoutLep03",&b_genMuon_puppiIsoWithoutLep03,"genMuon_puppiIsoWithoutLep03/F");
+  genttree_->Branch("genMuon_puppiIsoCombined03",&b_genMuon_puppiIsoCombined03,"genMuon_puppiIsoCombined03/F");
+  genttree_->Branch("genMuon_puppiIsoWithLep05",&b_genMuon_puppiIsoWithLep05,"genMuon_puppiIsoWithLep05/F");
+  genttree_->Branch("genMuon_puppiIsoWithoutLep05",&b_genMuon_puppiIsoWithoutLep05,"genMuon_puppiIsoWithoutLep05/F");
+  genttree_->Branch("genMuon_puppiIsoCombined05",&b_genMuon_puppiIsoCombined05,"genMuon_puppiIsoCombined05/F");
   genttree_->Branch("genMuon_numberOfValidMuonGEMHits",&b_genMuon_numberOfValidMuonGEMHits,"genMuon_numberOfValidMuonGEMHits/I");
   genttree_->Branch("genMuon_numberOfValidMuonME0Hits",&b_genMuon_numberOfValidMuonME0Hits,"genMuon_numberOfValidMuonME0Hits/I");
   genttree_->Branch("genMuon_signal", &b_genMuon_signal, "genMuon_signal/O");
@@ -218,6 +236,12 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_puppiIsoWithLep",&b_recoMuon_puppiIsoWithLep,"recoMuon_puppiIsoWithLep/F");
   recottree_->Branch("recoMuon_puppiIsoWithoutLep",&b_recoMuon_puppiIsoWithoutLep,"recoMuon_puppiIsoWithoutLep/F");
   recottree_->Branch("recoMuon_puppiIsoCombined",&b_recoMuon_puppiIsoCombined,"recoMuon_puppiIsoCombined/F");
+  recottree_->Branch("recoMuon_puppiIsoWithLep03",&b_recoMuon_puppiIsoWithLep03,"recoMuon_puppiIsoWithLep03/F");
+  recottree_->Branch("recoMuon_puppiIsoWithoutLep03",&b_recoMuon_puppiIsoWithoutLep03,"recoMuon_puppiIsoWithoutLep03/F");
+  recottree_->Branch("recoMuon_puppiIsoCombined03",&b_recoMuon_puppiIsoCombined03,"recoMuon_puppiIsoCombined03/F");
+  recottree_->Branch("recoMuon_puppiIsoWithLep05",&b_recoMuon_puppiIsoWithLep05,"recoMuon_puppiIsoWithLep05/F");
+  recottree_->Branch("recoMuon_puppiIsoWithoutLep05",&b_recoMuon_puppiIsoWithoutLep05,"recoMuon_puppiIsoWithoutLep05/F");
+  recottree_->Branch("recoMuon_puppiIsoCombined05",&b_recoMuon_puppiIsoCombined05,"recoMuon_puppiIsoCombined05/F");
   recottree_->Branch("recoMuon_noChamberMatch", &b_recoMuon_noChamberMatch, "recoMuon_noChamberMatch/I");
   recottree_->Branch("recoMuon_noSegment", &b_recoMuon_noSegment, "recoMuon_noSegment/I");
   recottree_->Branch("recoMuon_noSegmentDT", &b_recoMuon_noSegmentDT, "recoMuon_noSegmentDT/I");
@@ -360,6 +384,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
 	b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
 	b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
+
+	b_genMuon_puppiIsoWithLep03    = puppiIsoGen.withLep03;
+	b_genMuon_puppiIsoWithoutLep03 = puppiIsoGen.withoutlep03;
+	b_genMuon_puppiIsoCombined03   = puppiIsoGen.combined03;
+
+	b_genMuon_puppiIsoWithLep05    = puppiIsoGen.withLep05;
+	b_genMuon_puppiIsoWithoutLep05 = puppiIsoGen.withoutlep05;
+	b_genMuon_puppiIsoCombined05   = puppiIsoGen.combined05;
 	
 	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
 	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
@@ -436,6 +468,14 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_puppiIsoWithLep    = puppiIsoRec.withLep;
     b_recoMuon_puppiIsoWithoutLep = puppiIsoRec.withoutlep;
     b_recoMuon_puppiIsoCombined   = puppiIsoRec.combined;
+    
+    b_recoMuon_puppiIsoWithLep03    = puppiIsoRec.withLep03;
+    b_recoMuon_puppiIsoWithoutLep03 = puppiIsoRec.withoutlep03;
+    b_recoMuon_puppiIsoCombined03   = puppiIsoRec.combined03;
+    
+    b_recoMuon_puppiIsoWithLep05    = puppiIsoRec.withLep05;
+    b_recoMuon_puppiIsoWithoutLep05 = puppiIsoRec.withoutlep05;
+    b_recoMuon_puppiIsoCombined05   = puppiIsoRec.combined05;
 
     b_recoMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
     b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
@@ -611,6 +651,39 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_trackerlayers =tmvaValues[11];
 
     recottree_->Fill();
+    
+    /*if ( b_recoMuon.Pt() > 5 && abs(b_recoMuon.Eta()) < 2.4 ) {
+      int nIsoType = 0;
+      
+      if ( b_recoMuon_TrkIso03 < 0.0001 ) {
+        nIsoType +=     1;
+      }
+      
+      if ( b_recoMuon_PFIso04 < 0.0001 ) {
+        nIsoType +=    10;
+      }
+      
+      if ( b_recoMuon_puppiIsoWithLep < 0.0001 ) {
+        nIsoType +=   100;
+      }
+      
+      if ( b_recoMuon_puppiIsoWithoutLep < 0.0001 ) {
+        nIsoType +=  1000;
+      }
+      
+      if ( b_recoMuon_puppiIsoCombined < 0.0001 ) {
+        nIsoType += 10000;
+      }
+      
+      if ( nIsoType != 0 ) {
+        printf("%05i - ", nIsoType);
+        cout << "pdgid : " << b_recoMuon_pdgId << ", "
+          << "pT : "  << b_recoMuon.Pt()  << ", "
+          << "Eta : " << b_recoMuon.Eta() << ", "
+          << "phi : " << b_recoMuon.Phi() << ", "
+          << endl;
+      }
+    }*/
   }
 
 }
@@ -762,12 +835,19 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   const double _mix_fraction_ = 0.5;
-  const double dR_threshold = 0.4;
+  //const double dR_threshold = 0.4;
   
-  double dR2_threshold = dR_threshold * dR_threshold;
+  //double dR2_threshold = dR_threshold * dR_threshold;
+  double dR2_threshold03 = 0.3 * 0.3;
+  double dR2_threshold04 = 0.4 * 0.4;
+  double dR2_threshold05 = 0.5 * 0.5;
 
-  double val_PuppiWithLep    [3]= {0,0,0} ;
-  double val_PuppiWithoutLep [3]= {0,0,0} ;
+  double val_PuppiWithLep03    [3]= {0,0,0} ;
+  double val_PuppiWithoutLep03 [3]= {0,0,0} ;
+  double val_PuppiWithLep04    [3]= {0,0,0} ;
+  double val_PuppiWithoutLep04 [3]= {0,0,0} ;
+  double val_PuppiWithLep05    [3]= {0,0,0} ;
+  double val_PuppiWithoutLep05 [3]= {0,0,0} ;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   // loop ever all the candidates, and accumulate PT deposit around the lepton.
@@ -782,7 +862,7 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
     d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
     double dR2 = d_eta * d_eta  + d_phi * d_phi ;
     
-    if( dR2 > dR2_threshold ) continue ;
+    if( dR2 > dR2_threshold05 ) continue ;
     
     long nIDAbs = abs(cand -> pdgId());
 
@@ -813,18 +893,42 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
       // The candidate passed all the selection.
       // Now, add its PT to the variable with weight.
 
-      val_PuppiWithLep   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
-      val_PuppiWithoutLep[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+      val_PuppiWithLep05   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
+      val_PuppiWithoutLep05[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+      
+      if ( dR2 <= dR2_threshold04 ) {
+        val_PuppiWithLep04   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
+        val_PuppiWithoutLep04[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+        
+        if ( dR2 <= dR2_threshold03 ) {
+          val_PuppiWithLep03   [ pType ] += cand -> pt() * cand -> puppiWeight() ;
+          val_PuppiWithoutLep03[ pType ] += cand -> pt() * cand -> puppiWeightNoLep();
+        }
+      }
 
    
   }// end of candidate LOOP.
 
-  const double reliso_Puppi_withLep    = ( val_PuppiWithLep   [CH] + val_PuppiWithLep   [NH] + val_PuppiWithLep   [PH] ) / mu->pt() ;
-  const double reliso_Puppi_withoutlep = ( val_PuppiWithoutLep[CH] + val_PuppiWithoutLep[NH] + val_PuppiWithoutLep[PH] ) / mu->pt() ;
+  const double reliso_Puppi_withLep03    = ( val_PuppiWithLep03   [CH] + val_PuppiWithLep03   [NH] + val_PuppiWithLep03   [PH] ) / mu->pt() ;
+  const double reliso_Puppi_withoutlep03 = ( val_PuppiWithoutLep03[CH] + val_PuppiWithoutLep03[NH] + val_PuppiWithoutLep03[PH] ) / mu->pt() ;
 
-  puppivalues.withLep    = reliso_Puppi_withLep;
-  puppivalues.withoutlep = reliso_Puppi_withoutlep;
-  puppivalues.combined   = _mix_fraction_ * reliso_Puppi_withLep + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep;
+  const double reliso_Puppi_withLep04    = ( val_PuppiWithLep04   [CH] + val_PuppiWithLep04   [NH] + val_PuppiWithLep04   [PH] ) / mu->pt() ;
+  const double reliso_Puppi_withoutlep04 = ( val_PuppiWithoutLep04[CH] + val_PuppiWithoutLep04[NH] + val_PuppiWithoutLep04[PH] ) / mu->pt() ;
+
+  const double reliso_Puppi_withLep05    = ( val_PuppiWithLep05   [CH] + val_PuppiWithLep05   [NH] + val_PuppiWithLep05   [PH] ) / mu->pt() ;
+  const double reliso_Puppi_withoutlep05 = ( val_PuppiWithoutLep05[CH] + val_PuppiWithoutLep05[NH] + val_PuppiWithoutLep05[PH] ) / mu->pt() ;
+
+  puppivalues.withLep03    = reliso_Puppi_withLep03;
+  puppivalues.withoutlep03 = reliso_Puppi_withoutlep03;
+  puppivalues.combined03   = _mix_fraction_ * reliso_Puppi_withLep03 + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep03;
+
+  puppivalues.withLep      = reliso_Puppi_withLep04;
+  puppivalues.withoutlep   = reliso_Puppi_withoutlep04;
+  puppivalues.combined     = _mix_fraction_ * reliso_Puppi_withLep04 + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep04;
+
+  puppivalues.withLep05    = reliso_Puppi_withLep05;
+  puppivalues.withoutlep05 = reliso_Puppi_withoutlep05;
+  puppivalues.combined05   = _mix_fraction_ * reliso_Puppi_withLep05 + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep05;
   
   return puppivalues;
 }
