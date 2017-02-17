@@ -37,19 +37,18 @@ process.source = cms.Source("PoolSource",
 
 
 #run for entire sample
-#dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/my/'
-#filelst = open(dir+"TenMuPU0.txt", "r")
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
+filelst = open(dir+"QCD_PU0_pre4_fixed01.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 #process.source.fileNames = filelst.readlines()
 
 #process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0/TTbar_pu0.root"))
-process.TFileService = cms.Service("TFileService",fileName = cms.string("TenMuPU0.root"))
+process.TFileService = cms.Service("TFileService",fileName = cms.string("puppi_QCD_PU0_pre4_fixed01_ver2.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
 process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
 process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
-
 
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
