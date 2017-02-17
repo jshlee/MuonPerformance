@@ -304,7 +304,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(muAssocToken_, associatorBase);
   MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
   //reco::InnerTk or reco::GlobalTk
-  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle);
+  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
   
   vector<const Muon*> signalMuons; signalMuons.clear();
   
