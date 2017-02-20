@@ -96,40 +96,59 @@ arrPlotvar = [
     {"plotvar": "recoMuon.Phi()",      "binning": [12,-3,3],  "effrate": True, "id": "Loose", 
         "xtitle": "#phi",        "ytitle": "Fake Rate", "max": 1.2}, 
 """
-    
+
+"""
 arrPlotvar = [
     {"plotvar": "recoMuon_TrkIsolation03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all", 
-        "ylog": True, "xtitle": "Track Isolation", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-]
-"""
+        "ylog": True, "xtitle": "Track Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     {"plotvar": "recoMuon_PFIsolation04",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PF Isolation", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "PF Isolation R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     
     {"plotvar": "recoMuon_TrkIsolation03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "Track Isolation", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "Track Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     {"plotvar": "recoMuon_PFIsolation04",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PF Isolation", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "PF Isolation R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     
     {"plotvar": "recoMuon_puppiIsoWithLep",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation with lepton", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     {"plotvar": "recoMuon_puppiIsoWithoutLep", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation without lepton", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     {"plotvar": "recoMuon_puppiIsoCombined",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "Combined PUPPI Isolation (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.4 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     
     {"plotvar": "recoMuon_puppiIsoWithLep",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation with lepton", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     {"plotvar": "recoMuon_puppiIsoWithoutLep", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation without lepton", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
     {"plotvar": "recoMuon_puppiIsoCombined",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "Combined PUPPI Isolation (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.4 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
 ]
 """
+arrPlotvar = [
+    {"plotvar": "recoMuon_PFIsolation03",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
+        "ylog": True, "xtitle": "PF Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    {"plotvar": "recoMuon_PFIsolation03",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
+        "ylog": True, "xtitle": "PF Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    
+    {"plotvar": "recoMuon_puppiIsoWithLep03",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
+        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    {"plotvar": "recoMuon_puppiIsoWithoutLep03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
+        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    {"plotvar": "recoMuon_puppiIsoCombined03",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
+        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.3 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    
+    {"plotvar": "recoMuon_puppiIsoWithLep03",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
+        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    {"plotvar": "recoMuon_puppiIsoWithoutLep03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
+        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+    {"plotvar": "recoMuon_puppiIsoCombined03",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
+        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.3 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
+]
 
 strFileSampZMM0   = "puppi_ZMM_PU0_pre4_fixed01_ver2.root"
-strFileSampZMM140 = "puppi_ZMM_PU140_pre4_fixed01.root"
+strFileSampZMM140 = "puppi_ZMM_PU140_pre4_fixed01_ver2.root"
 strFileSampQCD0   = "puppi_QCD_PU0_pre4_fixed01_ver2.root"
-strFileSampQCD140 = "puppi_QCD_PU140_pre4_fixed01.root"
+strFileSampQCD140 = "puppi_QCD_PU140_pre4_fixed01_ver2.root"
 
 """
 arrSampleType = [
@@ -173,8 +192,8 @@ listIDCfg = {
     "Loose": {"isoCut": {"Trk": "TrkIsolation03 < 0.10", "PF": "PFIsolation04 < 0.25"}}, 
 }
 
-strCutPT  = "5"
-strCutEta = "2.4"
+strCutPT  = "15"
+strCutEta = "2"
 
 strCutGenNor = "genMuon.Pt() > %(pT)s && abs(genMuon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
 strCutGenDen = strCutGenNor
