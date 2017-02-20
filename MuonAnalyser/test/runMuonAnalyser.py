@@ -31,7 +31,8 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/xrootd/store/relval/CMSSW_9_0_0_pre2/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v1_2023D4Timing-v1/10000/086EEBBD-67C2-E611-BD7D-0CC47A4D761A.root'
+      'file:/cms/home/jlee/scratch/pfmuon/src/22811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4Timing_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4Timing+RecoFullGlobal_2023D4Timing+HARVESTFullGlobal_2023D4Timing/step3.root'
+      #'file:step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
@@ -40,7 +41,7 @@ process.source = cms.Source("PoolSource",
 dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_0_0_pre2/TenMu_'
 filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
-process.source.fileNames = filelst.readlines()
+#process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
