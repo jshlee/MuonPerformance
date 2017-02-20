@@ -15,6 +15,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2023_realistic_v1',
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
 
+"""
 #process.MessageLogger.categories.append("MuonAnalyser")
 process.MessageLogger.debugModules = cms.untracked.vstring("*")
 process.MessageLogger.destinations = cms.untracked.vstring("cout","junk")
@@ -25,6 +26,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
     #MuonAnalyser   = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
     #MuonAnalyser_Matching = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
 )
+"""
 
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
@@ -35,15 +37,13 @@ process.source = cms.Source("PoolSource",
     skipBadFiles = cms.untracked.bool(True), 
 )
 
-
-#run for entire sample
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
-filelst = open(dir+"QCD_PU0_pre4_fixed01.txt", "r")
+#to run for entire sample
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_0_0_pre2/TenMu_'
+filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 #process.source.fileNames = filelst.readlines()
 
-#process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0/TTbar_pu0.root"))
-process.TFileService = cms.Service("TFileService",fileName = cms.string("puppi_QCD_PU0_pre4_fixed01_ver2.root"))
+process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
