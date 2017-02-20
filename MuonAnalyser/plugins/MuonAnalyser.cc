@@ -728,8 +728,8 @@ std::vector<double> MuonAnalyser::collectTMVAvalues(const reco::Muon& mu, reco::
 
 bool MuonAnalyser::isLooseMuonCustom(const reco::Muon& mu) const
 {
-  if ( !(mu.isGlobalMuon()) ) return false;
-  if ( !(mu.isPFMuon() || mu.isTrackerMuon()) ) return false;
+  if ( !(mu.isPFMuon()) ) return false;
+  if ( !(mu.isGlobalMuon() || mu.isTrackerMuon()) ) return false;
   return true;
 }
 
@@ -757,12 +757,12 @@ bool MuonAnalyser::isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex
   if ( !(mu.globalTrack().isNonnull()) )  return false;
   if ( !(mu.muonBestTrack().isNonnull()) ) return false;
   if ( !(mu.innerTrack().isNonnull()) ) return false;
-  if ( !(mu.globalTrack()->normalizedChi2() < 4.) ) return false; // < 10.
-  if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 7) ) return false; // > 0
+  if ( !(mu.globalTrack()->normalizedChi2() < 2.) ) return false; // < 10.
+  if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 10) ) return false; // > 0
   if ( !(mu.numberOfMatchedStations() > 1) ) return false;
-  if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.05) ) return false; // < 0.2
+  if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.02) ) return false; // < 0.2
   //if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
-  if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 0) ) return false;
+  if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 3) ) return false; // > 0
   if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 7) ) return false; // > 5
   return true;
 }
