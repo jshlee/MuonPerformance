@@ -73,12 +73,11 @@ arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
         "color": 3, "shape": 34}, # green, filled cross
     
-    {"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
-        "color": 1, "shape": 24}, # black, unfilled circle
+    #{"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
+    #    "color": 1, "shape": 24}, # black, unfilled circle
     {"plotvar": "recoMuon_PFIsolation04",      "title": "PF Isolation, R = 0.4", 
         "color": 6, "shape": 25}, # pink,  unfilled square
 ]
-"""
 """
 arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoWithLep03",    "title": "PUPPI - with lepton, R = 0.3", 
@@ -88,8 +87,8 @@ arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoCombined03",   "title": "PUPPI - combined (ratio : 0.5)", 
         "color": 3, "shape": 34}, # green, filled cross
     
-    {"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
-        "color": 1, "shape": 24}, # black, unfilled circle
+    #{"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
+    #    "color": 1, "shape": 24}, # black, unfilled circle
     {"plotvar": "recoMuon_PFIsolation03",      "title": "PF Isolation, R = 0.3", 
         "color": 6, "shape": 25}, # pink,  unfilled square
 ]
@@ -105,6 +104,7 @@ arrPlotvar = [
     {"plotvar": "recoMuon_TrkIsolation05",     "title": "Track Isolation, R = 0.5", 
         "color": 1, "shape": 24}, # black, unfilled circle
 ]
+"""
 
 """
 dicSampleType = {
@@ -140,7 +140,7 @@ strPUTitle = dicSampleType[ strTypePU ][ "title" ]
 strSampleSig = dicSampleType[ strTypePU ][ "file_sig" ]
 strSampleBkg = dicSampleType[ strTypePU ][ "file_bkg" ]
 
-strCutPT  = "5"
+strCutPT  = "15"
 strCutEta = "2.4"
 
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
