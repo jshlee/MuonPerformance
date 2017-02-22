@@ -109,6 +109,7 @@ private:
   TLorentzVector b_genMuon;
   bool b_genMuon_isTightOptimized, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
   bool b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon, b_genMuon_signal;
+  bool b_genMuon_isGlobalMuon, b_genMuon_isStandAloneMuon;
   int b_genMuon_noRecHitGEM;
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_pfIso03ChargedHadronPt, b_genMuon_pfIso03NeutralHadronEt;
@@ -137,6 +138,7 @@ private:
   bool b_recoMuon_signal;
   bool b_recoMuon_isTightOptimized, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
   bool b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
+  bool b_recoMuon_isGlobalMuon, b_recoMuon_isStandAloneMuon;
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
@@ -231,6 +233,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
   genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
+  genttree_->Branch("genMuon_isGlobalMuon", &b_genMuon_isGlobalMuon, "genMuon_isGlobalMuon/O");
+  genttree_->Branch("genMuon_isStandAloneMuon", &b_genMuon_isStandAloneMuon, "genMuon_isStandAloneMuon/O");
   genttree_->Branch("genMuon_TrkIsolation03",&b_genMuon_TrkIso03,"genMuon_TrkIsolation03/F");
   genttree_->Branch("genMuon_TrkIsolation05",&b_genMuon_TrkIso05,"genMuon_TrkIsolation05/F");
   genttree_->Branch("genMuon_PFIsolation03",&b_genMuon_pfIso03,"genMuon_PFIsolation03/F");
@@ -296,6 +300,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_isME0Muon", &b_recoMuon_isME0Muon, "recoMuon_isME0Muon/O");
   recottree_->Branch("recoMuon_isGEMMuon", &b_recoMuon_isGEMMuon, "recoMuon_isGEMMuon/O");
   recottree_->Branch("recoMuon_isMuon", &b_recoMuon_isMuon, "recoMuon_isMuon/O");
+  recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_isGlobalMuon, "recoMuon_isGlobalMuon/O");
+  recottree_->Branch("recoMuon_isStandAloneMuon", &b_recoMuon_isStandAloneMuon, "recoMuon_isStandAloneMuon/O");
   recottree_->Branch("recoMuon_numberOfValidMuonGEMHits",&b_recoMuon_numberOfValidMuonGEMHits,"recoMuon_numberOfValidMuonGEMHits/I");
   recottree_->Branch("recoMuon_numberOfValidMuonME0Hits",&b_recoMuon_numberOfValidMuonME0Hits,"recoMuon_numberOfValidMuonME0Hits/I");
 
@@ -449,6 +455,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isME0Muon = false;
     b_genMuon_isGEMMuon = false;
     b_genMuon_isMuon = false;
+    b_genMuon_isGlobalMuon = false;
+    b_genMuon_isStandAloneMuon = false;
     b_genMuon_signal = false;
     b_genMuon_numberOfValidMuonGEMHits = -1;
     b_genMuon_numberOfValidMuonME0Hits = -1;
@@ -530,6 +538,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isME0Muon = mu->isME0Muon();
 	b_genMuon_isGEMMuon = mu->isGEMMuon();
 	b_genMuon_isMuon = mu->isMuon();
+    b_genMuon_isGlobalMuon = mu->isGlobalMuon();
+    b_genMuon_isStandAloneMuon = mu->isStandAloneMuon();
 
 	b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
 	b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
@@ -648,6 +658,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_isME0Muon = mu->isME0Muon();
     b_recoMuon_isGEMMuon = mu->isGEMMuon();
     b_recoMuon_isMuon = mu->isMuon();
+    b_recoMuon_isGlobalMuon = mu->isGlobalMuon();
+    b_recoMuon_isStandAloneMuon = mu->isStandAloneMuon();
     b_recoMuon_noRecHitGEM = -1;
     b_recoMuon_numberOfValidMuonGEMHits = -1;
     b_recoMuon_numberOfValidMuonME0Hits = -1;
