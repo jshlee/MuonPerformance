@@ -1,4 +1,4 @@
-import ROOT, copy, os, sys
+import ROOT, copy, os, sys, json
 import MuonPerformance.MuonAnalyser.CMS_lumi as CMS_lumi
 import MuonPerformance.MuonAnalyser.tdrstyle as tdrstyle
 from MuonPerformance.MuonAnalyser.histoHelper import *
@@ -6,10 +6,10 @@ ROOT.gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
 
-def setMarkerStyle(h,color,style):
+def setMarkerStyle(h,color,style,size):
     h.SetMarkerColor(color)
     h.SetMarkerStyle(style)
-    h.SetMarkerSize(0.5)
+    h.SetMarkerSize(size)
     h.SetLineColor(color)
     h.SetLineWidth(2)
 
@@ -17,9 +17,17 @@ def setMarkerStyle(h,color,style):
 def getH1_Normalized(filename,treename,title,binning,plotvar,cut):
     h1 = makeTH1(filename,treename,title,binning,plotvar,cut)
     
+    # Normalizing
     normfactor = h1.GetEntries()
     if normfactor > 0.0: h1.Scale(1.0 / normfactor)
     
+    # Showing overflow
+    nValLastBin  = h1.GetBinContent(binning[ 0 ])
+    nValOverflow = h1.GetBinContent(binning[ 0 ] + 1)
+    h1.SetBinContent(binning[ 0 ], nValLastBin + nValOverflow)
+    h1.SetBinContent(binning[ 0 ] + 1, 0)
+    
+    # Setting title
     h1.SetTitle(title)
     
     return copy.deepcopy(h1)
@@ -49,143 +57,15 @@ def drawSampleName(samplename):
 
 
 datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
-#datadir = "TenMuExtendedE_"
-isotype = sys.argv[1]
 
-listIso = ["Trk", "PF"]
-
-if isotype not in listIso:
-    print "Error : Isolation condition (second arg) should be Trk or PF"
+if len(sys.argv) < 2: 
+    print "Usage : python universaldrawer.py (JSON file)"
     exit(1)
 
-fMaxPuppi = 0.5
-nNumBinPuppi = 100
+dicMainCmd = json.load(open(sys.argv[ 1 ]))
 
-"""
-arrPlotvar = [
-    #{"plotvar": "genMuon.Pt()",        "binning": [10,5,105], "effrate": False, "id": "Tight", 
-    #    "xtitle": "p_{T} (GeV)", "ytitle": "Efficiency"}, 
-    #{"plotvar": "abs(genMuon.Eta())",  "binning": [15,0,2.4], "effrate": False, "id": "Tight", 
-    #    "xtitle": "|#eta|",      "ytitle": "Efficiency"}, 
-    #{"plotvar": "genMuon.Phi()",       "binning": [12,-3,3],  "effrate": False, "id": "Tight", 
-    #    "xtitle": "#phi",        "ytitle": "Efficiency"}, 
-]
-"""
-
-"""
-    {"plotvar": "genMuon.Pt()",        "binning": [10,5,105], "effrate": True, "id": "Tight", 
-        "xtitle": "p_{T} (GeV)", "ytitle": "Efficiency", "min": 0.6, "max": 1.1}, 
-    {"plotvar": "abs(genMuon.Eta())",  "binning": [15,0,2.4], "effrate": True, "id": "Tight", 
-        "xtitle": "|#eta|",      "ytitle": "Efficiency", "min": 0.6, "max": 1.1}, 
-    {"plotvar": "genMuon.Phi()",       "binning": [12,-3,3],  "effrate": True, "id": "Tight", 
-        "xtitle": "#phi",        "ytitle": "Efficiency", "min": 0.6, "max": 1.1}, 
-"""
-    
-"""
-    {"plotvar": "recoMuon.Pt()",       "binning": [10,5,105], "effrate": True, "id": "Tight", 
-        "xtitle": "p_{T} (GeV)", "ytitle": "Fake Rate", "max": 1.2}, 
-    {"plotvar": "abs(recoMuon.Eta())", "binning": [8,0,2.4],  "effrate": True, "id": "Tight", 
-        "xtitle": "|#eta|",      "ytitle": "Fake Rate", "max": 1.2}, 
-    {"plotvar": "recoMuon.Phi()",      "binning": [12,-3,3],  "effrate": True, "id": "Tight", 
-        "xtitle": "#phi",        "ytitle": "Fake Rate", "max": 1.2}, 
-    
-    {"plotvar": "recoMuon.Pt()",       "binning": [10,5,105], "effrate": True, "id": "Loose", 
-        "xtitle": "p_{T} (GeV)", "ytitle": "Fake Rate", "max": 1.2}, 
-    {"plotvar": "abs(recoMuon.Eta())", "binning": [8,0,2.4],  "effrate": True, "id": "Loose", 
-        "xtitle": "|#eta|",      "ytitle": "Fake Rate", "max": 1.2}, 
-    {"plotvar": "recoMuon.Phi()",      "binning": [12,-3,3],  "effrate": True, "id": "Loose", 
-        "xtitle": "#phi",        "ytitle": "Fake Rate", "max": 1.2}, 
-"""
-
-"""
-arrPlotvar = [
-    {"plotvar": "recoMuon_TrkIsolation03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all", 
-        "ylog": True, "xtitle": "Track Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_PFIsolation04",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PF Isolation R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    
-    {"plotvar": "recoMuon_TrkIsolation03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "Track Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_PFIsolation04",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PF Isolation R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    
-    {"plotvar": "recoMuon_puppiIsoWithLep",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoWithoutLep", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoCombined",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.4 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    
-    {"plotvar": "recoMuon_puppiIsoWithLep",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoWithoutLep", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.4", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoCombined",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.4 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-]
-"""
-arrPlotvar = [
-    {"plotvar": "recoMuon_PFIsolation03",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PF Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_PFIsolation03",  "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PF Isolation R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    
-    {"plotvar": "recoMuon_puppiIsoWithLep03",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoWithoutLep03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoCombined03",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Tight", "type": "all",
-        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.3 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    
-    {"plotvar": "recoMuon_puppiIsoWithLep03",    "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation with lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoWithoutLep03", "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "PUPPI Isolation without lepton R=0.3", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-    {"plotvar": "recoMuon_puppiIsoCombined03",   "binning": [nNumBinPuppi,0,fMaxPuppi], "id": "Loose", "type": "all",
-        "ylog": True, "xtitle": "Combined PUPPI Isolation R=0.3 (ratio = 0.5)", "ytitle": "# of events (normalized)", "min": 0.00005, "max":1.0}, 
-]
-
-strFileSampZMM0   = "puppi_ZMM_PU0_pre4_fixed01_ver2.root"
-strFileSampZMM140 = "puppi_ZMM_PU140_pre4_fixed01_ver2.root"
-strFileSampQCD0   = "puppi_QCD_PU0_pre4_fixed01_ver2.root"
-strFileSampQCD140 = "puppi_QCD_PU140_pre4_fixed01_ver2.root"
-
-"""
-arrSampleType = [
-    {"title": "Phase II PU0 - pre2",   "filename": "puppi_ZMM_PU0_pre2.root",   "id": "Tight", 
-        "color": 4, "shape": 20}, # blue,  filled circle
-    {"title": "Phase II PU200 - pre2", "filename": "puppi_ZMM_PU200_pre2.root", "id": "Tight", 
-        "color": 2, "shape": 21}, # red,   filled square
-    {"title": "Phase II QCD - pre2",   "filename": "puppi_QCD_PU0_pre2.root",   "id": "Tight",
-        "color": 1, "shape": 34}, # black, filled cross
-    
-    {"title": "Phase II PU0 - pre2",   "filename": "puppi_ZMM_PU0_pre2.root",   "id": "Loose",
-        "color": 3, "shape": 24}, # green, unfilled circle
-    {"title": "Phase II PU200 - pre2", "filename": "puppi_ZMM_PU200_pre2.root", "id": "Loose", 
-        "color": 6, "shape": 25}, # pink,  unfilled square
-    {"title": "Phase II QCD - pre2",   "filename": "puppi_QCD_PU0_pre2.root",   "id": "Loose",
-        "color": 7, "shape": 28}, # cyan,  unfilled cross
-];
-"""
-arrSampleType = [
-    {"title": "Phase II Signal PU0 - pre4",   "filename": strFileSampZMM0,   "id": "Tight", 
-        "color": 4, "shape": 20, "extracut": "recoMuon_signal"}, # blue,  filled circle
-    {"title": "Phase II Signal PU140 - pre4", "filename": strFileSampZMM140, "id": "Tight", 
-        "color": 2, "shape": 21, "extracut": "recoMuon_signal"}, # red,   filled square
-    {"title": "Phase II QCD PU0 - pre4",      "filename": strFileSampQCD0,   "id": "Tight",
-        "color": 1, "shape": 34, "extracut": "recoMuon_pdgId != 0"}, # black, filled cross
-    {"title": "Phase II QCD PU140 - pre4",    "filename": strFileSampQCD140, "id": "Tight",
-        "color": 7, "shape": 28, "extracut": "recoMuon_pdgId != 0"}, # cyan,  unfilled cross
-    
-    {"title": "Phase II Signal PU0 - pre4",   "filename": strFileSampZMM0,   "id": "Loose",
-        "color": 3, "shape": 24, "extracut": "recoMuon_signal"}, # green, unfilled circle
-    {"title": "Phase II Signal PU140 - pre4", "filename": strFileSampZMM140, "id": "Loose", 
-        "color": 6, "shape": 25, "extracut": "recoMuon_signal"}, # pink,  unfilled square
-    {"title": "Phase II QCD PU0 - pre4",      "filename": strFileSampQCD0,   "id": "Loose",
-        "color": 1, "shape": 34, "extracut": "recoMuon_pdgId != 0"}, # black, filled cross
-    {"title": "Phase II QCD PU140 - pre4",    "filename": strFileSampQCD140, "id": "Loose",
-        "color": 7, "shape": 28, "extracut": "recoMuon_pdgId != 0"}, # cyan,  unfilled cross
-];
+arrPlotvar =    dicMainCmd[ "plotvars" ]
+arrSampleType = dicMainCmd[ "samples" ]
 
 listIDCfg = {
     "Tight": {"isoCut": {"Trk": "TrkIsolation03 < 0.05", "PF": "PFIsolation04 < 0.15"}}, 
@@ -203,13 +83,19 @@ strCutGenNum = strCutGenDen + " && genMuon_isMuon && genMuon_%(iso)s"
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_is%(ID)s"
 #strCutRecNor = "recoMuon.Pt() > 5"
 #strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_TrkIsolation03 <= 0.00001"
-strCutRecNor = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta} + " && recoMuon_is%(ID)s"
+strCutRecNor = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
 #strCutRecNor = "recoMuon.Pt() > 20 && abs(recoMuon.Eta()) < 2"
 strCutRecDen = strCutRecNor + " && recoMuon_isMuon && recoMuon_%(iso)s"
 strCutRecNum = strCutRecDen + " && !recoMuon_signal"
 
 strCutGenIso = ""
 strCutRecIso = ""
+
+dicCutConfig = {
+    "pT": strCutPT, "Eta": strCutEta
+}
+
+if "cutconfig" in dicMainCmd: dicCutConfig = dicMainCmd[ "cutconfig" ]
 
 
 for i, dicPlotvar in enumerate(arrPlotvar):
@@ -240,6 +126,8 @@ for i, dicPlotvar in enumerate(arrPlotvar):
     nMax = 0
     nMin = 10000000
     
+    if "id" in dicMainCmd: dicCutConfig[ "ID" ] = dicMainCmd[ "id" ]
+    
     #Get histos
     for sampHead in arrSampleType: 
         if "type" not in dicPlotvar or dicPlotvar[ "type" ] != "all": 
@@ -249,9 +137,11 @@ for i, dicPlotvar in enumerate(arrPlotvar):
                 continue
 
         strIDCurr = sampHead[ "id" ]
+        dicCutConfig[ "ID" ] = strIDCurr
         
         # This is the isolation cut condition
-        strCutIso = listIDCfg[ strIDCurr ][ "isoCut" ][ isotype ]
+        isotype = dicPlotvar[ "isotype" ]
+        dicMainCmd[ "iso" ] = listIDCfg[ strIDCurr ][ "isoCut" ][ isotype ]
         
         strCutExtra = ""
         if "extracut" in sampHead: strCutExtra = " && " + sampHead[ "extracut" ]
@@ -261,20 +151,23 @@ for i, dicPlotvar in enumerate(arrPlotvar):
             # Drawing efficiency / fake rate plot
             sampHead[ "hist" ] = getEff(datadir + sampHead[ "filename" ], strTree, 
                 sampHead[ "title" ] + " - " + strIDCurr, binCurr, plotvar, 
-                strCutDen%{"ID": strIDCurr, "iso": strCutIso} + strCutExtra, # cut for denominator
-                strCutNum%{"ID": strIDCurr, "iso": strCutIso} + strCutExtra) # cut for nominator
+                strCutDen%dicCutConfig + strCutExtra, # cut for denominator
+                strCutNum%dicCutConfig + strCutExtra) # cut for nominator
         else:
             if strIDCurr != dicPlotvar[ "id" ]:
                 continue
             
-            strCut = strCutNor%{"ID": dicPlotvar[ "id" ], "iso": strCutIso} + strCutExtra # cut for normal
+            strCut = strCutNor%dicCutConfig + strCutExtra # cut for normal
             print sampHead[ "title" ] + " - " + strCut
             
             # Drawing normal plot (for isolation values)
             sampHead[ "hist" ] = getH1_Normalized(datadir + sampHead[ "filename" ], strTree, 
                 sampHead[ "title" ], binCurr, plotvar, strCut)
         
-        setMarkerStyle(sampHead[ "hist" ], sampHead[ "color" ], sampHead[ "shape" ])
+        fSizeDot = 1.5
+        if "size" in sampHead: fSizeDot = sampHead[ "size" ]
+        
+        setMarkerStyle(sampHead[ "hist" ], sampHead[ "color" ], sampHead[ "shape" ], fSizeDot)
         arrHist.append(sampHead)
         
         if nMin > sampHead[ "hist" ].GetMinimum(): 
@@ -312,7 +205,7 @@ for i, dicPlotvar in enumerate(arrPlotvar):
     drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} and QCD events, "
         "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon")%{"pT": strCutPT, "Eta": strCutEta, "ID": dicPlotvar[ "id" ]})
     
-    if "ylog" in dicPlotvar and dicPlotvar[ "ylog" ]:
+    if "ylog" in dicPlotvar and dicPlotvar[ "ylog" ] != 0:
         ROOT.gPad.SetLogy()
     else: 
         ROOT.gPad.SetLogy(0)
@@ -323,8 +216,31 @@ for i, dicPlotvar in enumerate(arrPlotvar):
     if "genMuon"  in plotvar: leg = legBot
     if "recoMuon" in plotvar: leg = legTop
     
+    if "legend" in dicMainCmd: 
+        fLegLeft   = 0.5
+        fLegTop    = 0.65
+        fLegRight  = 0.80
+        fLegBottom = 0.5
+        
+        if "left"   in dicMainCmd[ "legend" ]: 
+            fLegLeft   = dicMainCmd[ "legend" ][ "left" ]
+        
+        if "top"    in dicMainCmd[ "legend" ]: 
+            fLegTop    = dicMainCmd[ "legend" ][ "top" ]
+        
+        if "right"  in dicMainCmd[ "legend" ]: 
+            fLegRight  = dicMainCmd[ "legend" ][ "right" ]
+        
+        if "bottom" in dicMainCmd[ "legend" ]: 
+            fLegBottom = dicMainCmd[ "legend" ][ "bottom" ]
+        
+        leg = ROOT.TLegend(fLegLeft, fLegTop, fLegRight, fLegBottom)
+    
     for sampHead in arrHist: 
-        sampHead[ "hist" ].Draw("e1same")
+        strExtraOpt = ""
+        if "extradrawopt" in sampHead: strExtraOpt = sampHead[ "extradrawopt" ]
+        
+        sampHead[ "hist" ].Draw(strExtraOpt + "e1same")
         leg.AddEntry(sampHead[ "hist" ], sampHead[ "hist" ].GetTitle(), "p")
 
     leg.SetTextFont(61)
@@ -342,7 +258,10 @@ for i, dicPlotvar in enumerate(arrPlotvar):
 
     canv.Modified()
     canv.Update()
-    canv.SaveAs(name+".png")
+    if "filename" in dicPlotvar: 
+        canv.SaveAs(dicPlotvar[ "filename" ])
+    else: 
+        canv.SaveAs(name+".png")
     
     print "[%s - %s] has been drawn"%(plotvar, "All" if "id" not in dicPlotvar else dicPlotvar[ "id" ])
 
