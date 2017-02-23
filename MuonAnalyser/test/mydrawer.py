@@ -24,32 +24,39 @@ def drawSampleName(samplename):
     tex2.SetNDC()
     tex2.SetTextFont(42)
     tex2.SetTextSize(0.04)
-    tex2.DrawLatex(0.18, 0.8, samplename)
+    tex2.DrawLatex(0.18, 0.85, samplename)
 
+#datadir = '/cms/scratch/quark2930/Work/muon_upgrade/CMSSW_9_0_0_pre4/src/MuonPerformance/MuonAnalyser/test/puppi_ZMM_'
 datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
 #datadir = "TenMuExtendedE_"
-id = sys.argv[1]
-binning_l = [[10,5,105],[8,0,2.4],[12,-3,3],[10,5,105],[8,0,2.4],[12,-3,3]]
 
-for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi()", "recoMuon.Pt()", "abs(recoMuon.Eta())", "recoMuon.Phi()"]):
+id = sys.argv[1]
+binning_l = [[20,5,205],[24,-3,3],[12,-3,3],[20,5,205],[24,-3,3],[12,-3,3]]
+
+for i, plotvar in enumerate(["genMuon.Pt()", "genMuon.Eta()", "genMuon.Phi()", "recoMuon.Pt()", "recoMuon.Eta()", "recoMuon.Phi()"]):
+#for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi()", "recoMuon.Pt()", "abs(recoMuon.Eta())", "recoMuon.Phi()"]):
     #Get histos
-    cut = 0
+    regioncut = "genMuon.Pt()>5&&(abs(genMuon.Eta())>2.4&&genMuon_isME0Muon)"
     if "genMuon" in plotvar:
-        #h_ph2pu0   = getEff(datadir+"pu0.root",   "MuonAnalyser/gen", "PhaseII PU0",   binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_tmva_bdt>%d"%cut)
-        #h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_tmva_bdt>%d"%cut)
-        #h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_tmva_bdt>%f"%cut)
-        h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/gen", "PhaseII PU0", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
-        h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
-        h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", "genMuon.Pt()>5&&genMuon_is%s"%id)
+        h_ph2pu0   = getEff(datadir+"pu0.root",   "MuonAnalyser/gen", "PhaseII PU0",   binning_l[i], plotvar, "genMuon.Pt()>5", regioncut+"&&(abs(genMuon.Eta())<2.4&&genMuon_is%s)"%id)
+        h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/gen", "PhaseII PU140", binning_l[i], plotvar, "genMuon.Pt()>5", regioncut+"&&(abs(genMuon.Eta())<2.4&&genMuon_is%s)"%id)
+        h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/gen", "PhaseII PU200", binning_l[i], plotvar, "genMuon.Pt()>5", regioncut+"&&(abs(genMuon.Eta())<2.4&&genMuon_is%s)"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
+    tfile = ROOT.TFile(datadir+"pu0.root")
+    nevents_pu0 = tfile.Get("MuonAnalyser/nevents").Integral()
+    nevents_pu140 = tfile.Get("MuonAnalyser/nevents").Integral()
+    nevents_pu200 = tfile.Get("MuonAnalyser/nevents").Integral()
     if "recoMuon" in plotvar:
-        #h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_tmva_bdt>%f"%cut, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_tmva_bdt>%f"%cut)
-        #h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_tmva_bdt>%f"%cut, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_tmva_bdt>%f"%cut)
-        #h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_tmva_bdt>%f"%cut, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_tmva_bdt>%f"%cut)
-        h_ph2pu0 = getEff(datadir+"pu0.root", "MuonAnalyser/reco", "PhaseII PU0", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
-        h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
-        h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "recoMuon.Pt()>5&&recoMuon_is%s"%id, "recoMuon.Pt()>5&&!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu0   = makeTH1(datadir+"pu0.root",   "MuonAnalyser/reco", "PhaseII PU0",   binning_l[i], plotvar, "!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu140 = makeTH1(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu200 = makeTH1(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "!recoMuon_signal&&recoMuon_is%s"%id)
+        h_ph2pu0.Scale(1/nevents_pu0)
+        h_ph2pu140.Scale(1/nevents_pu140)
+        h_ph2pu200.Scale(1/nevents_pu200)
+        #h_ph2pu0   = getEff(datadir+"pu0.root",   "MuonAnalyser/reco", "PhaseII PU0",   binning_l[i], plotvar, nevents_pu0, "!recoMuon_signal&&recoMuon_is%s"%id)
+        #h_ph2pu140 = getEff(datadir+"pu140.root", "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, nevents_pu140, "!recoMuon_signal&&recoMuon_is%s"%id)
+        #h_ph2pu200 = getEff(datadir+"pu200.root", "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, nevents_pu200, "!recoMuon_signal&&recoMuon_is%s"%id)
         hlist = [h_ph2pu0, h_ph2pu140, h_ph2pu200]
 
     #Set init histo
@@ -64,13 +71,19 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
     y_name = id+" Muon "
     if "genMuon" in plotvar:
         h_init.SetMaximum(1.1)
-        h_init.SetMinimum(0.6)
+        h_init.SetMinimum(0.8)
         y_name = y_name+"Efficiency"
     if "recoMuon" in plotvar:
+        #maxY = hlist[1].GetEfficiency(0)
+        #for j in range(binning_l[i][0]):
+        #    x = hlist[1].GetEfficiency(j)
+        #    if maxY > x: continue
+        #    maxY = x
+        #h_init.SetMaximum(maxY*3)
         #h_init.SetMaximum(max(h.GetMaximum() for h in hlist)*2.5)
         h_init.GetYaxis().SetLabelSize(0.035)
         h_init.GetYaxis().SetTitleOffset(1.2)
-        y_name = y_name+"Fake Rate"
+        y_name = y_name+"Background Rate"
     h_init.GetXaxis().SetTitle(x_name)
     h_init.GetYaxis().SetTitle(y_name)
     h_init.GetYaxis().SetTitleOffset(1)
@@ -89,13 +102,20 @@ for i, plotvar in enumerate(["genMuon.Pt()", "abs(genMuon.Eta())", "genMuon.Phi(
     canv = makeCanvas(name, False)
     setMargins(canv, False)
     h_init.Draw()
-    drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV")
+    #drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV")
+    drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV, |#eta| < 2.4")
 
     #Legend and drawing
-    legTop = ROOT.TLegend(0.6,0.7,0.85,0.85)
-    legBot = ROOT.TLegend(0.6,0.2,0.85,0.35)
+    legTop = ROOT.TLegend(0.4,0.6,0.85,0.75)
+    legBot = ROOT.TLegend(0.4,0.2,0.85,0.35)
     if "genMuon"  in plotvar: leg = legBot
     if "recoMuon" in plotvar: leg = legTop
+    """
+    hlist[0].Draw("e1same")
+    hlist[1].Draw("e1same")
+    leg.AddEntry(hlist[0],hlist[0].GetTitle(),"p")
+    leg.AddEntry(hlist[1],hlist[1].GetTitle(),"p")
+    """
     for h in hlist:
         h.Draw("e1same")
         leg.AddEntry(h,h.GetTitle(),"p")
