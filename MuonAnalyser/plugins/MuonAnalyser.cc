@@ -106,6 +106,7 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   TH1D* h_nevents;
+  TH1D* h_vertex;
 
   TTree* genttree_;
   TTree* recottree_;
@@ -195,7 +196,7 @@ private:
   
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
-  edm::EDGetTokenT<SimVertexCollection> simVertexToken_;
+  edm::EDGetTokenT<std::vector<SimVertex> > simVertexToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
   edm::EDGetTokenT <std::vector< pat::PackedCandidate> > tokenPackedCandidate ;
@@ -207,7 +208,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
   vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
-  simVertexToken_ = consumes<std::vector<SimVertex> >(iConfig.getParameter<edm::InputTag> ("simVertexCollection"));  
+  simVertexToken_ = consumes<std::vector<SimVertex> >(pset.getParameter<edm::InputTag> ("simVertexCollection"));  
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
   tokenPackedCandidate = consumes <std::vector< pat::PackedCandidate> > ( edm::InputTag( std::string("packedPFCandidates"), std::string(""),std::string("") ) );
@@ -228,6 +229,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   usesResource("TFileService");
   edm::Service<TFileService> fs;
   h_nevents = fs->make<TH1D>("nevents", "nevents", 1, 0, 1);
+  h_vertex = fs->make<TH1D>("vertex reco vs sim", "vertex reco vs sim", 100, -1, 1);
 
   genttree_ = fs->make<TTree>("gen", "gen");
   genttree_->Branch("genMuon", "TLorentzVector", &b_genMuon);
@@ -434,7 +436,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   Handle<std::vector<SimVertex> > simVertexCollection;
   iEvent.getByToken(simVertexToken_, simVertexCollection);
   const SimVertex simPVh = *(simVertexCollection->begin());
-  simPV=simPVh.position().z();
+  h_vertex->Fill(pv0.position().z() - simPVh.position().z());
   
   Handle<TrackingParticleCollection> simHandle;
   iEvent.getByToken(simToken_, simHandle);
