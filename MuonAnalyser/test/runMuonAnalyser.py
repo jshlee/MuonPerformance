@@ -15,6 +15,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2023_realistic_v1',
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
 
+"""
 #process.MessageLogger.categories.append("MuonAnalyser")
 process.MessageLogger.debugModules = cms.untracked.vstring("*")
 process.MessageLogger.destinations = cms.untracked.vstring("cout","junk")
@@ -25,24 +26,24 @@ process.MessageLogger.cout = cms.untracked.PSet(
     #MuonAnalyser   = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
     #MuonAnalyser_Matching = cms.untracked.PSet( limit = cms.untracked.int32(-1) ),
 )
+"""
 
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/cms/home/jlee/scratch/pfmuon/src/1000/22811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4Timing_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4Timing+RecoFullGlobal_2023D4Timing+HARVESTFullGlobal_2023D4Timing/step3.root'
+      'file:/cms/home/jlee/scratch/pfmuon/src/22811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4Timing_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4Timing+RecoFullGlobal_2023D4Timing+HARVESTFullGlobal_2023D4Timing/step3.root'
+      #'file:step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
 
-
-#run for entire sample
-#dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/my/'
-#filelst = open(dir+"TenMuPU0.txt", "r")
+#to run for entire sample
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_0_0_pre2/TenMu_'
+filelst = open(dir+"pu0.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
 #process.source.fileNames = filelst.readlines()
 
-#process.TFileService = cms.Service("TFileService",fileName = cms.string("pu0/TTbar_pu0.root"))
-process.TFileService = cms.Service("TFileService",fileName = cms.string("TenMuPU0.root"))
+process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
