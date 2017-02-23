@@ -54,6 +54,7 @@ from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     primaryVertex = cms.InputTag('offlinePrimaryVertices'),
     simLabel = cms.InputTag("mix","MergedTrackTruth"),
+    simVertexCollection = cms.InputTag("g4SimHits"),
     muonLabel = cms.InputTag("muons"),
     muAssocLabel = cms.InputTag("muonAssociatorByHitsHelper"),
     tpSelector = muonTPSet, 

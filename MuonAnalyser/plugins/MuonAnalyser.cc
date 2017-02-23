@@ -21,6 +21,7 @@
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/Associations/interface/MuonToTrackingParticleAssociator.h"
+#include "SimDataFormats/Vertex/interface/SimVertex.h"
 #include "SimMuon/MCTruth/interface/MuonToSimAssociatorByHits.h"
 #include "SimTracker/Common/interface/TrackingParticleSelector.h"
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
@@ -190,6 +191,7 @@ private:
   
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
+  edm::EDGetTokenT<SimVertexCollection> simVertexToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
   edm::EDGetTokenT <std::vector< pat::PackedCandidate> > tokenPackedCandidate ;
@@ -201,6 +203,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
   vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
+  simVertexToken_ = consumes<std::vector<SimVertex> >(iConfig.getParameter<edm::InputTag> ("simVertexCollection"));  
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
   tokenPackedCandidate = consumes <std::vector< pat::PackedCandidate> > ( edm::InputTag( std::string("packedPFCandidates"), std::string(""),std::string("") ) );
@@ -416,6 +419,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   if (vertices->empty()) { cout << "noPV" << endl; return; }
   auto pv0 = vertices->front();
 
+  Handle<std::vector<SimVertex> > simVertexCollection;
+  iEvent.getByToken(simVertexToken_, simVertexCollection);
+  const SimVertex simPVh = *(simVertexCollection->begin());
+  simPV=simPVh.position().z();
+  
   Handle<TrackingParticleCollection> simHandle;
   iEvent.getByToken(simToken_, simHandle);
 
