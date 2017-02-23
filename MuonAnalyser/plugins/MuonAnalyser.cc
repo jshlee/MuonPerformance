@@ -104,6 +104,8 @@ public:
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
+  TH1D* h_nevents;
+
   TTree* genttree_;
   TTree* recottree_;
   TLorentzVector b_genMuon;
@@ -222,6 +224,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   
   usesResource("TFileService");
   edm::Service<TFileService> fs;
+  h_nevents = fs->make<TH1D>("nevents", "nevents", 1, 0, 1);
 
   genttree_ = fs->make<TTree>("gen", "gen");
   genttree_->Branch("genMuon", "TLorentzVector", &b_genMuon);
@@ -417,6 +420,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 MuonAnalyser::~MuonAnalyser(){}
 void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+
+  h_nevents->Fill(0.5);
+
   Handle<VertexCollection> vertices;
   iEvent.getByToken(vtxToken_, vertices); 
   if (vertices->empty()) { cout << "noPV" << endl; return; }
