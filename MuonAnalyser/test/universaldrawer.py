@@ -1,3 +1,104 @@
+########################################################################################
+## 
+## universaldrawer.py
+##
+## usage : python universaldrawer.py JSON_File
+##
+## The following is the form of JSON file.
+## You can see an example in test/jsonconf/jsonconf_Isovalue_PFIso04_Tight.json.
+## Perhaps, it is more helpful to read only this examples and 
+## skip decryption of the following descriptions.
+## 
+## Every item is marked by (L) or (D) or (V) or (C).
+## If makred by (L), it should be a list.
+## If makred by (D), it should be a dictinoary.
+## If makred by (V), it should be a single value, such as a number or a string.
+## If makred by (C), it should be a string which can contain format specifier.
+##   The format specifier will be filled with values in cutconfig.
+##   In Python, format specifiers can have a 'key', so the following is possible.
+## 
+##   "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s"%{"pT": "15", "Eta": "2.4"}
+##     => "recoMuon.Pt() > 15 && abs(recoMuon.Eta()) < 2.4"
+## 
+##   In the value with this mark you can use this specifiers, 
+##   where the followings are some possible keys.
+## 
+##   "pT"  : for pT cut.
+##   "Eta" : for eta cut.
+##   "ID"  : for ID cut. It MUST be "Tight" or "Loose".
+## 
+##   Of course, you can set up this setups as your taste; you can add any other keys
+##   and even type of a specifier.
+## 
+## 
+## (Required)
+## 
+## "cutconfig" (D) : cut configuration values, such as pT and eta for cut are in here.
+##   This values (and some in "vars") will be applied to values marked by (C), as mentioned.
+## 
+## "cut" (C) : Cut condition.
+## 
+## "binning" (L) : Binning of histogram.
+##   For more information, see ROOT:TH1 or and so on.
+## 
+## "title" (C) : This string will be printed at the histogram and 
+##   describes what this plot is.
+## 
+## "xtitle" (V) : title of x-axis
+## 
+## "ytitle" (V) : title of y-axis
+## 
+## "filename" (C) : the name of output image (or root) file
+## 
+## "vars" (L) : you can give the data in this list.
+##   For more information, see below.
+## 
+## 
+## (Optional)
+## 
+## "plotvar" (V) : What value do you want to draw?
+##   This value can be set in "vars" if you want to draw several values.
+## 
+## "ylog" (V) : Using log scale on y-axis
+## 
+## "min" (V) : you can set the minimum of the plot.
+## 
+## "max" (V) : you can set the maximum of the plot.
+## 
+## "legend" (D) : you can customize the position and size of the legend.
+##   It should be given as a dictionary with keys "left", "top", "right", "bottom".
+##   If one of these keys are not given, this program will use the default setting.
+##   For more information, see ROOT::TLegend.
+## 
+## 
+## The followings are for description of "vars".
+##   Each in the list of "vars" is a dictionary containing the following keys and values.
+## 
+## (Required)
+## 
+## "filename" (V) : the root file containng samples.
+## 
+## "title" (V) : you can see this value in the legend.
+## 
+## "color" (V) : the color of point in the histogram.
+## 
+## "shape" (V) : the shape of point in the histogram.
+## 
+## 
+## (Optional)
+## 
+## "plotvar" (V) : What value do you want to draw?
+##   It is optional, but if there is no central "plotvar", it becomes required.
+## 
+## "cutconfig" (C) : Additional cut configuration values for this samples.
+## 
+## "cut" (C) : Additional cut condition for this samples.
+## 
+## "size" (V) : the size of point in the histogram.
+## 
+########################################################################################
+
+
 import ROOT, copy, os, sys, json
 import MuonPerformance.MuonAnalyser.CMS_lumi as CMS_lumi
 import MuonPerformance.MuonAnalyser.tdrstyle as tdrstyle
@@ -65,7 +166,7 @@ if len(sys.argv) < 2:
 
 dicMainCmd = json.load(open(sys.argv[ 1 ]))
 
-# Getting vital variables
+# Getting required variables
 try: 
     strCut = dicMainCmd[ "cut" ]
     binCurr = dicMainCmd[ "binning" ]
@@ -81,7 +182,7 @@ try:
     arrVars = dicMainCmd[ "vars" ]
 
 except KeyError, strErr:
-    print "Error: the JSON file does not contain a vital key: %s"%strErr
+    print "Error: the JSON file does not contain a required key: %s"%strErr
 
 # Variables which can have a defalut value
 strPlotvar = "" # It must be determined either in "general" or "vars"
