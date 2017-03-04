@@ -1,3 +1,104 @@
+########################################################################################
+## 
+## universaldrawer.py
+##
+## usage : python universaldrawer.py JSON_File
+##
+## The following is the form of JSON file.
+## You can see an example in test/jsonconf/jsonconf_Isovalue_PFIso04_Tight.json.
+## Perhaps, it is more helpful to read only this examples and 
+## skip decryption of the following descriptions.
+## 
+## Every item is marked by (L) or (D) or (V) or (C).
+## If makred by (L), it should be a list.
+## If makred by (D), it should be a dictinoary.
+## If makred by (V), it should be a single value, such as a number or a string.
+## If makred by (C), it should be a string which can contain format specifier.
+##   The format specifier will be filled with values in cutconfig.
+##   In Python, format specifiers can have a 'key', so the following is possible.
+## 
+##   "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s"%{"pT": "15", "Eta": "2.4"}
+##     => "recoMuon.Pt() > 15 && abs(recoMuon.Eta()) < 2.4"
+## 
+##   In the value with this mark you can use this specifiers, 
+##   where the followings are some possible keys.
+## 
+##   "pT"  : for pT cut.
+##   "Eta" : for eta cut.
+##   "ID"  : for ID cut. It MUST be "Tight" or "Loose".
+## 
+##   Of course, you can set up this setups as your taste; you can add any other keys
+##   and even type of a specifier.
+## 
+## 
+## (Required)
+## 
+## "cutconfig" (D) : cut configuration values, such as pT and eta for cut are in here.
+##   This values (and some in "vars") will be applied to values marked by (C), as mentioned.
+## 
+## "cut" (C) : Cut condition.
+## 
+## "binning" (L) : Binning of histogram.
+##   For more information, see ROOT:TH1 or and so on.
+## 
+## "title" (C) : This string will be printed at the histogram and 
+##   describes what this plot is.
+## 
+## "xtitle" (V) : title of x-axis
+## 
+## "ytitle" (V) : title of y-axis
+## 
+## "filename" (C) : the name of output image (or root) file
+## 
+## "vars" (L) : you can give the data in this list.
+##   For more information, see below.
+## 
+## 
+## (Optional)
+## 
+## "plotvar" (V) : What value do you want to draw?
+##   This value can be set in "vars" if you want to draw several values.
+## 
+## "ylog" (V) : Using log scale on y-axis
+## 
+## "min" (V) : you can set the minimum of the plot.
+## 
+## "max" (V) : you can set the maximum of the plot.
+## 
+## "legend" (D) : you can customize the position and size of the legend.
+##   It should be given as a dictionary with keys "left", "top", "right", "bottom".
+##   If one of these keys are not given, this program will use the default setting.
+##   For more information, see ROOT::TLegend.
+## 
+## 
+## The followings are for description of "vars".
+##   Each in the list of "vars" is a dictionary containing the following keys and values.
+## 
+## (Required)
+## 
+## "filename" (V) : the root file containng samples.
+## 
+## "title" (V) : you can see this value in the legend.
+## 
+## "color" (V) : the color of point in the histogram.
+## 
+## "shape" (V) : the shape of point in the histogram.
+## 
+## 
+## (Optional)
+## 
+## "plotvar" (V) : What value do you want to draw?
+##   It is optional, but if there is no central "plotvar", it becomes required.
+## 
+## "cutconfig" (C) : Additional cut configuration values for this samples.
+## 
+## "cut" (C) : Additional cut condition for this samples.
+## 
+## "size" (V) : the size of point in the histogram.
+## 
+########################################################################################
+
+
 import ROOT, copy, os, sys, json
 import MuonPerformance.MuonAnalyser.CMS_lumi as CMS_lumi
 import MuonPerformance.MuonAnalyser.tdrstyle as tdrstyle
@@ -56,7 +157,8 @@ def drawSampleName(samplename):
         tex2.DrawLatex(fX, fY - i * 1.1 * fSizeTex, strLine)
 
 
-datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
+#datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
+datadir = "/cms/scratch/quark2930/Work/muon_upgrade/samples/"
 
 if len(sys.argv) < 2: 
     print "Usage : python universaldrawer.py (JSON file)"
@@ -64,204 +166,166 @@ if len(sys.argv) < 2:
 
 dicMainCmd = json.load(open(sys.argv[ 1 ]))
 
-arrPlotvar =    dicMainCmd[ "plotvars" ]
-arrSampleType = dicMainCmd[ "samples" ]
-
-listIDCfg = {
-    "Tight": {"isoCut": {"Trk": "TrkIsolation03 < 0.05", "PF": "PFIsolation04 < 0.15"}}, 
-    "Loose": {"isoCut": {"Trk": "TrkIsolation03 < 0.10", "PF": "PFIsolation04 < 0.25"}}, 
-}
-
-strCutPT  = "15"
-strCutEta = "2"
-
-strCutGenNor = "genMuon.Pt() > %(pT)s && abs(genMuon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
-strCutGenDen = strCutGenNor
-#strCutGenNum = strCutGenDen + " && genMuon_is%(ID)s && genMuon_%(iso)s" # ID is held
-strCutGenNum = strCutGenDen + " && genMuon_isMuon && genMuon_%(iso)s"
-
-#strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_is%(ID)s"
-#strCutRecNor = "recoMuon.Pt() > 5"
-#strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_TrkIsolation03 <= 0.00001"
-strCutRecNor = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
-#strCutRecNor = "recoMuon.Pt() > 20 && abs(recoMuon.Eta()) < 2"
-strCutRecDen = strCutRecNor + " && recoMuon_isMuon && recoMuon_%(iso)s"
-strCutRecNum = strCutRecDen + " && !recoMuon_signal"
-
-strCutGenIso = ""
-strCutRecIso = ""
-
-dicCutConfig = {
-    "pT": strCutPT, "Eta": strCutEta
-}
-
-if "cutconfig" in dicMainCmd: dicCutConfig = dicMainCmd[ "cutconfig" ]
-
-
-for i, dicPlotvar in enumerate(arrPlotvar):
-    plotvar = dicPlotvar[ "plotvar" ]
-    binCurr = dicPlotvar[ "binning" ]
+# Getting required variables
+try: 
+    strCut = dicMainCmd[ "cut" ]
+    binCurr = dicMainCmd[ "binning" ]
     
-    strCutNor = ""
-    strCutDen = ""
-    strCutNum = ""
+    dicCutConfig = dicMainCmd[ "cutconfig" ]
+    
+    strHistTitle = dicMainCmd[ "title" ]
+    x_name = "Muon " + dicMainCmd[ "xtitle" ]
+    y_name = "Muon " + dicMainCmd[ "ytitle" ]
+    
+    strFilename = dicMainCmd[ "filename" ]
+    
+    arrVars = dicMainCmd[ "vars" ]
+
+except KeyError, strErr:
+    print "Error: the JSON file does not contain a required key: %s"%strErr
+
+# Variables which can have a defalut value
+strPlotvar = "" # It must be determined either in "general" or "vars"
+nIsUsedCommonVar = 0
+
+nIsLogY = 0
+
+nIsUseMin = 0
+nIsUseMax = 0
+fMin =  1000000000
+fMax = -1000000000
+
+nIsEffRate = 0
+strCutDen = ""
+
+fLegLeft   = 0.50
+fLegTop    = 0.65
+fLegRight  = 0.85
+fLegBottom = 0.80
+
+# Now setup the configuration
+if "plotvar" in dicMainCmd:
+    strPlotvar = dicMainCmd[ "plotvar" ]
+    nIsUsedCommonVar = 1
+
+if "ylog" in dicMainCmd:
+    nIsLogY = 1
+
+if "min" in dicMainCmd: 
+    fMin = dicMainCmd[ "min" ]
+    nIsUseMin = 1
+
+if "max" in dicMainCmd: 
+    fMax = dicMainCmd[ "max" ]
+    nIsUseMax = 1
+
+if "effrate" in dicMainCmd: 
+    strCutDen = dicMainCmd[ "effrate" ]
+    nIsEffRate = 1
+
+if "legend" in dicMainCmd: 
+    try: 
+        fLegLeft   = dicMainCmd[ "legend" ][ "left" ]
+        fLegTop    = dicMainCmd[ "legend" ][ "top" ]
+        fLegRight  = dicMainCmd[ "legend" ][ "right" ]
+        fLegBottom = dicMainCmd[ "legend" ][ "bottom" ]
+    except KeyError, strErr:
+        print "Error: Wrong legend configuration : %s is missing"%strErr
+        
+        fLegLeft   = 0.50
+        fLegTop    = 0.65
+        fLegRight  = 0.85
+        fLegBottom = 0.80
+
+# Now all plots get being drawn
+for varHead in arrVars: 
+    if nIsUsedCommonVar == 0: 
+        strPlotvar = varHead[ "plotvar" ]
     
     strTree = ""
     
-    if "genMuon" in plotvar: 
-        strCutNor = strCutGenNor
-        strCutDen = strCutGenDen
-        strCutNum = strCutGenNum
-        
+    if "genMuon" in strPlotvar: 
         strTree = "MuonAnalyser/gen"
-    elif "recoMuon" in plotvar: 
-        strCutNor = strCutRecNor
-        strCutDen = strCutRecDen
-        strCutNum = strCutRecNum
-        
+    if "recoMuon" in strPlotvar: 
         strTree = "MuonAnalyser/reco"
     
-    arrHist = []
+    if "cutconfig" in varHead: 
+        for strKey in varHead[ "cutconfig" ].keys(): 
+            dicCutConfig[ strKey ] = varHead[ "cutconfig" ][ strKey ]
     
-    nMax = 0
-    nMin = 10000000
+    strCutExtra = ""
+    if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
     
-    if "id" in dicMainCmd: dicCutConfig[ "ID" ] = dicMainCmd[ "id" ]
+    if nIsEffRate != 0: 
+        # Drawing efficiency / fake rate plot
+        varHead[ "hist" ] = getEff(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "title" ], binCurr, strPlotvar, 
+            ( strCut + strCutDen + strCutExtra )%dicCutConfig, # cut for denominator
+            ( strCut +             strCutExtra )%dicCutConfig) # cut for nominator
+    else:
+        # Drawing normal plot (for isolation values)
+        varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "title" ], binCurr, strPlotvar, 
+            ( strCut + strCutExtra )%dicCutConfig)
     
-    #Get histos
-    for sampHead in arrSampleType: 
-        if "type" not in dicPlotvar or dicPlotvar[ "type" ] != "all": 
-            if "gen" in plotvar and "QCD" in sampHead[ "title" ]: 
-                continue
-            if "reco" in plotvar and "QCD" not in sampHead[ "title" ]: 
-                continue
+    fSizeDot = 1.0
+    if "size" in varHead: fSizeDot = varHead[ "size" ]
+    
+    setMarkerStyle(varHead[ "hist" ], varHead[ "color" ], varHead[ "shape" ], fSizeDot)
+    
+    if nIsUseMin == 0 and fMin > varHead[ "hist" ].GetMinimum(): 
+        fMin = varHead[ "hist" ].GetMinimum()
+    
+    if nIsUseMax == 0 and fMax < varHead[ "hist" ].GetMaximum(): 
+        fMax = varHead[ "hist" ].GetMaximum()
+    
+# The remainings are for drawing the total plot
+h_init = ROOT.TH1F("", "", binCurr[ 0 ], binCurr[ 1 ], binCurr[ 2 ])
 
-        strIDCurr = sampHead[ "id" ]
-        dicCutConfig[ "ID" ] = strIDCurr
-        
-        # This is the isolation cut condition
-        isotype = dicPlotvar[ "isotype" ]
-        dicMainCmd[ "iso" ] = listIDCfg[ strIDCurr ][ "isoCut" ][ isotype ]
-        
-        strCutExtra = ""
-        if "extracut" in sampHead: strCutExtra = " && " + sampHead[ "extracut" ]
-        
-        #if "Iso" not in plotvar: 
-        if "effrate" in dicPlotvar and dicPlotvar[ "effrate" ]: 
-            # Drawing efficiency / fake rate plot
-            sampHead[ "hist" ] = getEff(datadir + sampHead[ "filename" ], strTree, 
-                sampHead[ "title" ] + " - " + strIDCurr, binCurr, plotvar, 
-                strCutDen%dicCutConfig + strCutExtra, # cut for denominator
-                strCutNum%dicCutConfig + strCutExtra) # cut for nominator
-        else:
-            if strIDCurr != dicPlotvar[ "id" ]:
-                continue
-            
-            strCut = strCutNor%dicCutConfig + strCutExtra # cut for normal
-            print sampHead[ "title" ] + " - " + strCut
-            
-            # Drawing normal plot (for isolation values)
-            sampHead[ "hist" ] = getH1_Normalized(datadir + sampHead[ "filename" ], strTree, 
-                sampHead[ "title" ], binCurr, plotvar, strCut)
-        
-        fSizeDot = 1.5
-        if "size" in sampHead: fSizeDot = sampHead[ "size" ]
-        
-        setMarkerStyle(sampHead[ "hist" ], sampHead[ "color" ], sampHead[ "shape" ], fSizeDot)
-        arrHist.append(sampHead)
-        
-        if nMin > sampHead[ "hist" ].GetMinimum(): 
-            nMin = sampHead[ "hist" ].GetMinimum()
-        
-        if nMax < sampHead[ "hist" ].GetMaximum(): 
-            nMax = sampHead[ "hist" ].GetMaximum()
-    
-    #Set init histo
-    h_init = ROOT.TH1F("", "", binCurr[ 0 ], binCurr[ 1 ], binCurr[ 2 ])
+if nIsUseMax == 0: 
+    fMax = fMax * 1.15
 
-    #Set axis
-    x_name = "Muon " + dicPlotvar[ "xtitle" ]
-    y_name = "Muon " + dicPlotvar[ "ytitle" ]
-    
-    #h_init.SetMinimum(0.0)
-    #h_init.SetMaximum(nMax * 0.9)
-    #h_init.SetMaximum(1.0)
-    
-    if "min" in dicPlotvar: h_init.SetMinimum(dicPlotvar[ "min" ])
-    if "max" in dicPlotvar: h_init.SetMaximum(dicPlotvar[ "max" ])
-    
-    h_init.GetXaxis().SetTitle(x_name)
-    h_init.GetYaxis().SetTitle(y_name)
-    h_init.GetYaxis().SetTitleOffset(1)
+h_init.SetMinimum(fMin)
+h_init.SetMaximum(fMax)
 
-    name = "%s_%s"%(plotvar, isotype)
-    if "id" in dicPlotvar: name = name + "_%s"%dicPlotvar[ "id" ]
+h_init.GetXaxis().SetTitle(x_name)
+h_init.GetYaxis().SetTitle(y_name)
+h_init.GetYaxis().SetTitleOffset(1)
 
-    #Set canvas
-    canv = makeCanvas(name, False)
-    setMargins(canv, False)
-    h_init.Draw()
-    #drawSampleName("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}, p_{T} > 5 GeV")
-    drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} and QCD events, "
-        "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon")%{"pT": strCutPT, "Eta": strCutEta, "ID": dicPlotvar[ "id" ]})
+#Set canvas
+canv = makeCanvas("canvMain", False)
+setMargins(canv, False)
+h_init.Draw()
+drawSampleName(strHistTitle%dicCutConfig)
+
+if nIsLogY != 0: ROOT.gPad.SetLogy()
+
+#Legend and drawing
+leg = ROOT.TLegend(fLegLeft, fLegTop, fLegRight, fLegBottom)
+
+for varHead in arrVars: 
+    strExtraOpt = ""
+    if "extradrawopt" in varHead: strExtraOpt = varHead[ "extradrawopt" ]
     
-    if "ylog" in dicPlotvar and dicPlotvar[ "ylog" ] != 0:
-        ROOT.gPad.SetLogy()
-    else: 
-        ROOT.gPad.SetLogy(0)
+    varHead[ "hist" ].Draw(strExtraOpt + "e1same")
+    leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), "p")
 
-    #Legend and drawing
-    legTop = ROOT.TLegend(0.5,0.65,0.85,0.80)
-    legBot = ROOT.TLegend(0.5,0.2,0.85,0.35)
-    if "genMuon"  in plotvar: leg = legBot
-    if "recoMuon" in plotvar: leg = legTop
-    
-    if "legend" in dicMainCmd: 
-        fLegLeft   = 0.5
-        fLegTop    = 0.65
-        fLegRight  = 0.80
-        fLegBottom = 0.5
-        
-        if "left"   in dicMainCmd[ "legend" ]: 
-            fLegLeft   = dicMainCmd[ "legend" ][ "left" ]
-        
-        if "top"    in dicMainCmd[ "legend" ]: 
-            fLegTop    = dicMainCmd[ "legend" ][ "top" ]
-        
-        if "right"  in dicMainCmd[ "legend" ]: 
-            fLegRight  = dicMainCmd[ "legend" ][ "right" ]
-        
-        if "bottom" in dicMainCmd[ "legend" ]: 
-            fLegBottom = dicMainCmd[ "legend" ][ "bottom" ]
-        
-        leg = ROOT.TLegend(fLegLeft, fLegTop, fLegRight, fLegBottom)
-    
-    for sampHead in arrHist: 
-        strExtraOpt = ""
-        if "extradrawopt" in sampHead: strExtraOpt = sampHead[ "extradrawopt" ]
-        
-        sampHead[ "hist" ].Draw(strExtraOpt + "e1same")
-        leg.AddEntry(sampHead[ "hist" ], sampHead[ "hist" ].GetTitle(), "p")
+leg.SetTextFont(61)
+leg.SetTextSize(0.04)
+leg.SetBorderSize(0)
+leg.Draw()
 
-    leg.SetTextFont(61)
-    leg.SetTextSize(0.04)
-    leg.SetBorderSize(0)
-    leg.Draw()
+#CMS_lumi setting
+iPos = 0
+iPeriod = 0
+if( iPos==0 ): CMS_lumi.relPosX = 0.12
+CMS_lumi.extraText = "Simulation"
+CMS_lumi.lumi_sqrtS = "14 TeV"
+CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
 
-    #CMS_lumi setting
-    iPos = 0
-    iPeriod = 0
-    if( iPos==0 ): CMS_lumi.relPosX = 0.12
-    CMS_lumi.extraText = "Simulation"
-    CMS_lumi.lumi_sqrtS = "14 TeV"
-    CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
+canv.Modified()
+canv.Update()
+canv.SaveAs(strFilename%dicCutConfig)
 
-    canv.Modified()
-    canv.Update()
-    if "filename" in dicPlotvar: 
-        canv.SaveAs(dicPlotvar[ "filename" ])
-    else: 
-        canv.SaveAs(name+".png")
-    
-    print "[%s - %s] has been drawn"%(plotvar, "All" if "id" not in dicPlotvar else dicPlotvar[ "id" ])
+print "%s has been drawn"%(strFilename%dicCutConfig)
 
