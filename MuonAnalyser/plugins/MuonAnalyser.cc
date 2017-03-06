@@ -119,7 +119,8 @@ private:
   bool b_genMuon_isTightOptimized, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
   bool b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon, b_genMuon_signal;
   bool b_genMuon_isGlobalMuon, b_genMuon_isStandAloneMuon;
-  int b_genMuon_noRecHitGEM, b_genMuon_noRecHitME0;
+  int b_genMuon_noRecHitGEM;
+  int b_genMuon_noRecHitME0;
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_pfIso03ChargedHadronPt, b_genMuon_pfIso03NeutralHadronEt;
   float b_genMuon_pfIso03PhotonEt, b_genMuon_pfIso03PUPt;
@@ -471,8 +472,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(muAssocToken_, associatorBase);
   MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
   //reco::InnerTk or reco::GlobalTk
-  //assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
-  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle); // Only for GW
+  assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
+  //assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle); // For Only GW
   
   vector<const Muon*> signalMuons; signalMuons.clear();
   
