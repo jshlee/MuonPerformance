@@ -109,6 +109,7 @@ public:
   bool isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex pv0) const;
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
   int nGEMhit(const reco::Muon * mu) const;
+  int nME0hit(const reco::Muon * mu) const;
   void treereset();
   
   puppiIso getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs, int nIsReco) const;
@@ -121,6 +122,7 @@ private:
 
   TH1D* h_nevents;
   TH1D* h_vertex;
+  int b_nvertex;
 
   TTree* genttree_;
   TTree* recottree_;
@@ -128,7 +130,10 @@ private:
   bool b_genMuon_isTightOptimized, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
   bool b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon, b_genMuon_signal;
   bool b_genMuon_isGlobalMuon, b_genMuon_isStandAloneMuon;
+  float b_genMuon_pTresolution;
   int b_genMuon_noRecHitGEM;
+  int b_genMuon_noRecHitME0;
+  
   float b_genMuon_poszPV0, b_genMuon_poszSimPV;
   float b_genMuon_poszLPVOfCand, b_genMuon_varposzCand, b_genMuon_poszMuon;
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
@@ -264,17 +269,21 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   h_vertex = fs->make<TH1D>("vertex reco vs sim", "vertex reco vs sim", 100, -1, 1);
 
   genttree_ = fs->make<TTree>("gen", "gen");
+  genttree_->Branch("nvertex", &b_nvertex, "nvertex/I");
   genttree_->Branch("genMuon", "TLorentzVector", &b_genMuon);
   genttree_->Branch("genMuon_isTightOptimized", &b_genMuon_isTightOptimized, "genMuon_isTightOptimized/O");
   genttree_->Branch("genMuon_isTight", &b_genMuon_isTight, "genMuon_isTight/O");
   genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
   genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
   genttree_->Branch("genMuon_noRecHitGEM", &b_genMuon_noRecHitGEM, "genMuon_noRecHitGEM/I");
+  genttree_->Branch("genMuon_noRecHitME0", &b_genMuon_noRecHitME0, "genMuon_noRecHitME0/I");
   genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
   genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
   genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
   genttree_->Branch("genMuon_isGlobalMuon", &b_genMuon_isGlobalMuon, "genMuon_isGlobalMuon/O");
   genttree_->Branch("genMuon_isStandAloneMuon", &b_genMuon_isStandAloneMuon, "genMuon_isStandAloneMuon/O");
+  genttree_->Branch("genMuon_pTresolution", &b_genMuon_pTresolution, "genMuon_pTresolution/F");
+  
   genttree_->Branch("genMuon_poszPV0",&b_genMuon_poszPV0,"genMuon_poszPV0/F");
   genttree_->Branch("genMuon_poszSimPV",&b_genMuon_poszSimPV,"genMuon_poszSimPV/F");
   genttree_->Branch("genMuon_poszLPVOfCand",&b_genMuon_poszLPVOfCand,"genMuon_poszLPVOfCand/F");
@@ -345,6 +354,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_deltaDYDZErrME0", &b_genMuon_deltaDYDZErrME0, "genMuon_deltaDYDZErrME0/F");
 
   recottree_ = fs->make<TTree>("reco", "reco");
+  recottree_->Branch("nvertex", &b_nvertex, "nvertex/I");
   recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
   recottree_->Branch("recoMuon_pdgId", &b_recoMuon_pdgId, "recoMuon_pdgId/I");
   recottree_->Branch("recoMuon_signal", &b_recoMuon_signal, "recoMuon_signal/O");
@@ -493,6 +503,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(vtxToken_, vertices); 
   if (vertices->empty()) { cout << "noPV" << endl; return; }
   auto pv0 = vertices->front();
+  b_nvertex = vertices->size();
 
   Handle<std::vector<SimVertex> > simVertexCollection;
   iEvent.getByToken(simVertexToken_, simVertexCollection);
@@ -515,6 +526,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
   //reco::InnerTk or reco::GlobalTk
   assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
+  //assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle); // For Only GW
   
   vector<const Muon*> signalMuons; signalMuons.clear();
   
@@ -559,7 +571,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
+
+    b_genMuon_pTresolution = -9;
     b_genMuon_noRecHitGEM = -1;
+	b_genMuon_noRecHitME0 = -1;
     b_genMuon_isME0Muon = false;
     b_genMuon_isGEMMuon = false;
     b_genMuon_isMuon = false;
@@ -584,6 +599,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	const Muon* mu = MuRefV.begin()->first.get();
 	signalMuons.push_back(mu);
 	b_genMuon_signal = true;
+	b_genMuon_pTresolution = (b_genMuon.Pt()-mu->pt())/b_genMuon.Pt();
     
     b_genMuon_poszPV0       = pv0.position().z();
     b_genMuon_poszSimPV     = simPVh.position().z();
@@ -591,10 +607,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_varposzCand   = dVarPosZVtxCand;
     b_genMuon_poszMuon      = mu->muonBestTrack()->vz();
 
-	b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
-	b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
-	b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
-	b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+    b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
+    b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
+    b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
+    b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
     
     b_genMuon_pfIso03ChargedHadronPt = mu->pfIsolationR03().sumChargedHadronPt;
     b_genMuon_pfIso03NeutralHadronEt = mu->pfIsolationR03().sumNeutralHadronEt;
@@ -683,6 +699,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
 	if (muonTrack){
 	  b_genMuon_noRecHitGEM = nGEMhit(mu);
+	  b_genMuon_noRecHitME0 = nME0hit(mu);
 	  b_genMuon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
 	  b_genMuon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
 	}
@@ -1129,6 +1146,32 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
   // cout << " noRecHitMuon "<< noRecHitMuon <<endl;
   // cout << " noRecHitGEM  "<< noRecHitGEM <<endl;
   return noRecHitGEM;
+}
+
+int MuonAnalyser::nME0hit(const reco::Muon* muon) const
+{
+  int noRecHitME0 = 0;
+  int noRecHitMuon = 0;
+  int noRecHit = 0;
+  const reco::Track* muonTrack = 0;  
+  if ( muon->globalTrack().isNonnull() ) muonTrack = muon->globalTrack().get();
+  else if ( muon->outerTrack().isNonnull()  ) muonTrack = muon->outerTrack().get();
+  if (muonTrack){
+    for(auto i=muonTrack->recHitsBegin(); i!=muonTrack->recHitsEnd(); i++) {
+      DetId hitId = (*i)->geographicalId();
+      if (!(*i)->isValid() ) continue;
+      if ((*i)->recHits().size()) noRecHit +=(*i)->recHits().size();
+      else noRecHit++;
+      
+      if (hitId.det()!=DetId::Muon) continue;
+      if (hitId.subdetId() == MuonSubdetId::ME0) ++noRecHitME0;
+
+      if ((*i)->recHits().size()) noRecHitMuon +=(*i)->recHits().size();
+      else noRecHitMuon++;
+    }
+    
+  }
+  return noRecHitME0;
 }
 
 void MuonAnalyser::treereset()
