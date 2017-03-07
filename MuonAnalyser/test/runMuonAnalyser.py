@@ -31,7 +31,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/pnfs/user/jlee/pfmuon/src/22811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4Timing_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4Timing+RecoFullGlobal_2023D4Timing+HARVESTFullGlobal_2023D4Timing/step3.root'
+      'file:/pnfs/user/quark2/Work/muon_upgrade/CMSSW_9_0_0_pre4/src/MuonPerformance/MuonAnalyser/test/QCD_PU0_pre4_fixed01_UOS.txt'
       #'file:step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
