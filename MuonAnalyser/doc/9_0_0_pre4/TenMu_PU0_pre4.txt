@@ -1,0 +1,6 @@
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_0_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/3CD32386-B7EC-E611-81DF-0025905B85AA.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_0_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/664F0174-B9EC-E611-8CC8-0025905B8594.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_0_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/6A812D01-BBEC-E611-8BA9-0CC47A7C356A.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_0_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/720D7429-B8EC-E611-882A-0025905A48D8.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_0_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/E2747042-B7EC-E611-A9D5-0CC47A4C8E16.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_0_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/FEC12FB2-BAEC-E611-AC0B-0CC47A4D7646.root

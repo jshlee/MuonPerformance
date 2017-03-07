@@ -1,0 +1,12 @@
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_000.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_001.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_002.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_003.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_004.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_005.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_006.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_007.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_008.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_009.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_010.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_0_0_pre4/qcdD4/step3_011.root
