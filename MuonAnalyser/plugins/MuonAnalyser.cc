@@ -127,7 +127,7 @@ private:
   TTree* genttree_;
   TTree* recottree_;
   TLorentzVector b_genMuon;
-  bool b_genMuon_isTightOptimized, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
+  bool b_genMuon_isTightOptimized, b_genMuon_isTightCustom, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
   bool b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon, b_genMuon_signal;
   bool b_genMuon_isGlobalMuon, b_genMuon_isStandAloneMuon;
   float b_genMuon_pTresolution;
@@ -168,7 +168,7 @@ private:
 
   TLorentzVector b_recoMuon;
   bool b_recoMuon_signal;
-  bool b_recoMuon_isTightOptimized, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
+  bool b_recoMuon_isTightOptimized, b_recoMuon_isTightCustom, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
   bool b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
   bool b_recoMuon_isGlobalMuon, b_recoMuon_isStandAloneMuon;
   int b_recoMuon_noChamberMatch;
@@ -272,6 +272,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("nvertex", &b_nvertex, "nvertex/I");
   genttree_->Branch("genMuon", "TLorentzVector", &b_genMuon);
   genttree_->Branch("genMuon_isTightOptimized", &b_genMuon_isTightOptimized, "genMuon_isTightOptimized/O");
+  genttree_->Branch("genMuon_isTightCustom", &b_genMuon_isTightCustom, "genMuon_isTightCustom/O");
   genttree_->Branch("genMuon_isTight", &b_genMuon_isTight, "genMuon_isTight/O");
   genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
   genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
@@ -359,6 +360,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_pdgId", &b_recoMuon_pdgId, "recoMuon_pdgId/I");
   recottree_->Branch("recoMuon_signal", &b_recoMuon_signal, "recoMuon_signal/O");
   recottree_->Branch("recoMuon_isTightOptimized", &b_recoMuon_isTightOptimized, "recoMuon_isTightOptimized/O");
+  recottree_->Branch("recoMuon_isTightCustom", &b_recoMuon_isTightCustom, "recoMuon_isTightCustom/O");
   recottree_->Branch("recoMuon_isTight", &b_recoMuon_isTight, "recoMuon_isTight/O");
   recottree_->Branch("recoMuon_isMedium", &b_recoMuon_isMedium, "recoMuon_isMedium/O");
   recottree_->Branch("recoMuon_isLoose", &b_recoMuon_isLoose, "recoMuon_isLoose/O");
@@ -676,7 +678,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_puppiIsoNumOfCandsInR05PHApp = puppiIsoGen.nNumCandsInR05PHApp;
     
 	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
-	b_genMuon_isTight = isTightMuonCustom(*mu, pv0);
+	b_genMuon_isTightCustom = isTightMuonCustom(*mu, pv0);
+	b_genMuon_isTight = muon::isTightMuon(*mu, pv0);
 	b_genMuon_isMedium = muon::isMediumMuon(*mu);
 	b_genMuon_isLoose = muon::isLooseMuon(*mu);
 	b_genMuon_isME0Muon = mu->isME0Muon();
@@ -816,7 +819,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_puppiIsoNumOfCandsInR05PHApp = puppiIsoRec.nNumCandsInR05PHApp;
     
     b_recoMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
-    b_recoMuon_isTight = isTightMuonCustom(*mu, pv0);
+    b_recoMuon_isTightCustom = isTightMuonCustom(*mu, pv0);
+    b_recoMuon_isTight = muon::isTightMuon(*mu, pv0);
     b_recoMuon_isMedium = muon::isMediumMuon(*mu);
     b_recoMuon_isLoose = muon::isLooseMuon(*mu);
     b_recoMuon_isME0Muon = mu->isME0Muon();
@@ -1084,7 +1088,7 @@ bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) con
   if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 0) ) return false;
   if ( !(mu.numberOfMatchedStations() > 1) ) return false;
   if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.2) ) return false;
-  if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
+  //if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
   if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 0) ) return false;
   if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5) ) return false;
   return true;
@@ -1101,7 +1105,7 @@ bool MuonAnalyser::isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex
   if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 10) ) return false; // > 0
   if ( !(mu.numberOfMatchedStations() > 1) ) return false;
   if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.02) ) return false; // < 0.2
-  if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
+  //if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
   if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 3) ) return false; // > 0
   if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 7) ) return false; // > 5
   return true;

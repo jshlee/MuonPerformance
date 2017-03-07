@@ -150,9 +150,9 @@ def getEff(filename,treename,title,binning,plotvar,dencut,numcut):
     return copy.deepcopy(hEff)
 
 
-def drawSampleName(samplename):
-    fX = 0.18
-    fY = 0.85
+def drawSampleName(samplename, fX, fY):
+    #fX = 0.18
+    #fY = 0.85
     fSizeTex = 0.038
     
     tex2 = ROOT.TLatex()
@@ -206,12 +206,15 @@ def drawPlotFromDict(dicMainCmd):
     fMax = -1000000000
 
     nIsEffRate = 0
-    strCutDen = ""
+    strCutNum = ""
 
     fLegLeft   = 0.50
     fLegTop    = 0.65
     fLegRight  = 0.85
     fLegBottom = 0.80
+    
+    fTitleX = 0.18
+    fTitleY = 0.85
 
     # Now setup the configuration
     if "plotvar" in dicMainCmd:
@@ -230,8 +233,12 @@ def drawPlotFromDict(dicMainCmd):
         nIsUseMax = 1
 
     if "effrate" in dicMainCmd: 
-        strCutDen = dicMainCmd[ "effrate" ]
+        strCutNum = " && " + dicMainCmd[ "effrate" ]
         nIsEffRate = 1
+    
+    if "titlepos" in dicMainCmd: 
+        fTitleX = dicMainCmd[ "titlepos" ][ 0 ]
+        fTitleY = dicMainCmd[ "titlepos" ][ 1 ]
 
     if "legend" in dicMainCmd: 
         try: 
@@ -254,9 +261,9 @@ def drawPlotFromDict(dicMainCmd):
         
         strTree = ""
         
-        if "genMuon" in strPlotvar: 
+        if "genMuon" in strPlotvar or "genMuon" in strCut: 
             strTree = "MuonAnalyser/gen"
-        if "recoMuon" in strPlotvar: 
+        if "recoMuon" in strPlotvar or "recoMuon" in strCut: 
             strTree = "MuonAnalyser/reco"
         
         if "cutconfig" in varHead: 
@@ -267,12 +274,14 @@ def drawPlotFromDict(dicMainCmd):
         if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
         
         if nIsEffRate != 0: 
+            print "Num : %s\nDen : %s"%(( strCut + strCutNum + strCutExtra )%dicCutConfig, ( strCut + strCutExtra )%dicCutConfig)
             # Drawing efficiency / fake rate plot
             varHead[ "hist" ] = getEff(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
-                ( strCut + strCutDen + strCutExtra )%dicCutConfig, # cut for denominator
-                ( strCut +             strCutExtra )%dicCutConfig) # cut for nominator
+                ( strCut +             strCutExtra )%dicCutConfig, # cut for denominator
+                ( strCut + strCutNum + strCutExtra )%dicCutConfig) # cut for nominator
         else:
+            print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
             varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
@@ -306,7 +315,7 @@ def drawPlotFromDict(dicMainCmd):
     canv = makeCanvas("canvMain", False)
     setMargins(canv, False)
     h_init.Draw()
-    drawSampleName(strHistTitle%dicCutConfig)
+    drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY)
 
     if nIsLogY != 0: ROOT.gPad.SetLogy()
 
