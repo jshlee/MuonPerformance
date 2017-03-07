@@ -64,7 +64,6 @@ datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
 
 binMain = [1500, 0, 6.0]
 
-"""
 arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoWithLep",    "title": "PUPPI - with lepton, R = 0.4", 
         "color": 4, "shape": 20}, # blue,  filled circle
@@ -73,18 +72,16 @@ arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
         "color": 3, "shape": 34}, # green, filled cross
     
-    #{"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
-    #    "color": 1, "shape": 24}, # black, unfilled circle
     {"plotvar": "recoMuon_PFIsolation04",      "title": "PF Isolation, R = 0.4", 
         "color": 6, "shape": 25}, # pink,  unfilled square
 ]
 """
 arrPlotvar = [
-    {"plotvar": "recoMuon_puppiIsoWithLep03",    "title": "PUPPI - with lepton, R = 0.3", 
+    {"plotvar": "recoMuon_puppiIsoWithLep",    "title": "PUPPI - with lepton, R = 0.3", 
         "color": 4, "shape": 20}, # blue,  filled circle
-    {"plotvar": "recoMuon_puppiIsoWithoutLep03", "title": "PUPPI - without lepton, R = 0.3", 
+    {"plotvar": "recoMuon_puppiIsoWithoutLep", "title": "PUPPI - without lepton, R = 0.3", 
         "color": 2, "shape": 21}, # red,   filled square
-    {"plotvar": "recoMuon_puppiIsoCombined03",   "title": "PUPPI - combined (ratio : 0.5)", 
+    {"plotvar": "recoMuon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
         "color": 3, "shape": 34}, # green, filled cross
     
     #{"plotvar": "recoMuon_TrkIsolation03",     "title": "Track Isolation, R = 0.3", 
@@ -92,6 +89,7 @@ arrPlotvar = [
     {"plotvar": "recoMuon_PFIsolation03",      "title": "PF Isolation, R = 0.3", 
         "color": 6, "shape": 25}, # pink,  unfilled square
 ]
+"""
 """
 arrPlotvar = [
     {"plotvar": "recoMuon_puppiIsoWithLep05",    "title": "PUPPI - with lepton, R = 0.5", 
@@ -112,11 +110,17 @@ dicSampleType = {
     "PU200": {"title": "PU 200", "file_signal": "puppi_PU200.root"}, 
 }
 """
+strPathSamp = "/cms/scratch/quark2930/Work/muon_upgrade/samples/"
 dicSampleType = {
     "PU0":   {"title": "PU 0",   
-        "file_sig": "puppi_ZMM_PU0_pre4_fixed01_ver2.root",   "file_bkg": "puppi_QCD_PU0_pre4_fixed01_ver2.root"}, 
+        "file_sig": strPathSamp + "run_ZMM_PU0_pre4_rereco01_ver01.root", 
+        "file_bkg": strPathSamp + "run_QCD_PU0_pre4_rereco01_ver01.root"}, 
     "PU140": {"title": "PU 140", 
-        "file_sig": "puppi_ZMM_PU140_pre4_fixed01_ver2.root", "file_bkg": "puppi_QCD_PU140_pre4_fixed01_ver2.root"}, 
+        "file_sig": strPathSamp + "run_ZMM_PU140_pre4_rereco01_ver01.root", 
+        "file_bkg": strPathSamp + "run_QCD_PU140_pre4_rereco01_ver01.root"}, 
+    "PU200": {"title": "PU 200", 
+        "file_sig": strPathSamp + "run_ZMM_PU200_pre4_rereco01_ver01.root", 
+        "file_bkg": strPathSamp + "run_QCD_PU200_pre4_rereco01_ver01.root"}, 
 }
 
 arrListID = ["Tight", "Loose"]
@@ -143,11 +147,13 @@ strSampleBkg = dicSampleType[ strTypePU ][ "file_bkg" ]
 strCutPT  = "15"
 strCutEta = "2.4"
 
+strDPV = "0.5"
+
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
 #strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
-strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s && recoMuon_is%(ID)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id}
+strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s && recoMuon_is%(ID)s && abs(recoMuon_poszPV0 - recoMuon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 strCutSig = strCutDef + " && recoMuon_signal"
 strCutBkg = strCutDef
 
@@ -188,7 +194,7 @@ for i, dicPlotvar in enumerate(arrPlotvar):
     leg.AddEntry(dicPlotvar[ "graph" ], dicPlotvar[ "graph" ].GetTitle(), "pl")
 
 drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%(PU)s) and QCD events\n"
-    "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id})
+    "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "dPV": strDPV})
 
 leg.SetTextFont(61)
 leg.SetTextSize(0.04)
@@ -205,6 +211,6 @@ CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
 
 canv.Modified()
 canv.Update()
-canv.SaveAs("roccurves_%s_%s.png"%(strPUTitle.replace(" ", ""), id))
+canv.SaveAs("roccurves_%s_%s_dPV%s.png"%(strPUTitle.replace(" ", ""), id, strDPV))
     
 
