@@ -570,6 +570,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
     b_genMuon_isTightOptimized = false;
+    b_genMuon_isTightCustom = false;
     b_genMuon_isTight = false;
     b_genMuon_isMedium = false;
     b_genMuon_isLoose = false;
