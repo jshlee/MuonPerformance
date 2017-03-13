@@ -688,22 +688,27 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_genMuon_isMuon = mu->isMuon();
     b_genMuon_isGlobalMuon = mu->isGlobalMuon();
     b_genMuon_isStandAloneMuon = mu->isStandAloneMuon();
+    
+    const vector<MuonChamberMatch>& chambers = mu->matches();
+    for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+      for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+        if (chamber->detector() == 5){
+	      auto me0Segment = (*(*segment).me0SegmentRef);
+	      b_genMuon_noRecHitME0 = me0Segment.nRecHits();
 
-	b_genMuon_deltaXME0 = mu->dX(0,5, mu->ME0SegmentAndTrackArbitration); // position difference of track and segement
-	b_genMuon_deltaYME0 = mu->dY(0,5, mu->ME0SegmentAndTrackArbitration);
-	b_genMuon_deltaXErrME0 = mu->pullX(0,5, mu->ME0SegmentAndTrackArbitration); // delta X divided by segment error and propagation error
-	b_genMuon_deltaYErrME0 = mu->pullY(0,5, mu->ME0SegmentAndTrackArbitration);
-	b_genMuon_deltaDXDZME0 = mu->dDxDz(0,5, mu->ME0SegmentAndTrackArbitration); // slope difference of track and segment
-	b_genMuon_deltaDYDZME0 = mu->dDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
-	b_genMuon_deltaDXDZErrME0 = mu->pullDxDz(0,5, mu->ME0SegmentAndTrackArbitration); //delta dXdZ divided by segment error and propagation error
-	b_genMuon_deltaDYDZErrME0 = mu->pullDyDz(0,5, mu->ME0SegmentAndTrackArbitration);
-	
+          b_genMuon_deltaXME0 = fabs( chamber->x - segment->x );
+          b_genMuon_deltaYME0 = fabs( chamber->y - segment->y );
+          b_genMuon_deltaDXDZME0 = fabs( chamber->dXdZ - segment->dXdZ );
+          b_genMuon_deltaDYDZME0 = fabs( chamber->dYdZ - segment->dYdZ );
+        }
+      }
+    }
+
 	const reco::Track* muonTrack = 0;  
 	if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
 	else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
 	if (muonTrack){
 	  b_genMuon_noRecHitGEM = nGEMhit(mu);
-	  b_genMuon_noRecHitME0 = nME0hit(mu);
 	  b_genMuon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
 	  b_genMuon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
 	}
@@ -1151,32 +1156,6 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
   // cout << " noRecHitMuon "<< noRecHitMuon <<endl;
   // cout << " noRecHitGEM  "<< noRecHitGEM <<endl;
   return noRecHitGEM;
-}
-
-int MuonAnalyser::nME0hit(const reco::Muon* muon) const
-{
-  int noRecHitME0 = 0;
-  int noRecHitMuon = 0;
-  int noRecHit = 0;
-  const reco::Track* muonTrack = 0;  
-  if ( muon->globalTrack().isNonnull() ) muonTrack = muon->globalTrack().get();
-  else if ( muon->outerTrack().isNonnull()  ) muonTrack = muon->outerTrack().get();
-  if (muonTrack){
-    for(auto i=muonTrack->recHitsBegin(); i!=muonTrack->recHitsEnd(); i++) {
-      DetId hitId = (*i)->geographicalId();
-      if (!(*i)->isValid() ) continue;
-      if ((*i)->recHits().size()) noRecHit +=(*i)->recHits().size();
-      else noRecHit++;
-      
-      if (hitId.det()!=DetId::Muon) continue;
-      if (hitId.subdetId() == MuonSubdetId::ME0) ++noRecHitME0;
-
-      if ((*i)->recHits().size()) noRecHitMuon +=(*i)->recHits().size();
-      else noRecHitMuon++;
-    }
-    
-  }
-  return noRecHitME0;
 }
 
 void MuonAnalyser::treereset()
