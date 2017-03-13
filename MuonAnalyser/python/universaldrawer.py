@@ -123,12 +123,13 @@ def setMarkerStyle(h,color,style,size):
     h.SetLineWidth(2)
 
 
-def getH1_Normalized(filename,treename,title,binning,plotvar,cut):
+def getH1_Normalized(filename,treename,title,binning,plotvar,cut,normaloff=False):
     h1 = makeTH1(filename,treename,title,binning,plotvar,cut)
     
     # Normalizing
-    normfactor = h1.GetEntries()
-    if normfactor > 0.0: h1.Scale(1.0 / normfactor)
+    if not normaloff: 
+      normfactor = h1.GetEntries()
+      if normfactor > 0.0: h1.Scale(1.0 / normfactor)
     
     # Showing overflow
     nValLastBin  = h1.GetBinContent(binning[ 0 ])
@@ -215,6 +216,8 @@ def drawPlotFromDict(dicMainCmd):
     
     fTitleX = 0.18
     fTitleY = 0.85
+    
+    bNormalOff = False
 
     # Now setup the configuration
     if "plotvar" in dicMainCmd:
@@ -253,6 +256,9 @@ def drawPlotFromDict(dicMainCmd):
             fLegTop    = 0.65
             fLegRight  = 0.85
             fLegBottom = 0.80
+    
+    if "normoff" in dicMainCmd: 
+        bNormalOff = True
 
     # Now all plots get being drawn
     for varHead in arrVars: 
@@ -285,7 +291,7 @@ def drawPlotFromDict(dicMainCmd):
             # Drawing normal plot (for isolation values)
             varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
-                ( strCut + strCutExtra )%dicCutConfig)
+                ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         
         fSizeDot = 1.0
         if "size" in varHead: fSizeDot = varHead[ "size" ]
@@ -315,7 +321,15 @@ def drawPlotFromDict(dicMainCmd):
     canv = makeCanvas("canvMain", False)
     setMargins(canv, False)
     h_init.Draw()
+    
+    strTmpID = dicCutConfig[ "ID" ]
+    
+    #if "Tight" in dicCutConfig[ "ID" ]: 
+    #    dicCutConfig[ "ID" ] = "Tight"
+    
     drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY)
+    
+    dicCutConfig[ "ID" ] = strTmpID
 
     if nIsLogY != 0: ROOT.gPad.SetLogy()
 

@@ -15,7 +15,29 @@ def setMarkerStyle(h,color,style):
     h.SetLineWidth(2)
 
 
-def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg):
+def getRefSigEff(fileSig,treename,cutSig,cutIso):
+    binning = [3000,0,30]
+    hSigDen = makeTH1(fileSig,treename,"RefSigEffDen",binning,"recoMuon_PFIsolation04",cutSig)
+    hSigNum = makeTH1(fileSig,treename,"RefSigEffNum",binning,"recoMuon_PFIsolation04",cutSig+" && "+cutIso)
+    
+    fMSigDen = hSigDen.Integral(0, binning[ 0 ] + 1)
+    fMSigNum = hSigNum.Integral(0, binning[ 0 ] + 1)
+    
+    return fMSigNum / fMSigDen
+
+
+def getRefBkgRej(fileBkg,treename,cutBkg,cutIso):
+    binning = [3000,0,30]
+    hBkgDen = makeTH1(fileBkg,treename,"RefBkgRejDen",binning,"recoMuon_PFIsolation04",cutBkg)
+    hBkgNum = makeTH1(fileBkg,treename,"RefBkgRejNum",binning,"recoMuon_PFIsolation04",cutBkg+" && "+cutIso)
+    
+    fMBkgDen = hBkgDen.Integral(0, binning[ 0 ] + 1)
+    fMBkgNum = hBkgNum.Integral(0, binning[ 0 ] + 1)
+    
+    return 1.0 - fMBkgNum / fMBkgDen
+
+
+def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
     hSig = makeTH1(fileSig,treename,title,binning,plotvar,cutSig)
     hBkg = makeTH1(fileBkg,treename,title,binning,plotvar,cutBkg)
     
@@ -25,6 +47,11 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg):
     fMSig = hSig.Integral(0, binning[ 0 ] + 1)
     fMBkg = hBkg.Integral(0, binning[ 0 ] + 1)
     
+    fSigEffPrev = 1.0
+    fBkgRejPrev = 1.0
+    
+    nPerf = 0.0
+    
     for i in range(binning[ 0 ] + 2): 
       # DO NOT confuse this : 0th bin has all underflows, while (binning[0] + 1)-th bin has all overflows
       # Well, we have no underflows, but... for habit for safety.
@@ -33,8 +60,18 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg):
       fSigEff = hSig.Integral(0, nX) / fMSig
       fBkgRej = 1.0 - hBkg.Integral(0, nX) / fMBkg
       
+      if "sigeff" in dicRef: 
+          if fSigEffPrev <= dicRef[ "sigeff" ] and dicRef[ "sigeff" ] <= fSigEff: 
+            nPerf = i
+      elif "bkgrej" in dicRef: 
+          if fBkgRej <= dicRef[ "bkgrej" ] and dicRef[ "bkgrej" ] <= fBkgRejPrev: 
+            nPerf = i
+      
       arrSigEff.append(fSigEff)
       arrBkgRej.append(fBkgRej)
+      
+      fSigEffPrev = fSigEff
+      fBkgRejPrev = fBkgRej
     
     arrX = array.array("d", arrSigEff)
     arrY = array.array("d", arrBkgRej)
@@ -42,7 +79,8 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg):
     graphROC = ROOT.TGraph(binning[ 0 ] + 2, arrX, arrY)
     graphROC.SetTitle(title)
     
-    return copy.deepcopy(graphROC)
+    return {"graph": copy.deepcopy(graphROC), 
+        "performance": binning[1] + nPerf * ( binning[2] - binning[1] ) / binning[0]}
 
 
 def drawSampleName(samplename):
@@ -116,8 +154,8 @@ dicSampleType = {
         "file_sig": strPathSamp + "run_ZMM_PU0_pre4_rereco01_ver01.root", 
         "file_bkg": strPathSamp + "run_QCD_PU0_pre4_rereco01_ver01.root"}, 
     "PU140": {"title": "PU 140", 
-        "file_sig": strPathSamp + "run_ZMM_PU140_pre4_rereco01_ver01.root", 
-        "file_bkg": strPathSamp + "run_QCD_PU140_pre4_rereco01_ver01.root"}, 
+        "file_sig": strPathSamp + "puppi_ZMM_PU140_pre4_fixed01_ver5.root", 
+        "file_bkg": strPathSamp + "puppi_QCD_PU140_pre4_fixed01_ver5.root"}, 
     "PU200": {"title": "PU 200", 
         "file_sig": strPathSamp + "run_ZMM_PU200_pre4_rereco01_ver01.root", 
         "file_bkg": strPathSamp + "run_QCD_PU200_pre4_rereco01_ver01.root"}, 
@@ -158,18 +196,34 @@ strCutSig = strCutDef + " && recoMuon_signal"
 strCutBkg = strCutDef
 
 
+strCutIsoPF = ""
+fSigEff = 0.0
+
+if id == "Tight": 
+    strCutIsoPF = "recoMuon_PFIsolation04 < 0.15"
+    fSigEff = 0.95
+else: 
+    strCutIsoPF = "recoMuon_PFIsolation04 < 0.25"
+    fSigEff = 0.98
+
+#fRefBkgRej = getRefBkgRej(strSampleBkg, "MuonAnalyser/reco", 
+#    strCutDef, "recoMuon_PFIsolation04 < 0.15")
+dicRef = {"sigeff": fSigEff}
+
 for dicPlotvar in arrPlotvar: 
     plotvar = dicPlotvar[ "plotvar" ]
     
-    dicPlotvar[ "graph" ] = getROC(strSampleSig, strSampleBkg, "MuonAnalyser/reco", 
-        dicPlotvar[ "title" ], binMain, plotvar, strCutSig, strCutBkg)
+    dicRes = getROC(strSampleSig, strSampleBkg, "MuonAnalyser/reco", 
+        dicPlotvar[ "title" ], binMain, plotvar, strCutSig, strCutBkg, dicRef)
+    
+    dicPlotvar[ "graph" ] = dicRes[ "graph" ]
     
     setMarkerStyle(dicPlotvar[ "graph" ], dicPlotvar[ "color" ], dicPlotvar[ "shape" ])
     
     dicPlotvar[ "graph" ].GetXaxis().SetLimits(0.0, 1.1)
     dicPlotvar[ "graph" ].SetMaximum(1.1)
     
-    print "%s is done"%dicPlotvar[ "title" ]
+    print "Iso_cut: with %s, %s, %s - %0.5f, done"%(id, strTypePU, dicPlotvar[ "title" ], dicRes[ "performance" ])
 
 #Set canvas
 canv = makeCanvas("canv1", False)
@@ -211,6 +265,6 @@ CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
 
 canv.Modified()
 canv.Update()
-canv.SaveAs("roccurves_%s_%s_dPV%s.png"%(strPUTitle.replace(" ", ""), id, strDPV))
+canv.SaveAs("ROCCurves_%s_%s_dPV%s.png"%(strPUTitle.replace(" ", ""), id, strDPV))
     
 

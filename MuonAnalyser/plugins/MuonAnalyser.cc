@@ -135,6 +135,7 @@ private:
   int b_genMuon_noRecHitME0;
   
   float b_genMuon_poszPV0, b_genMuon_poszSimPV;
+  float b_genMuon_poszPV01D, b_genMuon_poszPV01DBS, b_genMuon_poszPV04D, b_genMuon_poszPV04DBS, b_genMuon_poszPV0BS;
   float b_genMuon_poszLPVOfCand, b_genMuon_varposzCand, b_genMuon_poszMuon;
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_pfIso03ChargedHadronPt, b_genMuon_pfIso03NeutralHadronEt;
@@ -198,6 +199,7 @@ private:
   int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
   int b_recoMuon_pdgId;
   float b_recoMuon_poszPV0, b_recoMuon_poszSimPV;
+  float b_recoMuon_poszPV01D, b_recoMuon_poszPV01DBS, b_recoMuon_poszPV04D, b_recoMuon_poszPV04DBS, b_recoMuon_poszPV0BS;
   float b_recoMuon_poszLPVOfCand, b_recoMuon_poszMuon;
   float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
   float b_recoMuon_PFIso03ChargedHadronPt, b_recoMuon_PFIso03NeutralHadronEt;
@@ -232,6 +234,11 @@ private:
   ReadMLP* mlp_;
   
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DBSToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx4DToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx4DBSToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtxBSToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<std::vector<SimVertex> > simVertexToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
@@ -243,7 +250,13 @@ private:
 
 MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
-  vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
+  vtxToken_     = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
+  vtx1DToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex1D"));
+  vtx1DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex1DBS"));
+  vtx4DToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4D"));
+  vtx4DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4DBS"));
+  vtxBSToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertexBS"));
+  
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   simVertexToken_ = consumes<std::vector<SimVertex> >(pset.getParameter<edm::InputTag> ("simVertexCollection"));  
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
@@ -286,6 +299,11 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_pTresolution", &b_genMuon_pTresolution, "genMuon_pTresolution/F");
   
   genttree_->Branch("genMuon_poszPV0",&b_genMuon_poszPV0,"genMuon_poszPV0/F");
+  genttree_->Branch("genMuon_poszPV01D",&b_genMuon_poszPV01D,"genMuon_poszPV01D/F");
+  genttree_->Branch("genMuon_poszPV01DBS",&b_genMuon_poszPV01DBS,"genMuon_poszPV01DBS/F");
+  genttree_->Branch("genMuon_poszPV04D",&b_genMuon_poszPV04D,"genMuon_poszPV04D/F");
+  genttree_->Branch("genMuon_poszPV04DBS",&b_genMuon_poszPV04DBS,"genMuon_poszPV04DBS/F");
+  genttree_->Branch("genMuon_poszPV0BS",&b_genMuon_poszPV0BS,"genMuon_poszPV0BS/F");
   genttree_->Branch("genMuon_poszSimPV",&b_genMuon_poszSimPV,"genMuon_poszSimPV/F");
   genttree_->Branch("genMuon_poszLPVOfCand",&b_genMuon_poszLPVOfCand,"genMuon_poszLPVOfCand/F");
   genttree_->Branch("genMuon_varposzCand",&b_genMuon_varposzCand,"genMuon_varposzCand/F");
@@ -373,6 +391,11 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_numberOfValidMuonME0Hits",&b_recoMuon_numberOfValidMuonME0Hits,"recoMuon_numberOfValidMuonME0Hits/I");
 
   recottree_->Branch("recoMuon_poszPV0",&b_recoMuon_poszPV0,"recoMuon_poszPV0/F");
+  recottree_->Branch("recoMuon_poszPV01D",&b_recoMuon_poszPV01D,"recoMuon_poszPV01D/F");
+  recottree_->Branch("recoMuon_poszPV01DBS",&b_recoMuon_poszPV01DBS,"recoMuon_poszPV01DBS/F");
+  recottree_->Branch("recoMuon_poszPV04D",&b_recoMuon_poszPV04D,"recoMuon_poszPV04D/F");
+  recottree_->Branch("recoMuon_poszPV04DBS",&b_recoMuon_poszPV04DBS,"recoMuon_poszPV04DBS/F");
+  recottree_->Branch("recoMuon_poszPV0BS",&b_recoMuon_poszPV0BS,"recoMuon_poszPV0BS/F");
   recottree_->Branch("recoMuon_poszSimPV",&b_recoMuon_poszSimPV,"recoMuon_poszSimPV/F");
   recottree_->Branch("recoMuon_poszLPVOfCand",&b_recoMuon_poszLPVOfCand,"recoMuon_poszLPVOfCand/F");
   recottree_->Branch("recoMuon_poszMuon",&b_recoMuon_poszMuon,"recoMuon_poszMuon/F");
@@ -502,7 +525,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   h_nevents->Fill(0.5);
 
   Handle<VertexCollection> vertices;
+  Handle<VertexCollection> vertices1D, vertices1DBS, vertices4D, vertices4DBS, verticesBS;
+  
   iEvent.getByToken(vtxToken_, vertices); 
+  iEvent.getByToken(vtx1DToken_,   vertices1D); 
+  iEvent.getByToken(vtx1DBSToken_, vertices1DBS); 
+  iEvent.getByToken(vtx4DToken_,   vertices4D); 
+  iEvent.getByToken(vtx4DBSToken_, vertices4DBS); 
+  iEvent.getByToken(vtxBSToken_,   verticesBS); 
+  
   if (vertices->empty()) { cout << "noPV" << endl; return; }
   auto pv0 = vertices->front();
   b_nvertex = vertices->size();
@@ -609,6 +640,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_poszLPVOfCand = dPosZVtxCand;
     b_genMuon_varposzCand   = dVarPosZVtxCand;
     b_genMuon_poszMuon      = mu->muonBestTrack()->vz();
+    
+    b_genMuon_poszPV01D   = vertices1D->front().position().z();
+    b_genMuon_poszPV01DBS = vertices1DBS->front().position().z();
+    b_genMuon_poszPV04D   = vertices4D->front().position().z();
+    b_genMuon_poszPV04DBS = vertices4DBS->front().position().z();
+    b_genMuon_poszPV0BS   = verticesBS->front().position().z();
 
     b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
     b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
@@ -756,6 +793,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_poszSimPV     = simPVh.position().z();
     b_recoMuon_poszLPVOfCand = dPosZVtxCand;
     b_recoMuon_poszMuon      = mu->muonBestTrack()->vz();
+    
+    b_recoMuon_poszPV01D   = vertices1D->front().position().z();
+    b_recoMuon_poszPV01DBS = vertices1DBS->front().position().z();
+    b_recoMuon_poszPV04D   = vertices4D->front().position().z();
+    b_recoMuon_poszPV04DBS = vertices4DBS->front().position().z();
+    b_recoMuon_poszPV0BS   = verticesBS->front().position().z();
 
     b_recoMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
     b_recoMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();

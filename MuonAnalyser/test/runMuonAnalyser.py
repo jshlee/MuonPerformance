@@ -52,7 +52,13 @@ process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDig
 
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
-    primaryVertex = cms.InputTag('offlinePrimaryVertices'),
+    primaryVertex     = cms.InputTag('offlinePrimaryVertices'),
+    primaryVertex1D   = cms.InputTag('offlinePrimaryVertices1D'),
+    primaryVertex1DBS = cms.InputTag('offlinePrimaryVertices1DWithBS'),
+    primaryVertex4D   = cms.InputTag('offlinePrimaryVertices4D'),
+    primaryVertex4DBS = cms.InputTag('offlinePrimaryVertices4DWithBS'),
+    primaryVertexBS   = cms.InputTag('offlinePrimaryVerticesWithBS'),
+    
     simLabel = cms.InputTag("mix","MergedTrackTruth"),
     simVertexCollection = cms.InputTag("g4SimHits"),
     muonLabel = cms.InputTag("muons"),
