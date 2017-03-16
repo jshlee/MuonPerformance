@@ -61,6 +61,15 @@
 ## "plotvar" (V) : What value do you want to draw?
 ##   This value can be set in "vars" if you want to draw several values.
 ## 
+## "plottype" (V) : Type of the plot
+##   This program has 3 types: 
+##     "normal" (default; if "plottype" is not given, it will be applied)
+##     "effrate" : See "effrate" key (if it is not given but "effrate" key is there, it turns on)
+##     "accumulated" : drawing accumulated plot
+## 
+## "normoff" (V) : If this key is there, plots are normalized. Note that it is turned on default!
+##   (not for "effrate")
+## 
 ## "ylog" (V) : Using log scale on y-axis
 ## 
 ## "min" (V) : you can set the minimum of the plot.
@@ -123,18 +132,46 @@ def setMarkerStyle(h,color,style,size):
     h.SetLineWidth(2)
 
 
-def getH1_Normalized(filename,treename,title,binning,plotvar,cut):
+def getH1_Normalized(filename,treename,title,binning,plotvar,cut,normaloff=False):
     h1 = makeTH1(filename,treename,title,binning,plotvar,cut)
     
     # Normalizing
-    normfactor = h1.GetEntries()
-    if normfactor > 0.0: h1.Scale(1.0 / normfactor)
+    if not normaloff: 
+      normfactor = h1.GetEntries()
+      if normfactor > 0.0: h1.Scale(1.0 / normfactor)
     
     # Showing overflow
     nValLastBin  = h1.GetBinContent(binning[ 0 ])
     nValOverflow = h1.GetBinContent(binning[ 0 ] + 1)
     h1.SetBinContent(binning[ 0 ], nValLastBin + nValOverflow)
     h1.SetBinContent(binning[ 0 ] + 1, 0)
+    
+    # Setting title
+    h1.SetTitle(title)
+    
+    return copy.deepcopy(h1)
+
+
+def getH1_Accumulated(filename,treename,title,binning,plotvar,cut,normaloff=False):
+    h1 = makeTH1(filename,treename,title,binning,plotvar,cut)
+    
+    # Normalizing
+    if not normaloff: 
+      normfactor = h1.GetEntries()
+      if normfactor > 0.0: h1.Scale(1.0 / normfactor)
+    
+    # Showing overflow
+    nValLastBin  = h1.GetBinContent(binning[ 0 ])
+    nValOverflow = h1.GetBinContent(binning[ 0 ] + 1)
+    h1.SetBinContent(binning[ 0 ], nValLastBin + nValOverflow)
+    h1.SetBinContent(binning[ 0 ] + 1, 0)
+    
+    # Accumulating
+    for i in range(binning[ 0 ]): 
+        fBinPrev = h1.GetBinContent(i + 1)
+        fBinCurr = h1.GetBinContent(i + 2)
+        
+        h1.SetBinContent(i + 2, fBinPrev + fBinCurr)
     
     # Setting title
     h1.SetTitle(title)
@@ -196,6 +233,7 @@ def drawPlotFromDict(dicMainCmd):
 
     # Variables which can have a defalut value
     strPlotvar = "" # It must be determined either in "general" or "vars"
+    strPlotType = "normal"
     nIsUsedCommonVar = 0
 
     nIsLogY = 0
@@ -213,13 +251,28 @@ def drawPlotFromDict(dicMainCmd):
     fLegRight  = 0.85
     fLegBottom = 0.80
     
+    fLegTextSize = 0.04
+    
     fTitleX = 0.18
     fTitleY = 0.85
+    
+    bNormalOff = False
 
     # Now setup the configuration
     if "plotvar" in dicMainCmd:
         strPlotvar = dicMainCmd[ "plotvar" ]
         nIsUsedCommonVar = 1
+    
+    if "plottype" in dicMainCmd: 
+        listPossible = [
+            "normal", "effrate", "accumulated"
+        ]
+        
+        if dicMainCmd[ "plottype" ] not in listPossible: 
+            print "Error : \"%s\" is not a possible type."%dicMainCmd[ "plottype" ]
+            sys.exit(1)
+        
+        strPlotType = dicMainCmd[ "plottype" ]
 
     if "ylog" in dicMainCmd:
         nIsLogY = 1
@@ -234,6 +287,7 @@ def drawPlotFromDict(dicMainCmd):
 
     if "effrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "effrate" ]
+        strPlotType = "effrate"
         nIsEffRate = 1
     
     if "titlepos" in dicMainCmd: 
@@ -253,6 +307,12 @@ def drawPlotFromDict(dicMainCmd):
             fLegTop    = 0.65
             fLegRight  = 0.85
             fLegBottom = 0.80
+        
+        if "textsize" in dicMainCmd[ "legend" ]: 
+            fLegTextSize = dicMainCmd[ "legend" ][ "textsize" ]
+    
+    if "normoff" in dicMainCmd: 
+        bNormalOff = True
 
     # Now all plots get being drawn
     for varHead in arrVars: 
@@ -273,19 +333,25 @@ def drawPlotFromDict(dicMainCmd):
         strCutExtra = ""
         if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
         
-        if nIsEffRate != 0: 
+        if strPlotType == "normal": 
+            print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
+            # Drawing normal plot (for isolation values)
+            varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
+                varHead[ "title" ], binCurr, strPlotvar, 
+                ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
+        elif strPlotType == "effrate": 
             print "Num : %s\nDen : %s"%(( strCut + strCutNum + strCutExtra )%dicCutConfig, ( strCut + strCutExtra )%dicCutConfig)
             # Drawing efficiency / fake rate plot
             varHead[ "hist" ] = getEff(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut +             strCutExtra )%dicCutConfig, # cut for denominator
                 ( strCut + strCutNum + strCutExtra )%dicCutConfig) # cut for nominator
-        else:
+        elif strPlotType == "accumulated": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getH1_Accumulated(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
-                ( strCut + strCutExtra )%dicCutConfig)
+                ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         
         fSizeDot = 1.0
         if "size" in varHead: fSizeDot = varHead[ "size" ]
@@ -315,7 +381,15 @@ def drawPlotFromDict(dicMainCmd):
     canv = makeCanvas("canvMain", False)
     setMargins(canv, False)
     h_init.Draw()
+    
+    strTmpID = dicCutConfig[ "ID" ]
+    
+    if "Tight" in dicCutConfig[ "ID" ]: 
+        dicCutConfig[ "ID" ] = "Tight"
+    
     drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY)
+    
+    dicCutConfig[ "ID" ] = strTmpID
 
     if nIsLogY != 0: ROOT.gPad.SetLogy()
 
@@ -326,11 +400,11 @@ def drawPlotFromDict(dicMainCmd):
         strExtraOpt = ""
         if "extradrawopt" in varHead: strExtraOpt = varHead[ "extradrawopt" ]
         
-        varHead[ "hist" ].Draw(strExtraOpt + "e1same")
-        leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), "p")
+        varHead[ "hist" ].Draw(strExtraOpt + "same")
+        leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), "pl")
 
     leg.SetTextFont(61)
-    leg.SetTextSize(0.04)
+    leg.SetTextSize(fLegTextSize)
     leg.SetBorderSize(0)
     leg.Draw()
 

@@ -103,10 +103,18 @@ class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 public:
   explicit MuonAnalyser(const edm::ParameterSet&);
   ~MuonAnalyser();
+  
+  bool isGlobalTightMuon( const Muon* muonRef );
+  bool isTrackerTightMuon( const reco::Muon *muonRef );
+  bool isIsolatedMuon( const reco::Muon *muonRef );
 
   bool isLooseMuonCustom(const reco::Muon& mu) const;
   bool isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const;
   bool isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex pv0) const;
+  
+  bool isLooseMod(const reco::Muon *muon);
+  bool isTightMod(const Handle<VertexCollection> &vertexHandle, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz);
+  
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
   int nGEMhit(const reco::Muon * mu) const;
   int nME0hit(const reco::Muon * mu) const;
@@ -122,6 +130,13 @@ private:
 
   TH1D* h_nevents;
   TH1D* h_vertex;
+  
+  TH1D* h_vertexBS;
+  TH1D* h_vertex1D;
+  TH1D* h_vertex1DBS;
+  TH1D* h_vertex4D;
+  TH1D* h_vertex4DBS;
+  
   int b_nvertex;
 
   TTree* genttree_;
@@ -130,11 +145,14 @@ private:
   bool b_genMuon_isTightOptimized, b_genMuon_isTightCustom, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
   bool b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon, b_genMuon_signal;
   bool b_genMuon_isGlobalMuon, b_genMuon_isStandAloneMuon;
+  bool b_genMuon_isLooseMod;
+  bool b_genMuon_isTightModNoIP, b_genMuon_isTightModIPxy, b_genMuon_isTightModIPz, b_genMuon_isTightModIPxyz;
   float b_genMuon_pTresolution;
   int b_genMuon_noRecHitGEM;
   int b_genMuon_noRecHitME0;
   
   float b_genMuon_poszPV0, b_genMuon_poszSimPV;
+  float b_genMuon_poszPV01D, b_genMuon_poszPV01DBS, b_genMuon_poszPV04D, b_genMuon_poszPV04DBS, b_genMuon_poszPV0BS;
   float b_genMuon_poszLPVOfCand, b_genMuon_varposzCand, b_genMuon_poszMuon;
   float b_genMuon_pfIso03; float b_genMuon_pfIso04;
   float b_genMuon_pfIso03ChargedHadronPt, b_genMuon_pfIso03NeutralHadronEt;
@@ -171,6 +189,8 @@ private:
   bool b_recoMuon_isTightOptimized, b_recoMuon_isTightCustom, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
   bool b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
   bool b_recoMuon_isGlobalMuon, b_recoMuon_isStandAloneMuon;
+  bool b_recoMuon_isLooseMod;
+  bool b_recoMuon_isTightModNoIP, b_recoMuon_isTightModIPxy, b_recoMuon_isTightModIPz, b_recoMuon_isTightModIPxyz;
   int b_recoMuon_noChamberMatch;
   int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
   int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
@@ -198,6 +218,7 @@ private:
   int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
   int b_recoMuon_pdgId;
   float b_recoMuon_poszPV0, b_recoMuon_poszSimPV;
+  float b_recoMuon_poszPV01D, b_recoMuon_poszPV01DBS, b_recoMuon_poszPV04D, b_recoMuon_poszPV04DBS, b_recoMuon_poszPV0BS;
   float b_recoMuon_poszLPVOfCand, b_recoMuon_poszMuon;
   float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
   float b_recoMuon_PFIso03ChargedHadronPt, b_recoMuon_PFIso03NeutralHadronEt;
@@ -232,6 +253,11 @@ private:
   ReadMLP* mlp_;
   
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DBSToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx4DToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtx4DBSToken_;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > vtxBSToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<std::vector<SimVertex> > simVertexToken_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
@@ -243,7 +269,13 @@ private:
 
 MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
-  vtxToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
+  vtxToken_     = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
+  vtx1DToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex1D"));
+  vtx1DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex1DBS"));
+  vtx4DToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4D"));
+  vtx4DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4DBS"));
+  vtxBSToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertexBS"));
+  
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   simVertexToken_ = consumes<std::vector<SimVertex> >(pset.getParameter<edm::InputTag> ("simVertexCollection"));  
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
@@ -267,6 +299,12 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   edm::Service<TFileService> fs;
   h_nevents = fs->make<TH1D>("nevents", "nevents", 1, 0, 1);
   h_vertex = fs->make<TH1D>("vertex reco vs sim", "vertex reco vs sim", 100, -1, 1);
+  
+  h_vertexBS   = fs->make<TH1D>("vertex reco with BS vs sim", "vertex reco with BS vs sim", 100, -1, 1);
+  h_vertex1D   = fs->make<TH1D>("vertex reco 1D vs sim", "vertex reco 1D vs sim", 100, -1, 1);
+  h_vertex1DBS = fs->make<TH1D>("vertex reco 1D with BS vs sim", "vertex reco 1D with BS vs sim", 100, -1, 1);
+  h_vertex4D   = fs->make<TH1D>("vertex reco 4D vs sim", "vertex reco 4D vs sim", 100, -1, 1);
+  h_vertex4DBS = fs->make<TH1D>("vertex reco 4D with BS vs sim", "vertex reco 4D with BS vs sim", 100, -1, 1);
 
   genttree_ = fs->make<TTree>("gen", "gen");
   genttree_->Branch("nvertex", &b_nvertex, "nvertex/I");
@@ -283,9 +321,19 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
   genttree_->Branch("genMuon_isGlobalMuon", &b_genMuon_isGlobalMuon, "genMuon_isGlobalMuon/O");
   genttree_->Branch("genMuon_isStandAloneMuon", &b_genMuon_isStandAloneMuon, "genMuon_isStandAloneMuon/O");
+  genttree_->Branch("genMuon_isLooseMod", &b_genMuon_isLooseMod, "genMuon_isLooseMod/O");
+  genttree_->Branch("genMuon_isTightModNoIP", &b_genMuon_isTightModNoIP, "genMuon_isTightModNoIP/O");
+  genttree_->Branch("genMuon_isTightModIPxy", &b_genMuon_isTightModIPxy, "genMuon_isTightModIPxy/O");
+  genttree_->Branch("genMuon_isTightModIPz", &b_genMuon_isTightModIPz, "genMuon_isTightModIPz/O");
+  genttree_->Branch("genMuon_isTightModIPxyz", &b_genMuon_isTightModIPxyz, "genMuon_isTightModIPxyz/O");
   genttree_->Branch("genMuon_pTresolution", &b_genMuon_pTresolution, "genMuon_pTresolution/F");
   
   genttree_->Branch("genMuon_poszPV0",&b_genMuon_poszPV0,"genMuon_poszPV0/F");
+  genttree_->Branch("genMuon_poszPV01D",&b_genMuon_poszPV01D,"genMuon_poszPV01D/F");
+  genttree_->Branch("genMuon_poszPV01DBS",&b_genMuon_poszPV01DBS,"genMuon_poszPV01DBS/F");
+  genttree_->Branch("genMuon_poszPV04D",&b_genMuon_poszPV04D,"genMuon_poszPV04D/F");
+  genttree_->Branch("genMuon_poszPV04DBS",&b_genMuon_poszPV04DBS,"genMuon_poszPV04DBS/F");
+  genttree_->Branch("genMuon_poszPV0BS",&b_genMuon_poszPV0BS,"genMuon_poszPV0BS/F");
   genttree_->Branch("genMuon_poszSimPV",&b_genMuon_poszSimPV,"genMuon_poszSimPV/F");
   genttree_->Branch("genMuon_poszLPVOfCand",&b_genMuon_poszLPVOfCand,"genMuon_poszLPVOfCand/F");
   genttree_->Branch("genMuon_varposzCand",&b_genMuon_varposzCand,"genMuon_varposzCand/F");
@@ -369,10 +417,20 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_->Branch("recoMuon_isMuon", &b_recoMuon_isMuon, "recoMuon_isMuon/O");
   recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_isGlobalMuon, "recoMuon_isGlobalMuon/O");
   recottree_->Branch("recoMuon_isStandAloneMuon", &b_recoMuon_isStandAloneMuon, "recoMuon_isStandAloneMuon/O");
+  recottree_->Branch("recoMuon_isLooseMod", &b_recoMuon_isLooseMod, "recoMuon_isLooseMod/O");
+  recottree_->Branch("recoMuon_isTightModNoIP", &b_recoMuon_isTightModNoIP, "recoMuon_isTightModNoIP/O");
+  recottree_->Branch("recoMuon_isTightModIPxy", &b_recoMuon_isTightModIPxy, "recoMuon_isTightModIPxy/O");
+  recottree_->Branch("recoMuon_isTightModIPz", &b_recoMuon_isTightModIPz, "recoMuon_isTightModIPz/O");
+  recottree_->Branch("recoMuon_isTightModIPxyz", &b_recoMuon_isTightModIPxyz, "recoMuon_isTightModIPxyz/O");
   recottree_->Branch("recoMuon_numberOfValidMuonGEMHits",&b_recoMuon_numberOfValidMuonGEMHits,"recoMuon_numberOfValidMuonGEMHits/I");
   recottree_->Branch("recoMuon_numberOfValidMuonME0Hits",&b_recoMuon_numberOfValidMuonME0Hits,"recoMuon_numberOfValidMuonME0Hits/I");
 
   recottree_->Branch("recoMuon_poszPV0",&b_recoMuon_poszPV0,"recoMuon_poszPV0/F");
+  recottree_->Branch("recoMuon_poszPV01D",&b_recoMuon_poszPV01D,"recoMuon_poszPV01D/F");
+  recottree_->Branch("recoMuon_poszPV01DBS",&b_recoMuon_poszPV01DBS,"recoMuon_poszPV01DBS/F");
+  recottree_->Branch("recoMuon_poszPV04D",&b_recoMuon_poszPV04D,"recoMuon_poszPV04D/F");
+  recottree_->Branch("recoMuon_poszPV04DBS",&b_recoMuon_poszPV04DBS,"recoMuon_poszPV04DBS/F");
+  recottree_->Branch("recoMuon_poszPV0BS",&b_recoMuon_poszPV0BS,"recoMuon_poszPV0BS/F");
   recottree_->Branch("recoMuon_poszSimPV",&b_recoMuon_poszSimPV,"recoMuon_poszSimPV/F");
   recottree_->Branch("recoMuon_poszLPVOfCand",&b_recoMuon_poszLPVOfCand,"recoMuon_poszLPVOfCand/F");
   recottree_->Branch("recoMuon_poszMuon",&b_recoMuon_poszMuon,"recoMuon_poszMuon/F");
@@ -502,7 +560,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   h_nevents->Fill(0.5);
 
   Handle<VertexCollection> vertices;
+  Handle<VertexCollection> vertices1D, vertices1DBS, vertices4D, vertices4DBS, verticesBS;
+  
   iEvent.getByToken(vtxToken_, vertices); 
+  iEvent.getByToken(vtx1DToken_,   vertices1D); 
+  iEvent.getByToken(vtx1DBSToken_, vertices1DBS); 
+  iEvent.getByToken(vtx4DToken_,   vertices4D); 
+  iEvent.getByToken(vtx4DBSToken_, vertices4DBS); 
+  iEvent.getByToken(vtxBSToken_,   verticesBS); 
+  
   if (vertices->empty()) { cout << "noPV" << endl; return; }
   auto pv0 = vertices->front();
   b_nvertex = vertices->size();
@@ -511,6 +577,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(simVertexToken_, simVertexCollection);
   const SimVertex simPVh = *(simVertexCollection->begin());
   h_vertex->Fill(pv0.position().z() - simPVh.position().z());
+  
+  h_vertexBS->Fill(  verticesBS->front().position().z()   - simPVh.position().z());
+  h_vertex1D->Fill(  vertices1D->front().position().z()   - simPVh.position().z());
+  h_vertex1DBS->Fill(vertices1DBS->front().position().z() - simPVh.position().z());
+  h_vertex4D->Fill(  vertices4D->front().position().z()   - simPVh.position().z());
+  h_vertex4DBS->Fill(vertices4DBS->front().position().z() - simPVh.position().z());
   
   Handle<TrackingParticleCollection> simHandle;
   iEvent.getByToken(simToken_, simHandle);
@@ -584,6 +656,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isGlobalMuon = false;
     b_genMuon_isStandAloneMuon = false;
     b_genMuon_signal = false;
+    b_genMuon_isLooseMod = false;
+    b_genMuon_isTightModNoIP = false;
+    b_genMuon_isTightModIPxy = false;
+    b_genMuon_isTightModIPz = false;
+    b_genMuon_isTightModIPxyz = false;
     b_genMuon_numberOfValidMuonGEMHits = -1;
     b_genMuon_numberOfValidMuonME0Hits = -1;
 
@@ -609,6 +686,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_poszLPVOfCand = dPosZVtxCand;
     b_genMuon_varposzCand   = dVarPosZVtxCand;
     b_genMuon_poszMuon      = mu->muonBestTrack()->vz();
+    
+    b_genMuon_poszPV01D   = vertices1D->front().position().z();
+    b_genMuon_poszPV01DBS = vertices1DBS->front().position().z();
+    b_genMuon_poszPV04D   = vertices4D->front().position().z();
+    b_genMuon_poszPV04DBS = vertices4DBS->front().position().z();
+    b_genMuon_poszPV0BS   = verticesBS->front().position().z();
 
     b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
     b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
@@ -689,6 +772,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_genMuon_isGlobalMuon = mu->isGlobalMuon();
     b_genMuon_isStandAloneMuon = mu->isStandAloneMuon();
     
+    b_genMuon_isLooseMod = isLooseMod(mu);
+    b_genMuon_isTightModNoIP  = isTightMod(vertices, simPVh, mu, false, false);
+    b_genMuon_isTightModIPxy  = isTightMod(vertices, simPVh, mu, true,  false);
+    b_genMuon_isTightModIPz   = isTightMod(vertices, simPVh, mu, false, true);
+    b_genMuon_isTightModIPxyz = isTightMod(vertices, simPVh, mu, true,  true);
+    
     const vector<MuonChamberMatch>& chambers = mu->matches();
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
       for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
@@ -752,10 +841,22 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     
+    b_recoMuon_isLooseMod = false;
+    b_recoMuon_isTightModNoIP  = false;
+    b_recoMuon_isTightModIPxy  = false;
+    b_recoMuon_isTightModIPz   = false;
+    b_recoMuon_isTightModIPxyz = false;
+    
     b_recoMuon_poszPV0       = pv0.position().z();
     b_recoMuon_poszSimPV     = simPVh.position().z();
     b_recoMuon_poszLPVOfCand = dPosZVtxCand;
     b_recoMuon_poszMuon      = mu->muonBestTrack()->vz();
+    
+    b_recoMuon_poszPV01D   = vertices1D->front().position().z();
+    b_recoMuon_poszPV01DBS = vertices1DBS->front().position().z();
+    b_recoMuon_poszPV04D   = vertices4D->front().position().z();
+    b_recoMuon_poszPV04DBS = vertices4DBS->front().position().z();
+    b_recoMuon_poszPV0BS   = verticesBS->front().position().z();
 
     b_recoMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
     b_recoMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
@@ -834,6 +935,13 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_isMuon = mu->isMuon();
     b_recoMuon_isGlobalMuon = mu->isGlobalMuon();
     b_recoMuon_isStandAloneMuon = mu->isStandAloneMuon();
+    
+    b_recoMuon_isLooseMod = isLooseMod(mu);
+    b_recoMuon_isTightModNoIP  = isTightMod(vertices, simPVh, mu, false, false);
+    b_recoMuon_isTightModIPxy  = isTightMod(vertices, simPVh, mu, true,  false);
+    b_recoMuon_isTightModIPz   = isTightMod(vertices, simPVh, mu, false, true);
+    b_recoMuon_isTightModIPxyz = isTightMod(vertices, simPVh, mu, true,  true);
+    
     b_recoMuon_noRecHitGEM = -1;
     b_recoMuon_numberOfValidMuonGEMHits = -1;
     b_recoMuon_numberOfValidMuonME0Hits = -1;
@@ -1001,39 +1109,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     b_recoMuon_trackerlayers =tmvaValues[11];
 
     recottree_->Fill();
-    
-    /*if ( b_recoMuon.Pt() > 5 && abs(b_recoMuon.Eta()) < 2.4 ) {
-      int nIsoType = 0;
-      
-      if ( b_recoMuon_TrkIso03 < 0.0001 ) {
-        nIsoType +=     1;
-      }
-      
-      if ( b_recoMuon_PFIso04 < 0.0001 ) {
-        nIsoType +=    10;
-      }
-      
-      if ( b_recoMuon_puppiIsoWithLep < 0.0001 ) {
-        nIsoType +=   100;
-      }
-      
-      if ( b_recoMuon_puppiIsoWithoutLep < 0.0001 ) {
-        nIsoType +=  1000;
-      }
-      
-      if ( b_recoMuon_puppiIsoCombined < 0.0001 ) {
-        nIsoType += 10000;
-      }
-      
-      if ( nIsoType != 0 ) {
-        printf("%05i - ", nIsoType);
-        cout << "pdgid : " << b_recoMuon_pdgId << ", "
-          << "pT : "  << b_recoMuon.Pt()  << ", "
-          << "Eta : " << b_recoMuon.Eta() << ", "
-          << "phi : " << b_recoMuon.Phi() << ", "
-          << endl;
-      }
-    }*/
   }
 
 }
@@ -1382,6 +1457,268 @@ bool MuonAnalyser::isCH( long pdgidAbs ) const{
 bool MuonAnalyser::isPH( long pdgidAbs ) const{
   if( pdgidAbs == 22 ) return true ; // Photon
   return false;
+}
+
+bool MuonAnalyser::isGlobalTightMuon( const reco::Muon *muonRef ) {
+
+ //if ( !muonRef.isNonnull() ) return false;
+
+ if ( !muonRef->isGlobalMuon() ) return false;
+ if ( !muonRef->isStandAloneMuon() ) return false;
+ 
+ 
+ if ( muonRef->isTrackerMuon() ) { 
+   
+   bool result = muon::isGoodMuon(*muonRef,muon::GlobalMuonPromptTight);
+   
+   bool isTM2DCompatibilityTight =  muon::isGoodMuon(*muonRef,muon::TM2DCompatibilityTight);   
+   int nMatches = muonRef->numberOfMatches();
+   bool quality = nMatches > 2 || isTM2DCompatibilityTight;
+   
+   return result && quality;
+   
+ } else {
+ 
+   reco::TrackRef standAloneMu = muonRef->standAloneMuon();
+   
+    // No tracker muon -> Request a perfect stand-alone muon, or an even better global muon
+    bool result = false;
+      
+    // Check the quality of the stand-alone muon : 
+    // good chi**2 and large number of hits and good pt error
+    if ( ( standAloneMu->hitPattern().numberOfValidMuonDTHits() < 22 &&
+       standAloneMu->hitPattern().numberOfValidMuonCSCHits() < 15 ) ||
+     standAloneMu->normalizedChi2() > 10. || 
+     standAloneMu->ptError()/standAloneMu->pt() > 0.20 ) {
+      result = false;
+    } else { 
+      
+      reco::TrackRef combinedMu = muonRef->combinedMuon();
+      reco::TrackRef trackerMu = muonRef->track();
+            
+      // If the stand-alone muon is good, check the global muon
+      if ( combinedMu->normalizedChi2() > standAloneMu->normalizedChi2() ) {
+    // If the combined muon is worse than the stand-alone, it 
+    // means that either the corresponding tracker track was not 
+    // reconstructed, or that the sta muon comes from a late 
+    // pion decay (hence with a momentum smaller than the track)
+    // Take the stand-alone muon only if its momentum is larger
+    // than that of the track
+    result = standAloneMu->pt() > trackerMu->pt() ;
+     } else { 
+    // If the combined muon is better (and good enough), take the 
+    // global muon
+    result = 
+      combinedMu->ptError()/combinedMu->pt() < 
+      std::min(0.20,standAloneMu->ptError()/standAloneMu->pt());
+      }
+    }      
+
+    return result;    
+  }
+
+  return false;
+
+}
+
+bool MuonAnalyser::isTrackerTightMuon( const reco::Muon *muonRef ) {
+
+  //if ( !muonRef.isNonnull() ) return false;
+    
+  if( !muonRef->isTrackerMuon() ) return false;
+  
+  reco::TrackRef trackerMu = muonRef->track();
+  const reco::Track& track = *trackerMu;
+  
+  unsigned nTrackerHits =  track.hitPattern().numberOfValidTrackerHits();
+  
+  if(nTrackerHits<=12) return false;
+  
+  bool isAllArbitrated = muon::isGoodMuon(*muonRef,muon::AllArbitrated);
+  
+  bool isTM2DCompatibilityTight = muon::isGoodMuon(*muonRef,muon::TM2DCompatibilityTight);
+  
+  if(!isAllArbitrated || !isTM2DCompatibilityTight)  return false;
+
+  if((trackerMu->ptError()/trackerMu->pt() > 0.10)){
+    //std::cout<<" PT ERROR > 10 % "<< trackerMu->pt() <<std::endl;
+    return false;
+  }
+  return true;
+  
+}
+
+bool MuonAnalyser::isIsolatedMuon( const reco::Muon *muonRef ){
+
+
+  //if ( !muonRef.isNonnull() ) return false;
+  if ( !muonRef->isIsolationValid() ) return false;
+  
+  // Isolated Muons which are missed by standard cuts are nearly always global+tracker
+  if ( !muonRef->isGlobalMuon() ) return false;
+
+  // If it's not a tracker muon, only take it if there are valid muon hits
+
+  reco::TrackRef standAloneMu = muonRef->standAloneMuon();
+
+  if ( !muonRef->isTrackerMuon() ){
+    if(standAloneMu->hitPattern().numberOfValidMuonDTHits() == 0 &&
+       standAloneMu->hitPattern().numberOfValidMuonCSCHits() ==0) return false;
+  }
+  
+  // for isolation, take the smallest pt available to reject fakes
+
+  reco::TrackRef combinedMu = muonRef->combinedMuon();
+  double smallestMuPt = combinedMu->pt();
+  
+  if(standAloneMu->pt()<smallestMuPt) smallestMuPt = standAloneMu->pt();
+  
+  if(muonRef->isTrackerMuon())
+    {
+      reco::TrackRef trackerMu = muonRef->track();
+      if(trackerMu->pt() < smallestMuPt) smallestMuPt= trackerMu->pt();
+    }
+     
+  double sumPtR03 = muonRef->isolationR03().sumPt;
+  double emEtR03 = muonRef->isolationR03().emEt;
+  double hadEtR03 = muonRef->isolationR03().hadEt;
+  
+  double relIso = (sumPtR03 + emEtR03 + hadEtR03)/smallestMuPt;
+
+  if(relIso<0.1) return true;
+  else return false;
+}
+
+bool MuonAnalyser::isLooseMod(const reco::Muon *muon)
+{
+    bool isPF= isGlobalTightMuon(muon) || isTrackerTightMuon(muon) || isIsolatedMuon(muon);
+    bool isGLB = muon->isGlobalMuon();
+    bool isTrk = muon->isTrackerMuon();
+    
+    return ( isPF && (isGLB || isTrk) );
+}
+
+bool MuonAnalyser::isTightMod(const Handle<VertexCollection> &vertexHandle, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz)
+{
+    bool result = false;
+    
+    if (muon->muonBestTrack().isNonnull() && muon->innerTrack().isNonnull() && muon->globalTrack().isNonnull()){
+        
+        //std::vector<double> vtxCoord = findSimVtx(iEvent);
+        std::vector<double> vtxCoord;
+        vtxCoord.push_back(1.0);
+        
+        //GlobalPoint point(vtxCoord[1],vtxCoord[2],vtxCoord[3]);
+        //GlobalPoint pointDY(vtxCoord[4],vtxCoord[5],vtxCoord[6]);
+        GlobalPoint point(simPVh.position().x(), simPVh.position().y(), simPVh.position().z());
+        GlobalPoint pointDY(simPVh.position().x(), simPVh.position().y(), simPVh.position().z());
+        
+        //double muonX = muon->vx();
+        //double muonY = muon->vy();
+        //double muonZ = muon->vz();
+        
+        double muonZ = pointDY.z();
+        
+        //edm::Handle<reco::VertexCollection> vertexHandle; // quark2 : It is given by argument
+        //iEvent.getByToken(vtx_Token,vertexHandle);
+        const reco::VertexCollection* vertices = vertexHandle.product();
+        
+        double distInit = 24;
+        int indexFinal = 0;
+        for(int i = 0; i < (int)vertices->size(); i++){
+            
+            //double vtxX = (*vertices)[i].x();
+            //double vtxY = (*vertices)[i].y();
+            double vtxZ = (*vertices)[i].z();
+            
+            double dist = fabs(muonZ - vtxZ);
+            //std::cout<<"dist "<<dist<<std::endl;
+            if(dist < distInit){
+                
+                distInit = dist;
+                indexFinal = i;
+                
+            }
+            
+        }
+        //std::cout<<distInit<<" "<<indexFinal<<std::endl;
+        
+        double ipxySim = 999;
+        double ipzSim = 999;
+        
+        if(vtxCoord[0] > 1.5 && vtxCoord[0] < 3.5){//Mu and nu gun samples
+            
+            ipxySim = fabs(muon->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
+            ipzSim = fabs(muon->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
+            
+        }
+        else if(vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){//DY samples
+            
+            ipxySim = fabs(muon->muonBestTrack()->dxy(math::XYZPoint(pointDY.x(),pointDY.y(),pointDY.z())));
+            ipzSim = fabs(muon->muonBestTrack()->dz(math::XYZPoint(pointDY.x(),pointDY.y(),pointDY.z())));
+            
+        }
+        bool ipxySimBool = ipxySim < 0.2;
+        bool ipzSimBool = ipzSim < 0.5;
+        //std::cout<<"vx: "<<point.x()<<" vy: "<<point.y()<<" vz: "<<point.z()<<" |Dxy|: "<<ipxySim<<" "<<ipxySimBool<<" |Dz|: "<<ipzSim<<" "<<ipzSimBool<<std::endl;
+        //std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dxy|: "<<ipxySim<<" "<<ipxySimBool<<" |Dz|: "<<ipzSim<<" "<<ipzSimBool<<std::endl;
+        
+        bool trkLayMeas = muon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5;
+        bool isGlb = muon->isGlobalMuon();
+        bool isPF= isGlobalTightMuon(muon) || isTrackerTightMuon(muon) || isIsolatedMuon(muon);
+        bool chi2 = muon->globalTrack()->normalizedChi2() < 10.;
+        bool validHits = muon->globalTrack()->hitPattern().numberOfValidMuonHits() > 0;
+        bool matchedSt = muon->numberOfMatchedStations() > 1;
+        
+        bool ipxy = false;
+        bool ipz = false;
+        if(useIPxy == true){
+            
+            if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){
+                
+                ipxy = fabs(muon->muonBestTrack()->dxy((*vertices)[indexFinal].position())) < 0.2;
+                //std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dxy|: "<<ipxy<<std::endl;
+                
+            }
+            else if(vtxCoord[0] > 1.5 && vtxCoord[0] < 3.5){
+                
+                ipxy = ipxySimBool;
+                //std::cout<<"vx: "<<point.x()<<" vy: "<<point.y()<<" vz: "<<point.z()<<" |Dxy|: "<<ipxy<<std::endl;
+                
+            }
+            
+        }
+        else if(useIPxy == false) ipxy = true;
+        
+        if(useIPz == true){
+            
+            if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){
+                
+                ipz = fabs(muon->muonBestTrack()->dz((*vertices)[indexFinal].position())) < 0.5;
+                //std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dz|: "<<ipz<<std::endl;
+                
+            }
+            else if(vtxCoord[0] > 1.5 && vtxCoord[0] < 3.5){
+                
+                ipz = ipzSimBool;
+                //std::cout<<"vx: "<<point.x()<<" vy: "<<point.y()<<" vz: "<<point.z()<<" |Dz|: "<<ipz<<std::endl;
+                
+            }
+            
+        }
+        else if(useIPz == false) ipz = true;
+        
+        bool validPxlHit = muon->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+        //bool validPxlHit = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement(3,2) > 0;
+        //bool validPxlHit = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement(4,3) > 0;
+        
+        //std::cout<<trkLayMeas<<" "<<isGlb<<" "<<isPF<<" "<<chi2<<" "<<validHits<<" "<<matchedSt<<" "<<ipxy<<" "<<ipz<<" "<<validPxlHit<<std::endl;
+        
+        if(trkLayMeas && isGlb && isPF && chi2 && validHits && matchedSt && ipxy && ipz && validPxlHit) result = true;
+        
+    }
+    
+    return result;
 }
 
 DEFINE_FWK_MODULE(MuonAnalyser);
