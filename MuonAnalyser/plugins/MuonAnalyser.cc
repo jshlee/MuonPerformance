@@ -113,7 +113,7 @@ public:
   bool isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex pv0) const;
   
   bool isLooseMod(const reco::Muon *muon);
-  bool isTightMod(const Handle<VertexCollection> &vertexHandle, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz);
+  bool isTightMod(const reco::VertexCollection* vertices, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz);
   
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
   int nGEMhit(const reco::Muon * mu) const;
@@ -125,6 +125,9 @@ public:
   bool isCH( long pdgid ) const;
   bool isPH( long pdgid ) const;
 
+  void setBranches(TTree *tree);
+  void fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muon* mu, bool isSignal, int pdgId, const reco::VertexCollection* verts, const SimVertex simPVh, const std::vector<pat::PackedCandidate> * candidates);
+  
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
@@ -141,113 +144,68 @@ private:
 
   TTree* genttree_;
   TTree* recottree_;
-  TLorentzVector b_genMuon;
-  bool b_genMuon_isTightOptimized, b_genMuon_isTightCustom, b_genMuon_isTight, b_genMuon_isMedium, b_genMuon_isLoose;
-  bool b_genMuon_isME0Muon, b_genMuon_isGEMMuon, b_genMuon_isMuon, b_genMuon_signal;
-  bool b_genMuon_isGlobalMuon, b_genMuon_isStandAloneMuon;
-  bool b_genMuon_isLooseMod;
-  bool b_genMuon_isTightModNoIP, b_genMuon_isTightModIPxy, b_genMuon_isTightModIPz, b_genMuon_isTightModIPxyz;
-  float b_genMuon_pTresolution;
-  int b_genMuon_noRecHitGEM;
-  int b_genMuon_noRecHitME0;
+
+  TLorentzVector b_muon;
+  bool b_muon_signal,b_muon_pdgId;
+  float b_muon_pTresolution, b_muon_pTinvresolution;
+  bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
+  bool b_muon_isME0Muon, b_muon_isGEMMuon;
+  bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon;
+  bool b_muon_isLooseMod;
+  bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
+  int b_muon_noChamberMatch;
+  int b_muon_noSegment, b_muon_noSegmentDT, b_muon_noSegmentCSC, b_muon_noSegmentRPC, b_muon_noSegmentGEM, b_muon_noSegmentME0;
+  int b_muon_noRecHitGEM, b_muon_noRecHitME0;
+
+  float b_muon_edgeXME0, b_muon_edgeYME0;
+  float b_muon_chamberMatchXME0, b_muon_chamberMatchYME0;
+  float b_muon_chamberMatchXErrME0, b_muon_chamberMatchYErrME0;
+  float b_muon_chamberMatchDXDZME0, b_muon_chamberMatchDYDZME0;
+  float b_muon_chamberMatchDXDZErrME0, b_muon_chamberMatchDYDZErrME0;
+  float b_muon_distance, b_muon_distErr;
+  float b_muon_segmentMatchXME0, b_muon_segmentMatchYME0;
+  float b_muon_segmentMatchXErrME0, b_muon_segmentMatchYErrME0;
+  float b_muon_segmentMatchDXDZME0, b_muon_segmentMatchDYDZME0;
+  float b_muon_segmentMatchDXDZErrME0, b_muon_segmentMatchDYDZErrME0;
+
+  float b_muon_deltaXME0, b_muon_deltaYME0;
+  float b_muon_deltaXDivBySegErrME0, b_muon_deltaYDivBySegErrME0, b_muon_deltaXDivByChamErrME0, b_muon_deltaYDivByChamErrME0;
+  float b_muon_deltaDXDZME0, b_muon_deltaDYDZME0;
+  float b_muon_deltaDXDZDivBySegErrME0, b_muon_deltaDYDZDivBySegErrME0, b_muon_deltaDXDZDivByChamErrME0, b_muon_deltaDYDZDivByChamErrME0;
+
+  bool b_muon_global; bool b_muon_pf;
+  float b_muon_chi2pos; float b_muon_trkKink; float b_muon_segcompati;
+  float b_muon_chi2; int b_muon_nglobalhits; int b_muon_nstations;
+  float b_muon_trackdxy; float b_muon_trackdz;
+  int b_muon_ninnerhits; float b_muon_trackerlayers;
+  float b_muon_poszPV0, b_muon_poszSimPV, b_muon_poszMuon;
+  float b_muon_PFIso04; float b_muon_PFIso03;
+  float b_muon_PFIso03ChargedHadronPt, b_muon_PFIso03NeutralHadronEt;
+  float b_muon_PFIso03PhotonEt, b_muon_PFIso03PUPt;
+  float b_muon_PFIso04ChargedHadronPt, b_muon_PFIso04NeutralHadronEt;
+  float b_muon_PFIso04PhotonEt, b_muon_PFIso04PUPt;
+  float b_muon_TrkIso05; float b_muon_TrkIso03;
+  float b_muon_puppiIsoWithLep, b_muon_puppiIsoWithoutLep, b_muon_puppiIsoCombined;
+  float b_muon_puppiIsoWithLep03, b_muon_puppiIsoWithoutLep03, b_muon_puppiIsoCombined03;
+  float b_muon_puppiIsoWithLep05, b_muon_puppiIsoWithoutLep05, b_muon_puppiIsoCombined05;
+  float b_muon_puppiIsoWithLep03ChargedHadron, b_muon_puppiIsoWithLep03NeutralHadron, b_muon_puppiIsoWithLep03Photon;
+  float b_muon_puppiIsoWithLep04ChargedHadron, b_muon_puppiIsoWithLep04NeutralHadron, b_muon_puppiIsoWithLep04Photon;
+  float b_muon_puppiIsoWithLep05ChargedHadron, b_muon_puppiIsoWithLep05NeutralHadron, b_muon_puppiIsoWithLep05Photon;
+  float b_muon_puppiIsoWithoutLep03ChargedHadron, b_muon_puppiIsoWithoutLep03NeutralHadron, b_muon_puppiIsoWithoutLep03Photon;
+  float b_muon_puppiIsoWithoutLep04ChargedHadron, b_muon_puppiIsoWithoutLep04NeutralHadron, b_muon_puppiIsoWithoutLep04Photon;
+  float b_muon_puppiIsoWithoutLep05ChargedHadron, b_muon_puppiIsoWithoutLep05NeutralHadron, b_muon_puppiIsoWithoutLep05Photon;
+  int b_muon_puppiIsoNumOfCands;
+  int b_muon_puppiIsoNumOfCandsInR05;
+  int b_muon_puppiIsoNumOfCandsOutR05;
+  int b_muon_puppiIsoNumOfCandsInR05OT;
+  int b_muon_puppiIsoNumOfCandsInR05CH, b_muon_puppiIsoNumOfCandsInR05CHApp;
+  int b_muon_puppiIsoNumOfCandsInR05NH, b_muon_puppiIsoNumOfCandsInR05NHApp;
+  int b_muon_puppiIsoNumOfCandsInR05PH, b_muon_puppiIsoNumOfCandsInR05PHApp;
+  bool b_muon_isMuon;
+  int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
+
+  float b_muon_tmva_bdt, b_muon_tmva_mlp;
   
-  float b_genMuon_poszPV0, b_genMuon_poszSimPV;
-  float b_genMuon_poszPV01D, b_genMuon_poszPV01DBS, b_genMuon_poszPV04D, b_genMuon_poszPV04DBS, b_genMuon_poszPV0BS;
-  float b_genMuon_poszLPVOfCand, b_genMuon_varposzCand, b_genMuon_poszMuon;
-  float b_genMuon_pfIso03; float b_genMuon_pfIso04;
-  float b_genMuon_pfIso03ChargedHadronPt, b_genMuon_pfIso03NeutralHadronEt;
-  float b_genMuon_pfIso03PhotonEt, b_genMuon_pfIso03PUPt;
-  float b_genMuon_pfIso04ChargedHadronPt, b_genMuon_pfIso04NeutralHadronEt;
-  float b_genMuon_pfIso04PhotonEt, b_genMuon_pfIso04PUPt;
-  float b_genMuon_TrkIso05; float b_genMuon_TrkIso03;
-  float b_genMuon_puppiIsoWithLep, b_genMuon_puppiIsoWithoutLep, b_genMuon_puppiIsoCombined;
-  float b_genMuon_puppiIsoWithLep03, b_genMuon_puppiIsoWithoutLep03, b_genMuon_puppiIsoCombined03;
-  float b_genMuon_puppiIsoWithLep05, b_genMuon_puppiIsoWithoutLep05, b_genMuon_puppiIsoCombined05;
-  float b_genMuon_puppiIsoWithLep03ChargedHadron, b_genMuon_puppiIsoWithLep03NeutralHadron, b_genMuon_puppiIsoWithLep03Photon;
-  float b_genMuon_puppiIsoWithLep04ChargedHadron, b_genMuon_puppiIsoWithLep04NeutralHadron, b_genMuon_puppiIsoWithLep04Photon;
-  float b_genMuon_puppiIsoWithLep05ChargedHadron, b_genMuon_puppiIsoWithLep05NeutralHadron, b_genMuon_puppiIsoWithLep05Photon;
-  float b_genMuon_puppiIsoWithoutLep03ChargedHadron, b_genMuon_puppiIsoWithoutLep03NeutralHadron, b_genMuon_puppiIsoWithoutLep03Photon;
-  float b_genMuon_puppiIsoWithoutLep04ChargedHadron, b_genMuon_puppiIsoWithoutLep04NeutralHadron, b_genMuon_puppiIsoWithoutLep04Photon;
-  float b_genMuon_puppiIsoWithoutLep05ChargedHadron, b_genMuon_puppiIsoWithoutLep05NeutralHadron, b_genMuon_puppiIsoWithoutLep05Photon;
-  int b_genMuon_puppiIsoNumOfCands;
-  int b_genMuon_puppiIsoNumOfCandsInR05;
-  int b_genMuon_puppiIsoNumOfCandsOutR05;
-  int b_genMuon_puppiIsoNumOfCandsInR05OT;
-  int b_genMuon_puppiIsoNumOfCandsInR05CH, b_genMuon_puppiIsoNumOfCandsInR05CHApp;
-  int b_genMuon_puppiIsoNumOfCandsInR05NH, b_genMuon_puppiIsoNumOfCandsInR05NHApp;
-  int b_genMuon_puppiIsoNumOfCandsInR05PH, b_genMuon_puppiIsoNumOfCandsInR05PHApp;
-  int b_genMuon_numberOfValidMuonGEMHits, b_genMuon_numberOfValidMuonME0Hits;
-  float b_genMuon_tmva_bdt, b_genMuon_tmva_mlp;
-
-  float b_genMuon_deltaXME0, b_genMuon_deltaYME0;
-  float b_genMuon_deltaXErrME0, b_genMuon_deltaYErrME0;
-  float b_genMuon_deltaDXDZME0, b_genMuon_deltaDYDZME0;
-  float b_genMuon_deltaDXDZErrME0, b_genMuon_deltaDYDZErrME0;
-
-  TLorentzVector b_recoMuon;
-  bool b_recoMuon_signal;
-  bool b_recoMuon_isTightOptimized, b_recoMuon_isTightCustom, b_recoMuon_isTight, b_recoMuon_isMedium, b_recoMuon_isLoose;
-  bool b_recoMuon_isME0Muon, b_recoMuon_isGEMMuon;
-  bool b_recoMuon_isGlobalMuon, b_recoMuon_isStandAloneMuon;
-  bool b_recoMuon_isLooseMod;
-  bool b_recoMuon_isTightModNoIP, b_recoMuon_isTightModIPxy, b_recoMuon_isTightModIPz, b_recoMuon_isTightModIPxyz;
-  int b_recoMuon_noChamberMatch;
-  int b_recoMuon_noSegment, b_recoMuon_noSegmentDT, b_recoMuon_noSegmentCSC, b_recoMuon_noSegmentRPC, b_recoMuon_noSegmentGEM, b_recoMuon_noSegmentME0;
-  int b_recoMuon_noRecHitGEM, b_recoMuon_noRecHitME0;
-
-  float b_recoMuon_edgeXME0, b_recoMuon_edgeYME0;
-  float b_recoMuon_chamberMatchXME0, b_recoMuon_chamberMatchYME0;
-  float b_recoMuon_chamberMatchXErrME0, b_recoMuon_chamberMatchYErrME0;
-  float b_recoMuon_chamberMatchDXDZME0, b_recoMuon_chamberMatchDYDZME0;
-  float b_recoMuon_chamberMatchDXDZErrME0, b_recoMuon_chamberMatchDYDZErrME0;
-  float b_recoMuon_distance, b_recoMuon_distErr;
-  float b_recoMuon_segmentMatchXME0, b_recoMuon_segmentMatchYME0;
-  float b_recoMuon_segmentMatchXErrME0, b_recoMuon_segmentMatchYErrME0;
-  float b_recoMuon_segmentMatchDXDZME0, b_recoMuon_segmentMatchDYDZME0;
-  float b_recoMuon_segmentMatchDXDZErrME0, b_recoMuon_segmentMatchDYDZErrME0;
-
-  float b_recoMuon_deltaXME0, b_recoMuon_deltaYME0;
-  float b_recoMuon_deltaXDivBySegErrME0, b_recoMuon_deltaYDivBySegErrME0, b_recoMuon_deltaXDivByChamErrME0, b_recoMuon_deltaYDivByChamErrME0;
-  float b_recoMuon_deltaDXDZME0, b_recoMuon_deltaDYDZME0;
-  float b_recoMuon_deltaDXDZDivBySegErrME0, b_recoMuon_deltaDYDZDivBySegErrME0, b_recoMuon_deltaDXDZDivByChamErrME0, b_recoMuon_deltaDYDZDivByChamErrME0;
-
-  bool b_recoMuon_global; bool b_recoMuon_pf;
-  float b_recoMuon_chi2pos; float b_recoMuon_trkKink; float b_recoMuon_segcompati;
-  float b_recoMuon_chi2; int b_recoMuon_nglobalhits; int b_recoMuon_nstations;
-  float b_recoMuon_trackdxy; float b_recoMuon_trackdz;
-  int b_recoMuon_ninnerhits; float b_recoMuon_trackerlayers;
-  int b_recoMuon_pdgId;
-  float b_recoMuon_poszPV0, b_recoMuon_poszSimPV;
-  float b_recoMuon_poszPV01D, b_recoMuon_poszPV01DBS, b_recoMuon_poszPV04D, b_recoMuon_poszPV04DBS, b_recoMuon_poszPV0BS;
-  float b_recoMuon_poszLPVOfCand, b_recoMuon_poszMuon;
-  float b_recoMuon_PFIso04; float b_recoMuon_PFIso03;
-  float b_recoMuon_PFIso03ChargedHadronPt, b_recoMuon_PFIso03NeutralHadronEt;
-  float b_recoMuon_PFIso03PhotonEt, b_recoMuon_PFIso03PUPt;
-  float b_recoMuon_PFIso04ChargedHadronPt, b_recoMuon_PFIso04NeutralHadronEt;
-  float b_recoMuon_PFIso04PhotonEt, b_recoMuon_PFIso04PUPt;
-  float b_recoMuon_TrkIso05; float b_recoMuon_TrkIso03;
-  float b_recoMuon_puppiIsoWithLep, b_recoMuon_puppiIsoWithoutLep, b_recoMuon_puppiIsoCombined;
-  float b_recoMuon_puppiIsoWithLep03, b_recoMuon_puppiIsoWithoutLep03, b_recoMuon_puppiIsoCombined03;
-  float b_recoMuon_puppiIsoWithLep05, b_recoMuon_puppiIsoWithoutLep05, b_recoMuon_puppiIsoCombined05;
-  float b_recoMuon_puppiIsoWithLep03ChargedHadron, b_recoMuon_puppiIsoWithLep03NeutralHadron, b_recoMuon_puppiIsoWithLep03Photon;
-  float b_recoMuon_puppiIsoWithLep04ChargedHadron, b_recoMuon_puppiIsoWithLep04NeutralHadron, b_recoMuon_puppiIsoWithLep04Photon;
-  float b_recoMuon_puppiIsoWithLep05ChargedHadron, b_recoMuon_puppiIsoWithLep05NeutralHadron, b_recoMuon_puppiIsoWithLep05Photon;
-  float b_recoMuon_puppiIsoWithoutLep03ChargedHadron, b_recoMuon_puppiIsoWithoutLep03NeutralHadron, b_recoMuon_puppiIsoWithoutLep03Photon;
-  float b_recoMuon_puppiIsoWithoutLep04ChargedHadron, b_recoMuon_puppiIsoWithoutLep04NeutralHadron, b_recoMuon_puppiIsoWithoutLep04Photon;
-  float b_recoMuon_puppiIsoWithoutLep05ChargedHadron, b_recoMuon_puppiIsoWithoutLep05NeutralHadron, b_recoMuon_puppiIsoWithoutLep05Photon;
-  int b_recoMuon_puppiIsoNumOfCands;
-  int b_recoMuon_puppiIsoNumOfCandsInR05;
-  int b_recoMuon_puppiIsoNumOfCandsOutR05;
-  int b_recoMuon_puppiIsoNumOfCandsInR05OT;
-  int b_recoMuon_puppiIsoNumOfCandsInR05CH, b_recoMuon_puppiIsoNumOfCandsInR05CHApp;
-  int b_recoMuon_puppiIsoNumOfCandsInR05NH, b_recoMuon_puppiIsoNumOfCandsInR05NHApp;
-  int b_recoMuon_puppiIsoNumOfCandsInR05PH, b_recoMuon_puppiIsoNumOfCandsInR05PHApp;
-  bool b_recoMuon_isMuon;
-  int b_recoMuon_numberOfValidMuonGEMHits, b_recoMuon_numberOfValidMuonME0Hits;
-
-  float b_recoMuon_tmva_bdt, b_recoMuon_tmva_mlp;
-   
-  std::vector<double> tmvaValues;
   float b_tmva_bdt; float b_tmva_mlp;
   ReadBDT* bdt_;
   ReadMLP* mlp_;
@@ -307,244 +265,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   h_vertex4DBS = fs->make<TH1D>("vertex reco 4D with BS vs sim", "vertex reco 4D with BS vs sim", 100, -1, 1);
 
   genttree_ = fs->make<TTree>("gen", "gen");
-  genttree_->Branch("nvertex", &b_nvertex, "nvertex/I");
-  genttree_->Branch("genMuon", "TLorentzVector", &b_genMuon);
-  genttree_->Branch("genMuon_isTightOptimized", &b_genMuon_isTightOptimized, "genMuon_isTightOptimized/O");
-  genttree_->Branch("genMuon_isTightCustom", &b_genMuon_isTightCustom, "genMuon_isTightCustom/O");
-  genttree_->Branch("genMuon_isTight", &b_genMuon_isTight, "genMuon_isTight/O");
-  genttree_->Branch("genMuon_isMedium", &b_genMuon_isMedium, "genMuon_isMedium/O");
-  genttree_->Branch("genMuon_isLoose", &b_genMuon_isLoose, "genMuon_isLoose/O");
-  genttree_->Branch("genMuon_noRecHitGEM", &b_genMuon_noRecHitGEM, "genMuon_noRecHitGEM/I");
-  genttree_->Branch("genMuon_noRecHitME0", &b_genMuon_noRecHitME0, "genMuon_noRecHitME0/I");
-  genttree_->Branch("genMuon_isME0Muon", &b_genMuon_isME0Muon, "genMuon_isME0Muon/O");
-  genttree_->Branch("genMuon_isGEMMuon", &b_genMuon_isGEMMuon, "genMuon_isGEMMuon/O");
-  genttree_->Branch("genMuon_isMuon", &b_genMuon_isMuon, "genMuon_isMuon/O");
-  genttree_->Branch("genMuon_isGlobalMuon", &b_genMuon_isGlobalMuon, "genMuon_isGlobalMuon/O");
-  genttree_->Branch("genMuon_isStandAloneMuon", &b_genMuon_isStandAloneMuon, "genMuon_isStandAloneMuon/O");
-  genttree_->Branch("genMuon_isLooseMod", &b_genMuon_isLooseMod, "genMuon_isLooseMod/O");
-  genttree_->Branch("genMuon_isTightModNoIP", &b_genMuon_isTightModNoIP, "genMuon_isTightModNoIP/O");
-  genttree_->Branch("genMuon_isTightModIPxy", &b_genMuon_isTightModIPxy, "genMuon_isTightModIPxy/O");
-  genttree_->Branch("genMuon_isTightModIPz", &b_genMuon_isTightModIPz, "genMuon_isTightModIPz/O");
-  genttree_->Branch("genMuon_isTightModIPxyz", &b_genMuon_isTightModIPxyz, "genMuon_isTightModIPxyz/O");
-  genttree_->Branch("genMuon_pTresolution", &b_genMuon_pTresolution, "genMuon_pTresolution/F");
-  
-  genttree_->Branch("genMuon_poszPV0",&b_genMuon_poszPV0,"genMuon_poszPV0/F");
-  genttree_->Branch("genMuon_poszPV01D",&b_genMuon_poszPV01D,"genMuon_poszPV01D/F");
-  genttree_->Branch("genMuon_poszPV01DBS",&b_genMuon_poszPV01DBS,"genMuon_poszPV01DBS/F");
-  genttree_->Branch("genMuon_poszPV04D",&b_genMuon_poszPV04D,"genMuon_poszPV04D/F");
-  genttree_->Branch("genMuon_poszPV04DBS",&b_genMuon_poszPV04DBS,"genMuon_poszPV04DBS/F");
-  genttree_->Branch("genMuon_poszPV0BS",&b_genMuon_poszPV0BS,"genMuon_poszPV0BS/F");
-  genttree_->Branch("genMuon_poszSimPV",&b_genMuon_poszSimPV,"genMuon_poszSimPV/F");
-  genttree_->Branch("genMuon_poszLPVOfCand",&b_genMuon_poszLPVOfCand,"genMuon_poszLPVOfCand/F");
-  genttree_->Branch("genMuon_varposzCand",&b_genMuon_varposzCand,"genMuon_varposzCand/F");
-  genttree_->Branch("genMuon_poszMuon",&b_genMuon_poszMuon,"genMuon_poszMuon/F");
-  genttree_->Branch("genMuon_TrkIsolation03",&b_genMuon_TrkIso03,"genMuon_TrkIsolation03/F");
-  genttree_->Branch("genMuon_TrkIsolation05",&b_genMuon_TrkIso05,"genMuon_TrkIsolation05/F");
-  genttree_->Branch("genMuon_PFIsolation03",&b_genMuon_pfIso03,"genMuon_PFIsolation03/F");
-  genttree_->Branch("genMuon_PFIsolation04",&b_genMuon_pfIso04,"genMuon_PFIsolation04/F");
-  genttree_->Branch("genMuon_PFIso03ChargedHadronPt",&b_genMuon_pfIso03ChargedHadronPt,"genMuon_PFIso03ChargedHadronPt/F");
-  genttree_->Branch("genMuon_PFIso03NeutralHadronEt",&b_genMuon_pfIso03NeutralHadronEt,"genMuon_PFIso03NeutralHadronEt/F");
-  genttree_->Branch("genMuon_PFIso03PhotonEt",&b_genMuon_pfIso03PhotonEt,"genMuon_PFIso03PhotonEt/F");
-  genttree_->Branch("genMuon_PFIso03PUPt",&b_genMuon_pfIso03PUPt,"genMuon_PFIso03PUPt/F");
-  genttree_->Branch("genMuon_PFIso04ChargedHadronPt",&b_genMuon_pfIso04ChargedHadronPt,"genMuon_PFIso04ChargedHadronPt/F");
-  genttree_->Branch("genMuon_PFIso04NeutralHadronEt",&b_genMuon_pfIso04NeutralHadronEt,"genMuon_PFIso04NeutralHadronEt/F");
-  genttree_->Branch("genMuon_PFIso04PhotonEt",&b_genMuon_pfIso04PhotonEt,"genMuon_PFIso04PhotonEt/F");
-  genttree_->Branch("genMuon_PFIso04PUPt",&b_genMuon_pfIso04PUPt,"genMuon_PFIso04PUPt/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep",&b_genMuon_puppiIsoWithLep,"genMuon_puppiIsoWithLep/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep",&b_genMuon_puppiIsoWithoutLep,"genMuon_puppiIsoWithoutLep/F");
-  genttree_->Branch("genMuon_puppiIsoCombined",&b_genMuon_puppiIsoCombined,"genMuon_puppiIsoCombined/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep03",&b_genMuon_puppiIsoWithLep03,"genMuon_puppiIsoWithLep03/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep03",&b_genMuon_puppiIsoWithoutLep03,"genMuon_puppiIsoWithoutLep03/F");
-  genttree_->Branch("genMuon_puppiIsoCombined03",&b_genMuon_puppiIsoCombined03,"genMuon_puppiIsoCombined03/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep05",&b_genMuon_puppiIsoWithLep05,"genMuon_puppiIsoWithLep05/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep05",&b_genMuon_puppiIsoWithoutLep05,"genMuon_puppiIsoWithoutLep05/F");
-  genttree_->Branch("genMuon_puppiIsoCombined05",&b_genMuon_puppiIsoCombined05,"genMuon_puppiIsoCombined05/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep03ChargedHadron",&b_genMuon_puppiIsoWithLep03ChargedHadron,"genMuon_puppiIsoWithLep03ChargedHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep03NeutralHadron",&b_genMuon_puppiIsoWithLep03NeutralHadron,"genMuon_puppiIsoWithLep03NeutralHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep03Photon",&b_genMuon_puppiIsoWithLep03Photon,"genMuon_puppiIsoWithLep03Photon/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep04ChargedHadron",&b_genMuon_puppiIsoWithLep04ChargedHadron,"genMuon_puppiIsoWithLep04ChargedHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep04NeutralHadron",&b_genMuon_puppiIsoWithLep04NeutralHadron,"genMuon_puppiIsoWithLep04NeutralHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep04Photon",&b_genMuon_puppiIsoWithLep04Photon,"genMuon_puppiIsoWithLep04Photon/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep05ChargedHadron",&b_genMuon_puppiIsoWithLep05ChargedHadron,"genMuon_puppiIsoWithLep05ChargedHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep05NeutralHadron",&b_genMuon_puppiIsoWithLep05NeutralHadron,"genMuon_puppiIsoWithLep05NeutralHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithLep05Photon",&b_genMuon_puppiIsoWithLep05Photon,"genMuon_puppiIsoWithLep05Photon/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep03ChargedHadron",&b_genMuon_puppiIsoWithoutLep03ChargedHadron,"genMuon_puppiIsoWithoutLep03ChargedHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep03NeutralHadron",&b_genMuon_puppiIsoWithoutLep03NeutralHadron,"genMuon_puppiIsoWithoutLep03NeutralHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep03Photon",&b_genMuon_puppiIsoWithoutLep03Photon,"genMuon_puppiIsoWithoutLep03Photon/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep04ChargedHadron",&b_genMuon_puppiIsoWithoutLep04ChargedHadron,"genMuon_puppiIsoWithoutLep04ChargedHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep04NeutralHadron",&b_genMuon_puppiIsoWithoutLep04NeutralHadron,"genMuon_puppiIsoWithoutLep04NeutralHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep04Photon",&b_genMuon_puppiIsoWithoutLep04Photon,"genMuon_puppiIsoWithoutLep04Photon/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep05ChargedHadron",&b_genMuon_puppiIsoWithoutLep05ChargedHadron,"genMuon_puppiIsoWithoutLep05ChargedHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep05NeutralHadron",&b_genMuon_puppiIsoWithoutLep05NeutralHadron,"genMuon_puppiIsoWithoutLep05NeutralHadron/F");
-  genttree_->Branch("genMuon_puppiIsoWithoutLep05Photon",&b_genMuon_puppiIsoWithoutLep05Photon,"genMuon_puppiIsoWithoutLep05Photon/F");
-  genttree_->Branch("genMuon_puppiIsoNumOfCands",&b_genMuon_puppiIsoNumOfCands,"genMuon_puppiIsoNumOfCands/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05",&b_genMuon_puppiIsoNumOfCandsInR05,"genMuon_puppiIsoNumOfCandsInR05/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsOutR05",&b_genMuon_puppiIsoNumOfCandsOutR05,"genMuon_puppiIsoNumOfCandsOutR05/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05OT",&b_genMuon_puppiIsoNumOfCandsInR05OT,"genMuon_puppiIsoNumOfCandsInR05OT/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05CH",&b_genMuon_puppiIsoNumOfCandsInR05CH,"genMuon_puppiIsoNumOfCandsInR05CH/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05NH",&b_genMuon_puppiIsoNumOfCandsInR05NH,"genMuon_puppiIsoNumOfCandsInR05NH/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05PH",&b_genMuon_puppiIsoNumOfCandsInR05PH,"genMuon_puppiIsoNumOfCandsInR05PH/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05CHApp",&b_genMuon_puppiIsoNumOfCandsInR05CHApp,"genMuon_puppiIsoNumOfCandsInR05CHApp/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05NHApp",&b_genMuon_puppiIsoNumOfCandsInR05NHApp,"genMuon_puppiIsoNumOfCandsInR05NHApp/I");
-  genttree_->Branch("genMuon_puppiIsoNumOfCandsInR05PHApp",&b_genMuon_puppiIsoNumOfCandsInR05PHApp,"genMuon_puppiIsoNumOfCandsInR05PHApp/I");
-  genttree_->Branch("genMuon_numberOfValidMuonGEMHits",&b_genMuon_numberOfValidMuonGEMHits,"genMuon_numberOfValidMuonGEMHits/I");
-  genttree_->Branch("genMuon_numberOfValidMuonME0Hits",&b_genMuon_numberOfValidMuonME0Hits,"genMuon_numberOfValidMuonME0Hits/I");
-  genttree_->Branch("genMuon_signal", &b_genMuon_signal, "genMuon_signal/O");
-  genttree_->Branch("genMuon_tmva_bdt", &b_genMuon_tmva_bdt, "genMuon_tmva_bdt/F");
-  genttree_->Branch("genMuon_tmva_mlp", &b_genMuon_tmva_mlp, "genMuon_tmva_mlp/F");
-
-  genttree_->Branch("genMuon_deltaXME0", &b_genMuon_deltaXME0, "genMuon_deltaXME0/F");
-  genttree_->Branch("genMuon_deltaYME0", &b_genMuon_deltaYME0, "genMuon_deltaYME0/F");
-  genttree_->Branch("genMuon_deltaXErrME0", &b_genMuon_deltaXErrME0, "genMuon_deltaXErrME0/F");
-  genttree_->Branch("genMuon_deltaYErrME0", &b_genMuon_deltaYErrME0, "genMuon_deltaYErrME0/F");
-  genttree_->Branch("genMuon_deltaDXDZME0", &b_genMuon_deltaDXDZME0, "genMuon_deltaDXDZME0/F");
-  genttree_->Branch("genMuon_deltaDYDZME0", &b_genMuon_deltaDYDZME0, "genMuon_deltaDYDZME0/F");
-  genttree_->Branch("genMuon_deltaDXDZErrME0", &b_genMuon_deltaDXDZErrME0, "genMuon_deltaDXDZErrME0/F");
-  genttree_->Branch("genMuon_deltaDYDZErrME0", &b_genMuon_deltaDYDZErrME0, "genMuon_deltaDYDZErrME0/F");
-
+  setBranches(genttree_);
   recottree_ = fs->make<TTree>("reco", "reco");
-  recottree_->Branch("nvertex", &b_nvertex, "nvertex/I");
-  recottree_->Branch("recoMuon", "TLorentzVector", &b_recoMuon);  
-  recottree_->Branch("recoMuon_pdgId", &b_recoMuon_pdgId, "recoMuon_pdgId/I");
-  recottree_->Branch("recoMuon_signal", &b_recoMuon_signal, "recoMuon_signal/O");
-  recottree_->Branch("recoMuon_isTightOptimized", &b_recoMuon_isTightOptimized, "recoMuon_isTightOptimized/O");
-  recottree_->Branch("recoMuon_isTightCustom", &b_recoMuon_isTightCustom, "recoMuon_isTightCustom/O");
-  recottree_->Branch("recoMuon_isTight", &b_recoMuon_isTight, "recoMuon_isTight/O");
-  recottree_->Branch("recoMuon_isMedium", &b_recoMuon_isMedium, "recoMuon_isMedium/O");
-  recottree_->Branch("recoMuon_isLoose", &b_recoMuon_isLoose, "recoMuon_isLoose/O");
-  recottree_->Branch("recoMuon_isME0Muon", &b_recoMuon_isME0Muon, "recoMuon_isME0Muon/O");
-  recottree_->Branch("recoMuon_isGEMMuon", &b_recoMuon_isGEMMuon, "recoMuon_isGEMMuon/O");
-  recottree_->Branch("recoMuon_isMuon", &b_recoMuon_isMuon, "recoMuon_isMuon/O");
-  recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_isGlobalMuon, "recoMuon_isGlobalMuon/O");
-  recottree_->Branch("recoMuon_isStandAloneMuon", &b_recoMuon_isStandAloneMuon, "recoMuon_isStandAloneMuon/O");
-  recottree_->Branch("recoMuon_isLooseMod", &b_recoMuon_isLooseMod, "recoMuon_isLooseMod/O");
-  recottree_->Branch("recoMuon_isTightModNoIP", &b_recoMuon_isTightModNoIP, "recoMuon_isTightModNoIP/O");
-  recottree_->Branch("recoMuon_isTightModIPxy", &b_recoMuon_isTightModIPxy, "recoMuon_isTightModIPxy/O");
-  recottree_->Branch("recoMuon_isTightModIPz", &b_recoMuon_isTightModIPz, "recoMuon_isTightModIPz/O");
-  recottree_->Branch("recoMuon_isTightModIPxyz", &b_recoMuon_isTightModIPxyz, "recoMuon_isTightModIPxyz/O");
-  recottree_->Branch("recoMuon_numberOfValidMuonGEMHits",&b_recoMuon_numberOfValidMuonGEMHits,"recoMuon_numberOfValidMuonGEMHits/I");
-  recottree_->Branch("recoMuon_numberOfValidMuonME0Hits",&b_recoMuon_numberOfValidMuonME0Hits,"recoMuon_numberOfValidMuonME0Hits/I");
-
-  recottree_->Branch("recoMuon_poszPV0",&b_recoMuon_poszPV0,"recoMuon_poszPV0/F");
-  recottree_->Branch("recoMuon_poszPV01D",&b_recoMuon_poszPV01D,"recoMuon_poszPV01D/F");
-  recottree_->Branch("recoMuon_poszPV01DBS",&b_recoMuon_poszPV01DBS,"recoMuon_poszPV01DBS/F");
-  recottree_->Branch("recoMuon_poszPV04D",&b_recoMuon_poszPV04D,"recoMuon_poszPV04D/F");
-  recottree_->Branch("recoMuon_poszPV04DBS",&b_recoMuon_poszPV04DBS,"recoMuon_poszPV04DBS/F");
-  recottree_->Branch("recoMuon_poszPV0BS",&b_recoMuon_poszPV0BS,"recoMuon_poszPV0BS/F");
-  recottree_->Branch("recoMuon_poszSimPV",&b_recoMuon_poszSimPV,"recoMuon_poszSimPV/F");
-  recottree_->Branch("recoMuon_poszLPVOfCand",&b_recoMuon_poszLPVOfCand,"recoMuon_poszLPVOfCand/F");
-  recottree_->Branch("recoMuon_poszMuon",&b_recoMuon_poszMuon,"recoMuon_poszMuon/F");
-  recottree_->Branch("recoMuon_TrkIsolation03",&b_recoMuon_TrkIso03,"recoMuon_TrkIsolation03/F");
-  recottree_->Branch("recoMuon_TrkIsolation05",&b_recoMuon_TrkIso05,"recoMuon_TrkIsolation05/F");
-  recottree_->Branch("recoMuon_PFIsolation04",&b_recoMuon_PFIso04,"recoMuon_PFIsolation04/F");
-  recottree_->Branch("recoMuon_PFIsolation03",&b_recoMuon_PFIso03,"recoMuon_PFIsolation03/F");
-  recottree_->Branch("recoMuon_PFIso03ChargedHadronPt",&b_recoMuon_PFIso03ChargedHadronPt,"recoMuon_PFIso03ChargedHadronPt/F");
-  recottree_->Branch("recoMuon_PFIso03NeutralHadronEt",&b_recoMuon_PFIso03NeutralHadronEt,"recoMuon_PFIso03NeutralHadronEt/F");
-  recottree_->Branch("recoMuon_PFIso03PhotonEt",&b_recoMuon_PFIso03PhotonEt,"recoMuon_PFIso03PhotonEt/F");
-  recottree_->Branch("recoMuon_PFIso03PUPt",&b_recoMuon_PFIso03PUPt,"recoMuon_PFIso03PUPt/F");
-  recottree_->Branch("recoMuon_PFIso04ChargedHadronPt",&b_recoMuon_PFIso04ChargedHadronPt,"recoMuon_PFIso04ChargedHadronPt/F");
-  recottree_->Branch("recoMuon_PFIso04NeutralHadronEt",&b_recoMuon_PFIso04NeutralHadronEt,"recoMuon_PFIso04NeutralHadronEt/F");
-  recottree_->Branch("recoMuon_PFIso04PhotonEt",&b_recoMuon_PFIso04PhotonEt,"recoMuon_PFIso04PhotonEt/F");
-  recottree_->Branch("recoMuon_PFIso04PUPt",&b_recoMuon_PFIso04PUPt,"recoMuon_PFIso04PUPt/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep",&b_recoMuon_puppiIsoWithLep,"recoMuon_puppiIsoWithLep/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep",&b_recoMuon_puppiIsoWithoutLep,"recoMuon_puppiIsoWithoutLep/F");
-  recottree_->Branch("recoMuon_puppiIsoCombined",&b_recoMuon_puppiIsoCombined,"recoMuon_puppiIsoCombined/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep03",&b_recoMuon_puppiIsoWithLep03,"recoMuon_puppiIsoWithLep03/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep03",&b_recoMuon_puppiIsoWithoutLep03,"recoMuon_puppiIsoWithoutLep03/F");
-  recottree_->Branch("recoMuon_puppiIsoCombined03",&b_recoMuon_puppiIsoCombined03,"recoMuon_puppiIsoCombined03/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep05",&b_recoMuon_puppiIsoWithLep05,"recoMuon_puppiIsoWithLep05/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep05",&b_recoMuon_puppiIsoWithoutLep05,"recoMuon_puppiIsoWithoutLep05/F");
-  recottree_->Branch("recoMuon_puppiIsoCombined05",&b_recoMuon_puppiIsoCombined05,"recoMuon_puppiIsoCombined05/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep03ChargedHadron",&b_recoMuon_puppiIsoWithLep03ChargedHadron,"recoMuon_puppiIsoWithLep03ChargedHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep03NeutralHadron",&b_recoMuon_puppiIsoWithLep03NeutralHadron,"recoMuon_puppiIsoWithLep03NeutralHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep03Photon",&b_recoMuon_puppiIsoWithLep03Photon,"recoMuon_puppiIsoWithLep03Photon/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep04ChargedHadron",&b_recoMuon_puppiIsoWithLep04ChargedHadron,"recoMuon_puppiIsoWithLep04ChargedHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep04NeutralHadron",&b_recoMuon_puppiIsoWithLep04NeutralHadron,"recoMuon_puppiIsoWithLep04NeutralHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep04Photon",&b_recoMuon_puppiIsoWithLep04Photon,"recoMuon_puppiIsoWithLep04Photon/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep05ChargedHadron",&b_recoMuon_puppiIsoWithLep05ChargedHadron,"recoMuon_puppiIsoWithLep05ChargedHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep05NeutralHadron",&b_recoMuon_puppiIsoWithLep05NeutralHadron,"recoMuon_puppiIsoWithLep05NeutralHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithLep05Photon",&b_recoMuon_puppiIsoWithLep05Photon,"recoMuon_puppiIsoWithLep05Photon/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep03ChargedHadron",&b_recoMuon_puppiIsoWithoutLep03ChargedHadron,"recoMuon_puppiIsoWithoutLep03ChargedHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep03NeutralHadron",&b_recoMuon_puppiIsoWithoutLep03NeutralHadron,"recoMuon_puppiIsoWithoutLep03NeutralHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep03Photon",&b_recoMuon_puppiIsoWithoutLep03Photon,"recoMuon_puppiIsoWithoutLep03Photon/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep04ChargedHadron",&b_recoMuon_puppiIsoWithoutLep04ChargedHadron,"recoMuon_puppiIsoWithoutLep04ChargedHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep04NeutralHadron",&b_recoMuon_puppiIsoWithoutLep04NeutralHadron,"recoMuon_puppiIsoWithoutLep04NeutralHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep04Photon",&b_recoMuon_puppiIsoWithoutLep04Photon,"recoMuon_puppiIsoWithoutLep04Photon/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep05ChargedHadron",&b_recoMuon_puppiIsoWithoutLep05ChargedHadron,"recoMuon_puppiIsoWithoutLep05ChargedHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep05NeutralHadron",&b_recoMuon_puppiIsoWithoutLep05NeutralHadron,"recoMuon_puppiIsoWithoutLep05NeutralHadron/F");
-  recottree_->Branch("recoMuon_puppiIsoWithoutLep05Photon",&b_recoMuon_puppiIsoWithoutLep05Photon,"recoMuon_puppiIsoWithoutLep05Photon/F");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCands",&b_recoMuon_puppiIsoNumOfCands,"recoMuon_puppiIsoNumOfCands/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05",&b_recoMuon_puppiIsoNumOfCandsInR05,"recoMuon_puppiIsoNumOfCandsInR05/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsOutR05",&b_recoMuon_puppiIsoNumOfCandsOutR05,"recoMuon_puppiIsoNumOfCandsOutR05/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05OT",&b_recoMuon_puppiIsoNumOfCandsInR05OT,"recoMuon_puppiIsoNumOfCandsInR05OT/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05CH",&b_recoMuon_puppiIsoNumOfCandsInR05CH,"recoMuon_puppiIsoNumOfCandsInR05CH/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05NH",&b_recoMuon_puppiIsoNumOfCandsInR05NH,"recoMuon_puppiIsoNumOfCandsInR05NH/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05PH",&b_recoMuon_puppiIsoNumOfCandsInR05PH,"recoMuon_puppiIsoNumOfCandsInR05PH/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05CHApp",&b_recoMuon_puppiIsoNumOfCandsInR05CHApp,"recoMuon_puppiIsoNumOfCandsInR05CHApp/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05NHApp",&b_recoMuon_puppiIsoNumOfCandsInR05NHApp,"recoMuon_puppiIsoNumOfCandsInR05NHApp/I");
-  recottree_->Branch("recoMuon_puppiIsoNumOfCandsInR05PHApp",&b_recoMuon_puppiIsoNumOfCandsInR05PHApp,"recoMuon_puppiIsoNumOfCandsInR05PHApp/I");
-  recottree_->Branch("recoMuon_noChamberMatch", &b_recoMuon_noChamberMatch, "recoMuon_noChamberMatch/I");
-  recottree_->Branch("recoMuon_noSegment", &b_recoMuon_noSegment, "recoMuon_noSegment/I");
-  recottree_->Branch("recoMuon_noSegmentDT", &b_recoMuon_noSegmentDT, "recoMuon_noSegmentDT/I");
-  recottree_->Branch("recoMuon_noSegmentCSC", &b_recoMuon_noSegmentCSC, "recoMuon_noSegmentCSC/I");
-  recottree_->Branch("recoMuon_noSegmentRPC", &b_recoMuon_noSegmentRPC, "recoMuon_noSegmentRPC/I");
-  recottree_->Branch("recoMuon_noSegmentGEM", &b_recoMuon_noSegmentGEM, "recoMuon_noSegmentGEM/I");
-  recottree_->Branch("recoMuon_noSegmentME0", &b_recoMuon_noSegmentME0, "recoMuon_noSegmentME0/I");
-
-  recottree_->Branch("recoMuon_noRecHitGEM", &b_recoMuon_noRecHitGEM, "recoMuon_noRecHitGEM/I");
-  recottree_->Branch("recoMuon_noRecHitME0", &b_recoMuon_noRecHitME0, "recoMuon_noRecHitME0/I");
-
-  recottree_->Branch("recoMuon_edgeXME0", &b_recoMuon_edgeXME0, "recoMuon_edgeXME0/F");
-  recottree_->Branch("recoMuon_edgeYME0", &b_recoMuon_edgeYME0, "recoMuon_edgeYME0/F");
-  recottree_->Branch("recoMuon_chamberMatchXME0", &b_recoMuon_chamberMatchXME0, "recoMuon_chamberMatchXME0/F");
-  recottree_->Branch("recoMuon_chamberMatchYME0", &b_recoMuon_chamberMatchYME0, "recoMuon_chamberMatchYME0/F");
-  recottree_->Branch("recoMuon_chamberMatchXErrME0", &b_recoMuon_chamberMatchXErrME0, "recoMuon_chamberMatchXErrME0/F");
-  recottree_->Branch("recoMuon_chamberMatchYErrME0", &b_recoMuon_chamberMatchYErrME0, "recoMuon_chamberMatchYErrME0/F");
-  recottree_->Branch("recoMuon_chamberMatchDXDZME0", &b_recoMuon_chamberMatchDXDZME0, "recoMuon_chamberMatchDXDZME0/F");
-  recottree_->Branch("recoMuon_chamberMatchDYDZME0", &b_recoMuon_chamberMatchDYDZME0, "recoMuon_chamberMatchDYDZME0/F");
-  recottree_->Branch("recoMuon_chamberMatchDXDZErrME0", &b_recoMuon_chamberMatchDXDZErrME0, "recoMuon_chamberMatchDXDZErrME0/F");
-  recottree_->Branch("recoMuon_chamberMatchDYDZErrME0", &b_recoMuon_chamberMatchDYDZErrME0, "recoMuon_chamberMatchDYDZErrME0/F");
-
-  recottree_->Branch("recoMuon_segmentMatchXME0", &b_recoMuon_segmentMatchXME0, "recoMuon_segmentMatchXME0/F");
-  recottree_->Branch("recoMuon_segmentMatchYME0", &b_recoMuon_segmentMatchYME0, "recoMuon_segmentMatchYME0/F");
-  recottree_->Branch("recoMuon_segmentMatchXErrME0", &b_recoMuon_segmentMatchXErrME0, "recoMuon_segmentMatchXErrME0/F");
-  recottree_->Branch("recoMuon_segmentMatchYErrME0", &b_recoMuon_segmentMatchYErrME0, "recoMuon_segmentMatchYErrME0/F");
-  recottree_->Branch("recoMuon_segmentMatchDXDZME0", &b_recoMuon_segmentMatchDXDZME0, "recoMuon_segmentMatchDXDZME0/F");
-  recottree_->Branch("recoMuon_segmentMatchDYDZME0", &b_recoMuon_segmentMatchDYDZME0, "recoMuon_segmentMatchDYDZME0/F");
-  recottree_->Branch("recoMuon_segmentMatchDXDZErrME0", &b_recoMuon_segmentMatchDXDZErrME0, "recoMuon_segmentMatchDXDZErrME0/F");
-  recottree_->Branch("recoMuon_segmentMatchDYDZErrME0", &b_recoMuon_segmentMatchDYDZErrME0, "recoMuon_segmentMatchDYDZErrME0/F");
-
-  recottree_->Branch("recoMuon_deltaXME0", &b_recoMuon_deltaXME0, "recoMuon_deltaXME0/F");
-  recottree_->Branch("recoMuon_deltaYME0", &b_recoMuon_deltaYME0, "recoMuon_deltaYME0/F");
-  recottree_->Branch("recoMuon_deltaXDivBySegErrME0", &b_recoMuon_deltaXDivBySegErrME0, "recoMuon_deltaXDivBySegErrME0/F");
-  recottree_->Branch("recoMuon_deltaYDivBySegErrME0", &b_recoMuon_deltaYDivBySegErrME0, "recoMuon_deltaYDivBySegErrME0/F");
-  recottree_->Branch("recoMuon_deltaXDivByChamErrME0", &b_recoMuon_deltaXDivByChamErrME0, "recoMuon_deltaXDivByChamErrME0/F");
-  recottree_->Branch("recoMuon_deltaYDivByChamErrME0", &b_recoMuon_deltaYDivByChamErrME0, "recoMuon_deltaYDivByChamErrME0/F");
-
-  recottree_->Branch("recoMuon_deltaDXDZME0", &b_recoMuon_deltaDXDZME0, "recoMuon_deltaDXDZME0/F");
-  recottree_->Branch("recoMuon_deltaDYDZME0", &b_recoMuon_deltaDYDZME0, "recoMuon_deltaDYDZME0/F");
-  recottree_->Branch("recoMuon_deltaDXDZDivBySegErrME0", &b_recoMuon_deltaDXDZDivBySegErrME0, "recoMuon_deltaDXDZDivBySegErrME0/F");
-  recottree_->Branch("recoMuon_deltaDYDZDivBySegErrME0", &b_recoMuon_deltaDYDZDivBySegErrME0, "recoMuon_deltaDYDZDivBySegErrME0/F");
-  recottree_->Branch("recoMuon_deltaDXDZDivByChamErrME0", &b_recoMuon_deltaDXDZDivByChamErrME0, "recoMuon_deltaDXDZDivByChamErrME0/F");
-  recottree_->Branch("recoMuon_deltaDYDZDivByChamErrME0", &b_recoMuon_deltaDYDZDivByChamErrME0, "recoMuon_deltaDYDZDivByChamErrME0/F");
-
-  recottree_->Branch("recoMuon_distance", &b_recoMuon_distance, "recoMuon_distance/F");
-  recottree_->Branch("recoMuon_distErr", &b_recoMuon_distErr, "recoMuon_distErr/F");
-
-  recottree_->Branch("recoMuon_isGlobalMuon", &b_recoMuon_global, "recoMuon_isGlobalMuon/O");
-  recottree_->Branch("recoMuon_isPFMuon", &b_recoMuon_pf, "recoMuon_isPFMuon/O");
-  recottree_->Branch("recoMuon_normalizedChi2", &b_recoMuon_chi2, "recoMuon_normalizedChi2/F");
-  recottree_->Branch("recoMuon_chi2LocalPosition", &b_recoMuon_chi2pos, "recoMuon_chi2LocalPosition/F");
-  recottree_->Branch("recoMuon_trkKink", &b_recoMuon_trkKink, "recoMuon_trkKink/F");
-  recottree_->Branch("recoMuon_segmentCompatibility", &b_recoMuon_segcompati, "recoMuon_segmentCompatibility/F");
-  recottree_->Branch("recoMuon_numberOfValidMuonHits", &b_recoMuon_nglobalhits, "recoMuon_numberOfValidMuonHits/I");
-  recottree_->Branch("recoMuon_numberOfMatchedStations", &b_recoMuon_nstations, "recoMuon_numberOfMatchedStations/I");
-  recottree_->Branch("recoMuon_pv0pos_dxy", &b_recoMuon_trackdxy, "recoMuon_pv0pos_dxy/F");
-  recottree_->Branch("recoMuon_pv0pos_dz", &b_recoMuon_trackdz, "recoMuon_pv0pos_dz/F");
-  recottree_->Branch("recoMuon_numberOfValidPixelHits", &b_recoMuon_ninnerhits, "recoMuon_numberOfValidPixelHits/I");
-  recottree_->Branch("recoMuon_trackerLayersWithMeasurement", &b_recoMuon_trackerlayers, "recoMuon_trackerLayersWithMeasurement/F");
-  recottree_->Branch("recoMuon_tmva_bdt", &b_recoMuon_tmva_bdt, "recoMuon_tmva_bdt/F");
-  recottree_->Branch("recoMuon_tmva_mlp", &b_recoMuon_tmva_mlp, "recoMuon_tmva_mlp/F");
+  setBranches(recottree_);
 
   string dummy[] = { "recoMuon_isGlobalMuon", "recoMuon_isPFMuon", "recoMuon_normalizedChi2", "recoMuon_chi2LocalPosition", "recoMuon_trkKink", "recoMuon_segmentCompatibility", "recoMuon_numberOfMatchedStations", "recoMuon_numberOfValidMuonHits", "recoMuon_pv0pos_dxy", "recoMuon_pv0pos_dz", "recoMuon_numberOfValidPixelHits", "recoMuon_trackerLayersWithMeasurement" };
   vector< string > dummy_label;
@@ -570,14 +293,13 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(vtxBSToken_,   verticesBS); 
   
   if (vertices->empty()) { cout << "noPV" << endl; return; }
-  auto pv0 = vertices->front();
-  b_nvertex = vertices->size();
+  const reco::VertexCollection* verts = vertices.product();
 
   Handle<std::vector<SimVertex> > simVertexCollection;
-  iEvent.getByToken(simVertexToken_, simVertexCollection);
+  iEvent.getByToken(simVertexToken_, simVertexCollection);  
   const SimVertex simPVh = *(simVertexCollection->begin());
-  h_vertex->Fill(pv0.position().z() - simPVh.position().z());
   
+  h_vertex->Fill(vertices->front().position().z() - simPVh.position().z());  
   h_vertexBS->Fill(  verticesBS->front().position().z()   - simPVh.position().z());
   h_vertex1D->Fill(  vertices1D->front().position().z()   - simPVh.position().z());
   h_vertex1DBS->Fill(vertices1DBS->front().position().z() - simPVh.position().z());
@@ -603,237 +325,43 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   //assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::InnerTk, simHandle); // For Only GW
   
   vector<const Muon*> signalMuons; signalMuons.clear();
-  
-  // The following few lines are for finding the vertex of candidates with PUPPI weight non-zero
-  double dSumPosZVtxCand;
-  double dSumSqrPosZVtxCand;
-  int nNumCandCH;
-  
-  double dPosZVtxCand, dVarPosZVtxCand;
-  
-  dSumPosZVtxCand = 0.0;
-  dSumSqrPosZVtxCand = 0.0;
-  nNumCandCH = 0;
-  
-  for ( std::vector<pat::PackedCandidate>::const_iterator cand = candidates-> begin();
-	cand != candidates->end();
-	cand ++ )
-    {
-      if ( !isCH( abs(cand->pdgId()) ) ) {
-	continue;
-      }
     
-      if ( cand->puppiWeight() > 0 || cand->puppiWeightNoLep() > 0 ) {
-	dSumPosZVtxCand += cand->vz();
-	dSumSqrPosZVtxCand += cand->vz() * cand->vz();
-	nNumCandCH++;
-      }
-    }
-  
-  // The vertex is found
-  dPosZVtxCand = dSumPosZVtxCand / nNumCandCH;
-  // Will it be needed?
-  dVarPosZVtxCand = dSumSqrPosZVtxCand / nNumCandCH - dPosZVtxCand * dPosZVtxCand;
-  
   for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
     TrackingParticleRef simRef(simHandle, i);
     const TrackingParticle* simTP = simRef.get();
     if ( ! tpSelector_(*simTP) ) continue;
 
-    b_genMuon = TLorentzVector(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
-    b_genMuon_isTightOptimized = false;
-    b_genMuon_isTightCustom = false;
-    b_genMuon_isTight = false;
-    b_genMuon_isMedium = false;
-    b_genMuon_isLoose = false;
-
-    b_genMuon_pTresolution = -9;
-    b_genMuon_noRecHitGEM = -1;
-    b_genMuon_noRecHitME0 = -1;
-    b_genMuon_isME0Muon = false;
-    b_genMuon_isGEMMuon = false;
-    b_genMuon_isMuon = false;
-    b_genMuon_isGlobalMuon = false;
-    b_genMuon_isStandAloneMuon = false;
-    b_genMuon_signal = false;
-    b_genMuon_isLooseMod = false;
-    b_genMuon_isTightModNoIP = false;
-    b_genMuon_isTightModIPxy = false;
-    b_genMuon_isTightModIPz = false;
-    b_genMuon_isTightModIPxyz = false;
-    b_genMuon_numberOfValidMuonGEMHits = -1;
-    b_genMuon_numberOfValidMuonME0Hits = -1;
-
-    b_genMuon_deltaXME0 = 0;
-    b_genMuon_deltaYME0 = 0;
-    b_genMuon_deltaXErrME0 = 0;
-    b_genMuon_deltaYErrME0 = 0;
-    b_genMuon_deltaDXDZME0 = 0;
-    b_genMuon_deltaDYDZME0 = 0;
-    b_genMuon_deltaDXDZErrME0 = 0;
-    b_genMuon_deltaDYDZErrME0 = 0;
-
+    TLorentzVector gentlv(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
+    const Muon* mu = NULL;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
-	const Muon* mu = MuRefV.begin()->first.get();
-	signalMuons.push_back(mu);
-	b_genMuon_signal = true;
-	b_genMuon_pTresolution = (b_genMuon.Pt()-mu->pt())/b_genMuon.Pt();
-    
-	b_genMuon_poszPV0       = pv0.position().z();
-	b_genMuon_poszSimPV     = simPVh.position().z();
-	b_genMuon_poszLPVOfCand = dPosZVtxCand;
-	b_genMuon_varposzCand   = dVarPosZVtxCand;
-	b_genMuon_poszMuon      = mu->muonBestTrack()->vz();
-    
-	b_genMuon_poszPV01D   = vertices1D->front().position().z();
-	b_genMuon_poszPV01DBS = vertices1DBS->front().position().z();
-	b_genMuon_poszPV04D   = vertices4D->front().position().z();
-	b_genMuon_poszPV04DBS = vertices4DBS->front().position().z();
-	b_genMuon_poszPV0BS   = verticesBS->front().position().z();
-
-	b_genMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
-	b_genMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
-	b_genMuon_pfIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
-	b_genMuon_pfIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
-    
-	b_genMuon_pfIso03ChargedHadronPt = mu->pfIsolationR03().sumChargedHadronPt;
-	b_genMuon_pfIso03NeutralHadronEt = mu->pfIsolationR03().sumNeutralHadronEt;
-	b_genMuon_pfIso03PhotonEt        = mu->pfIsolationR03().sumPhotonEt;
-	b_genMuon_pfIso03PUPt            = mu->pfIsolationR03().sumPUPt;
-    
-	b_genMuon_pfIso04ChargedHadronPt = mu->pfIsolationR04().sumChargedHadronPt;
-	b_genMuon_pfIso04NeutralHadronEt = mu->pfIsolationR04().sumNeutralHadronEt;
-	b_genMuon_pfIso04PhotonEt        = mu->pfIsolationR04().sumPhotonEt;
-	b_genMuon_pfIso04PUPt            = mu->pfIsolationR04().sumPUPt;
-
-	puppiIso puppiIsoGen = getPuppiIso( mu, candidates, 0);
-	//cout << "pIso.combined "<< pIso.combined  <<endl;
-
-	b_genMuon_puppiIsoWithLep    = puppiIsoGen.withLep;
-	b_genMuon_puppiIsoWithoutLep = puppiIsoGen.withoutlep;
-	b_genMuon_puppiIsoCombined   = puppiIsoGen.combined;
-
-	b_genMuon_puppiIsoWithLep03    = puppiIsoGen.withLep03;
-	b_genMuon_puppiIsoWithoutLep03 = puppiIsoGen.withoutlep03;
-	b_genMuon_puppiIsoCombined03   = puppiIsoGen.combined03;
-
-	b_genMuon_puppiIsoWithLep05    = puppiIsoGen.withLep05;
-	b_genMuon_puppiIsoWithoutLep05 = puppiIsoGen.withoutlep05;
-	b_genMuon_puppiIsoCombined05   = puppiIsoGen.combined05;
-    
-	b_genMuon_puppiIsoWithLep03ChargedHadron = puppiIsoGen.withLep03CH;
-	b_genMuon_puppiIsoWithLep03NeutralHadron = puppiIsoGen.withLep03NH;
-	b_genMuon_puppiIsoWithLep03Photon        = puppiIsoGen.withLep03PH;
-    
-	b_genMuon_puppiIsoWithLep04ChargedHadron = puppiIsoGen.withLep04CH;
-	b_genMuon_puppiIsoWithLep04NeutralHadron = puppiIsoGen.withLep04NH;
-	b_genMuon_puppiIsoWithLep04Photon        = puppiIsoGen.withLep04PH;
-    
-	b_genMuon_puppiIsoWithLep05ChargedHadron = puppiIsoGen.withLep05CH;
-	b_genMuon_puppiIsoWithLep05NeutralHadron = puppiIsoGen.withLep05NH;
-	b_genMuon_puppiIsoWithLep05Photon        = puppiIsoGen.withLep05PH;
-    
-	b_genMuon_puppiIsoWithoutLep03ChargedHadron = puppiIsoGen.withoutlep03CH;
-	b_genMuon_puppiIsoWithoutLep03NeutralHadron = puppiIsoGen.withoutlep03NH;
-	b_genMuon_puppiIsoWithoutLep03Photon        = puppiIsoGen.withoutlep03PH;
-    
-	b_genMuon_puppiIsoWithoutLep04ChargedHadron = puppiIsoGen.withoutlep04CH;
-	b_genMuon_puppiIsoWithoutLep04NeutralHadron = puppiIsoGen.withoutlep04NH;
-	b_genMuon_puppiIsoWithoutLep04Photon        = puppiIsoGen.withoutlep04PH;
-    
-	b_genMuon_puppiIsoWithoutLep05ChargedHadron = puppiIsoGen.withoutlep05CH;
-	b_genMuon_puppiIsoWithoutLep05NeutralHadron = puppiIsoGen.withoutlep05NH;
-	b_genMuon_puppiIsoWithoutLep05Photon        = puppiIsoGen.withoutlep05PH;
-    
-	b_genMuon_puppiIsoNumOfCands       = puppiIsoGen.nNumCands;
-	b_genMuon_puppiIsoNumOfCandsInR05  = puppiIsoGen.nNumCandsInR05;
-	b_genMuon_puppiIsoNumOfCandsOutR05 = puppiIsoGen.nNumCandsOutR05;
-    
-	b_genMuon_puppiIsoNumOfCandsInR05OT = puppiIsoGen.nNumCandsInR05OT;
-    
-	b_genMuon_puppiIsoNumOfCandsInR05CH = puppiIsoGen.nNumCandsInR05CH;
-	b_genMuon_puppiIsoNumOfCandsInR05NH = puppiIsoGen.nNumCandsInR05NH;
-	b_genMuon_puppiIsoNumOfCandsInR05PH = puppiIsoGen.nNumCandsInR05PH;
-    
-	b_genMuon_puppiIsoNumOfCandsInR05CHApp = puppiIsoGen.nNumCandsInR05CHApp;
-	b_genMuon_puppiIsoNumOfCandsInR05NHApp = puppiIsoGen.nNumCandsInR05NHApp;
-	b_genMuon_puppiIsoNumOfCandsInR05PHApp = puppiIsoGen.nNumCandsInR05PHApp;
-    
-	b_genMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
-	b_genMuon_isTightCustom = isTightMuonCustom(*mu, pv0);
-	b_genMuon_isTight = muon::isTightMuon(*mu, pv0);
-	b_genMuon_isMedium = muon::isMediumMuon(*mu);
-	b_genMuon_isLoose = muon::isLooseMuon(*mu);
-	b_genMuon_isME0Muon = mu->isME0Muon();
-	b_genMuon_isGEMMuon = mu->isGEMMuon();
-	b_genMuon_isMuon = mu->isMuon();
-	b_genMuon_isGlobalMuon = mu->isGlobalMuon();
-	b_genMuon_isStandAloneMuon = mu->isStandAloneMuon();
-    
-	b_genMuon_isLooseMod = isLooseMod(mu);
-	b_genMuon_isTightModNoIP  = isTightMod(vertices, simPVh, mu, false, false);
-	b_genMuon_isTightModIPxy  = isTightMod(vertices, simPVh, mu, true,  false);
-	b_genMuon_isTightModIPz   = isTightMod(vertices, simPVh, mu, false, true);
-	b_genMuon_isTightModIPxyz = isTightMod(vertices, simPVh, mu, true,  true);
-    
-	const vector<MuonChamberMatch>& chambers = mu->matches();
-	for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
-	  for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
-	    if (chamber->detector() == 5){
-	      auto me0Segment = (*(*segment).me0SegmentRef);
-	      b_genMuon_noRecHitME0 = me0Segment.nRecHits();
-
-	      b_genMuon_deltaXME0 = fabs( chamber->x - segment->x );
-	      b_genMuon_deltaYME0 = fabs( chamber->y - segment->y );
-	      b_genMuon_deltaDXDZME0 = fabs( chamber->dXdZ - segment->dXdZ );
-	      b_genMuon_deltaDYDZME0 = fabs( chamber->dYdZ - segment->dYdZ );
-	    }
-	  }
-	}
-
-	const reco::Track* muonTrack = 0;  
-	if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
-	else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
-	if (muonTrack){
-	  b_genMuon_noRecHitGEM = nGEMhit(mu);
-	  b_genMuon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
-	  b_genMuon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
-	}
-
-	tmvaValues.clear();
-	tmvaValues = collectTMVAvalues(*mu, pv0);
-	b_genMuon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
-	b_genMuon_tmva_mlp = mlp_->GetMvaValue(tmvaValues);
+	mu = MuRefV.begin()->first.get();
+	signalMuons.push_back(mu);	
       }
     }
-    
-    genttree_->Fill();
+    fillBranches(genttree_, gentlv, mu, true, simTP->pdgId(), verts, simPVh, candidates);
   }
-
+  
   for (size_t i = 0; i < muonHandle->size(); ++i) {
     treereset();
     
     auto muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
-
-    b_recoMuon = TLorentzVector(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
-
-    b_recoMuon_signal = false;
+    TLorentzVector recotlv(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
+    bool isMuon_signal = false;
     for (auto signal : signalMuons){
       if (mu == signal){
-	b_recoMuon_signal = true;
+	isMuon_signal = true;
 	break;
       }
     }
-    
-    b_recoMuon_pdgId = 0;
+    int pdgId = 0;
     if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
       auto trkRefV = muonToSimColl[muRef];
       if ( !trkRefV.empty()) {
 	const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
-	b_recoMuon_pdgId = trkParticle->pdgId();
+	pdgId = trkParticle->pdgId();
 	// cout << "trkParticle " << trkParticle->pdgId()
 	//      << " pt = " << trkParticle->pt()
 	//      << " eta = " << trkParticle->eta()
@@ -841,276 +369,213 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     
-    b_recoMuon_isLooseMod = false;
-    b_recoMuon_isTightModNoIP  = false;
-    b_recoMuon_isTightModIPxy  = false;
-    b_recoMuon_isTightModIPz   = false;
-    b_recoMuon_isTightModIPxyz = false;
-    
-    b_recoMuon_poszPV0       = pv0.position().z();
-    b_recoMuon_poszSimPV     = simPVh.position().z();
-    b_recoMuon_poszLPVOfCand = dPosZVtxCand;
-    b_recoMuon_poszMuon      = mu->muonBestTrack()->vz();
-    
-    b_recoMuon_poszPV01D   = vertices1D->front().position().z();
-    b_recoMuon_poszPV01DBS = vertices1DBS->front().position().z();
-    b_recoMuon_poszPV04D   = vertices4D->front().position().z();
-    b_recoMuon_poszPV04DBS = vertices4DBS->front().position().z();
-    b_recoMuon_poszPV0BS   = verticesBS->front().position().z();
+    fillBranches(recottree_, recotlv, mu, isMuon_signal, pdgId, verts, simPVh, candidates);
+  }
 
-    b_recoMuon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
-    b_recoMuon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
-    b_recoMuon_PFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
-    b_recoMuon_PFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
+}
+
+void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muon* mu, bool isSignal, int pdgId, const reco::VertexCollection* verts, const SimVertex simPVh, const std::vector<pat::PackedCandidate> * candidates)
+{
+  b_muon = tlv;
+  b_muon_signal = isSignal;
+  b_muon_pdgId = pdgId;
+  reco::Vertex pv0 = verts->at(0);
     
-    b_recoMuon_PFIso03ChargedHadronPt = mu->pfIsolationR03().sumChargedHadronPt;
-    b_recoMuon_PFIso03NeutralHadronEt = mu->pfIsolationR03().sumNeutralHadronEt;
-    b_recoMuon_PFIso03PhotonEt        = mu->pfIsolationR03().sumPhotonEt;
-    b_recoMuon_PFIso03PUPt            = mu->pfIsolationR03().sumPUPt;
+  b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
+  
+  b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
+  b_muon_isME0Muon = 0; b_muon_isGEMMuon = 0;
+  b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0;
+  b_muon_isLooseMod = 0;
+  b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
+  b_muon_noChamberMatch = 0;
+  b_muon_noSegment = 0; b_muon_noSegmentDT = 0; b_muon_noSegmentCSC = 0; b_muon_noSegmentRPC = 0; b_muon_noSegmentGEM = 0; b_muon_noSegmentME0 = 0;
+  b_muon_noRecHitGEM = 0; b_muon_noRecHitME0 = 0;
+
+  b_muon_edgeXME0 = 0; b_muon_edgeYME0 = 0;
+  b_muon_chamberMatchXME0 = 0; b_muon_chamberMatchYME0 = 0;
+  b_muon_chamberMatchXErrME0 = 0; b_muon_chamberMatchYErrME0 = 0;
+  b_muon_chamberMatchDXDZME0 = 0; b_muon_chamberMatchDYDZME0 = 0;
+  b_muon_chamberMatchDXDZErrME0 = 0; b_muon_chamberMatchDYDZErrME0 = 0;
+  b_muon_distance = 0; b_muon_distErr = 0;
+  b_muon_segmentMatchXME0 = 0; b_muon_segmentMatchYME0 = 0;
+  b_muon_segmentMatchXErrME0 = 0; b_muon_segmentMatchYErrME0 = 0;
+  b_muon_segmentMatchDXDZME0 = 0; b_muon_segmentMatchDYDZME0 = 0;
+  b_muon_segmentMatchDXDZErrME0 = 0; b_muon_segmentMatchDYDZErrME0 = 0;
+
+  b_muon_deltaXME0 = 0; b_muon_deltaYME0 = 0;
+  b_muon_deltaXDivBySegErrME0 = 0; b_muon_deltaYDivBySegErrME0 = 0; b_muon_deltaXDivByChamErrME0 = 0; b_muon_deltaYDivByChamErrME0 = 0;
+  b_muon_deltaDXDZME0 = 0; b_muon_deltaDYDZME0 = 0;
+  b_muon_deltaDXDZDivBySegErrME0 = 0; b_muon_deltaDYDZDivBySegErrME0 = 0; b_muon_deltaDXDZDivByChamErrME0 = 0; b_muon_deltaDYDZDivByChamErrME0 = 0;
+
+  b_muon_global = 0;  b_muon_pf = 0;
+  b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segcompati = 0;
+  b_muon_chi2 = 0;  b_muon_nglobalhits = 0;  b_muon_nstations = 0;
+  b_muon_trackdxy = 0;  b_muon_trackdz = 0;
+  b_muon_ninnerhits = 0;  b_muon_trackerlayers = 0;
+  b_muon_poszPV0 = 0; b_muon_poszSimPV = 0; b_muon_poszMuon = 0;
+  b_muon_PFIso04 = 0;  b_muon_PFIso03 = 0;
+  b_muon_PFIso03ChargedHadronPt = 0; b_muon_PFIso03NeutralHadronEt = 0;
+  b_muon_PFIso03PhotonEt = 0; b_muon_PFIso03PUPt = 0;
+  b_muon_PFIso04ChargedHadronPt = 0; b_muon_PFIso04NeutralHadronEt = 0;
+  b_muon_PFIso04PhotonEt = 0; b_muon_PFIso04PUPt = 0;
+  b_muon_TrkIso05 = 0;  b_muon_TrkIso03 = 0;
+  b_muon_puppiIsoWithLep = 0; b_muon_puppiIsoWithoutLep = 0; b_muon_puppiIsoCombined = 0;
+  b_muon_puppiIsoWithLep03 = 0; b_muon_puppiIsoWithoutLep03 = 0; b_muon_puppiIsoCombined03 = 0;
+  b_muon_puppiIsoWithLep05 = 0; b_muon_puppiIsoWithoutLep05 = 0; b_muon_puppiIsoCombined05 = 0;
+  b_muon_puppiIsoWithLep03ChargedHadron = 0; b_muon_puppiIsoWithLep03NeutralHadron = 0; b_muon_puppiIsoWithLep03Photon = 0;
+  b_muon_puppiIsoWithLep04ChargedHadron = 0; b_muon_puppiIsoWithLep04NeutralHadron = 0; b_muon_puppiIsoWithLep04Photon = 0;
+  b_muon_puppiIsoWithLep05ChargedHadron = 0; b_muon_puppiIsoWithLep05NeutralHadron = 0; b_muon_puppiIsoWithLep05Photon = 0;
+  b_muon_puppiIsoWithoutLep03ChargedHadron = 0; b_muon_puppiIsoWithoutLep03NeutralHadron = 0; b_muon_puppiIsoWithoutLep03Photon = 0;
+  b_muon_puppiIsoWithoutLep04ChargedHadron = 0; b_muon_puppiIsoWithoutLep04NeutralHadron = 0; b_muon_puppiIsoWithoutLep04Photon = 0;
+  b_muon_puppiIsoWithoutLep05ChargedHadron = 0; b_muon_puppiIsoWithoutLep05NeutralHadron = 0; b_muon_puppiIsoWithoutLep05Photon = 0;
+  b_muon_puppiIsoNumOfCands = 0;
+  b_muon_puppiIsoNumOfCandsInR05 = 0;
+  b_muon_puppiIsoNumOfCandsOutR05 = 0;
+  b_muon_puppiIsoNumOfCandsInR05OT = 0;
+  b_muon_puppiIsoNumOfCandsInR05CH = 0; b_muon_puppiIsoNumOfCandsInR05CHApp = 0;
+  b_muon_puppiIsoNumOfCandsInR05NH = 0; b_muon_puppiIsoNumOfCandsInR05NHApp = 0;
+  b_muon_puppiIsoNumOfCandsInR05PH = 0; b_muon_puppiIsoNumOfCandsInR05PHApp = 0;
+  b_muon_isMuon = 0;
+  b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
+
+  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0;
+  b_tmva_bdt = 0;  b_tmva_mlp = 0;
+  
+  if (mu){
+    b_muon_pTresolution = (b_muon.Pt()-mu->pt())/b_muon.Pt();
+    b_muon_pTinvresolution = (1/b_muon.Pt() - 1/mu->pt())/(1/b_muon.Pt());
+    b_muon_poszPV0       = pv0.position().z();
+    b_muon_poszSimPV     = simPVh.position().z();
+    b_muon_poszMuon      = mu->muonBestTrack()->vz();
     
-    b_recoMuon_PFIso04ChargedHadronPt = mu->pfIsolationR04().sumChargedHadronPt;
-    b_recoMuon_PFIso04NeutralHadronEt = mu->pfIsolationR04().sumNeutralHadronEt;
-    b_recoMuon_PFIso04PhotonEt        = mu->pfIsolationR04().sumPhotonEt;
-    b_recoMuon_PFIso04PUPt            = mu->pfIsolationR04().sumPUPt;
+    b_muon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
+    b_muon_TrkIso05 = mu->isolationR05().sumPt/mu->pt();
+    b_muon_PFIso04 = (mu->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+    b_muon_PFIso03 = (mu->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,mu->pfIsolationR03().sumNeutralHadronEt + mu->pfIsolationR03().sumPhotonEt - 0.5*mu->pfIsolationR03().sumPUPt))/mu->pt();
     
-    puppiIso puppiIsoRec = getPuppiIso( mu, candidates, 1);
+    b_muon_PFIso03ChargedHadronPt = mu->pfIsolationR03().sumChargedHadronPt;
+    b_muon_PFIso03NeutralHadronEt = mu->pfIsolationR03().sumNeutralHadronEt;
+    b_muon_PFIso03PhotonEt        = mu->pfIsolationR03().sumPhotonEt;
+    b_muon_PFIso03PUPt            = mu->pfIsolationR03().sumPUPt;
+
+    b_muon_PFIso04ChargedHadronPt = mu->pfIsolationR04().sumChargedHadronPt;
+    b_muon_PFIso04NeutralHadronEt = mu->pfIsolationR04().sumNeutralHadronEt;
+    b_muon_PFIso04PhotonEt        = mu->pfIsolationR04().sumPhotonEt;
+    b_muon_PFIso04PUPt            = mu->pfIsolationR04().sumPUPt;   
+
+    puppiIso puppiIsoValues = getPuppiIso( mu, candidates, 0);
+    //cout << "pIso.combined "<< pIso.combined  <<endl;
+
+    b_muon_puppiIsoWithLep    = puppiIsoValues.withLep;
+    b_muon_puppiIsoWithoutLep = puppiIsoValues.withoutlep;
+    b_muon_puppiIsoCombined   = puppiIsoValues.combined;
+
+    b_muon_puppiIsoWithLep03    = puppiIsoValues.withLep03;
+    b_muon_puppiIsoWithoutLep03 = puppiIsoValues.withoutlep03;
+    b_muon_puppiIsoCombined03   = puppiIsoValues.combined03;
+
+    b_muon_puppiIsoWithLep05    = puppiIsoValues.withLep05;
+    b_muon_puppiIsoWithoutLep05 = puppiIsoValues.withoutlep05;
+    b_muon_puppiIsoCombined05   = puppiIsoValues.combined05;
     
-    b_recoMuon_puppiIsoWithLep    = puppiIsoRec.withLep;
-    b_recoMuon_puppiIsoWithoutLep = puppiIsoRec.withoutlep;
-    b_recoMuon_puppiIsoCombined   = puppiIsoRec.combined;
+    b_muon_puppiIsoWithLep03ChargedHadron = puppiIsoValues.withLep03CH;
+    b_muon_puppiIsoWithLep03NeutralHadron = puppiIsoValues.withLep03NH;
+    b_muon_puppiIsoWithLep03Photon        = puppiIsoValues.withLep03PH;
     
-    b_recoMuon_puppiIsoWithLep03    = puppiIsoRec.withLep03;
-    b_recoMuon_puppiIsoWithoutLep03 = puppiIsoRec.withoutlep03;
-    b_recoMuon_puppiIsoCombined03   = puppiIsoRec.combined03;
+    b_muon_puppiIsoWithLep04ChargedHadron = puppiIsoValues.withLep04CH;
+    b_muon_puppiIsoWithLep04NeutralHadron = puppiIsoValues.withLep04NH;
+    b_muon_puppiIsoWithLep04Photon        = puppiIsoValues.withLep04PH;
     
-    b_recoMuon_puppiIsoWithLep05    = puppiIsoRec.withLep05;
-    b_recoMuon_puppiIsoWithoutLep05 = puppiIsoRec.withoutlep05;
-    b_recoMuon_puppiIsoCombined05   = puppiIsoRec.combined05;
+    b_muon_puppiIsoWithLep05ChargedHadron = puppiIsoValues.withLep05CH;
+    b_muon_puppiIsoWithLep05NeutralHadron = puppiIsoValues.withLep05NH;
+    b_muon_puppiIsoWithLep05Photon        = puppiIsoValues.withLep05PH;
     
-    b_recoMuon_puppiIsoWithLep03ChargedHadron = puppiIsoRec.withLep03CH;
-    b_recoMuon_puppiIsoWithLep03NeutralHadron = puppiIsoRec.withLep03NH;
-    b_recoMuon_puppiIsoWithLep03Photon        = puppiIsoRec.withLep03PH;
+    b_muon_puppiIsoWithoutLep03ChargedHadron = puppiIsoValues.withoutlep03CH;
+    b_muon_puppiIsoWithoutLep03NeutralHadron = puppiIsoValues.withoutlep03NH;
+    b_muon_puppiIsoWithoutLep03Photon        = puppiIsoValues.withoutlep03PH;
     
-    b_recoMuon_puppiIsoWithLep04ChargedHadron = puppiIsoRec.withLep04CH;
-    b_recoMuon_puppiIsoWithLep04NeutralHadron = puppiIsoRec.withLep04NH;
-    b_recoMuon_puppiIsoWithLep04Photon        = puppiIsoRec.withLep04PH;
+    b_muon_puppiIsoWithoutLep04ChargedHadron = puppiIsoValues.withoutlep04CH;
+    b_muon_puppiIsoWithoutLep04NeutralHadron = puppiIsoValues.withoutlep04NH;
+    b_muon_puppiIsoWithoutLep04Photon        = puppiIsoValues.withoutlep04PH;
     
-    b_recoMuon_puppiIsoWithLep05ChargedHadron = puppiIsoRec.withLep05CH;
-    b_recoMuon_puppiIsoWithLep05NeutralHadron = puppiIsoRec.withLep05NH;
-    b_recoMuon_puppiIsoWithLep05Photon        = puppiIsoRec.withLep05PH;
+    b_muon_puppiIsoWithoutLep05ChargedHadron = puppiIsoValues.withoutlep05CH;
+    b_muon_puppiIsoWithoutLep05NeutralHadron = puppiIsoValues.withoutlep05NH;
+    b_muon_puppiIsoWithoutLep05Photon        = puppiIsoValues.withoutlep05PH;
     
-    b_recoMuon_puppiIsoWithoutLep03ChargedHadron = puppiIsoRec.withoutlep03CH;
-    b_recoMuon_puppiIsoWithoutLep03NeutralHadron = puppiIsoRec.withoutlep03NH;
-    b_recoMuon_puppiIsoWithoutLep03Photon        = puppiIsoRec.withoutlep03PH;
+    b_muon_puppiIsoNumOfCands       = puppiIsoValues.nNumCands;
+    b_muon_puppiIsoNumOfCandsInR05  = puppiIsoValues.nNumCandsInR05;
+    b_muon_puppiIsoNumOfCandsOutR05 = puppiIsoValues.nNumCandsOutR05;
     
-    b_recoMuon_puppiIsoWithoutLep04ChargedHadron = puppiIsoRec.withoutlep04CH;
-    b_recoMuon_puppiIsoWithoutLep04NeutralHadron = puppiIsoRec.withoutlep04NH;
-    b_recoMuon_puppiIsoWithoutLep04Photon        = puppiIsoRec.withoutlep04PH;
+    b_muon_puppiIsoNumOfCandsInR05OT = puppiIsoValues.nNumCandsInR05OT;
     
-    b_recoMuon_puppiIsoWithoutLep05ChargedHadron = puppiIsoRec.withoutlep05CH;
-    b_recoMuon_puppiIsoWithoutLep05NeutralHadron = puppiIsoRec.withoutlep05NH;
-    b_recoMuon_puppiIsoWithoutLep05Photon        = puppiIsoRec.withoutlep05PH;
+    b_muon_puppiIsoNumOfCandsInR05CH = puppiIsoValues.nNumCandsInR05CH;
+    b_muon_puppiIsoNumOfCandsInR05NH = puppiIsoValues.nNumCandsInR05NH;
+    b_muon_puppiIsoNumOfCandsInR05PH = puppiIsoValues.nNumCandsInR05PH;
     
-    b_recoMuon_puppiIsoNumOfCands       = puppiIsoRec.nNumCands;
-    b_recoMuon_puppiIsoNumOfCandsInR05  = puppiIsoRec.nNumCandsInR05;
-    b_recoMuon_puppiIsoNumOfCandsOutR05 = puppiIsoRec.nNumCandsOutR05;
+    b_muon_puppiIsoNumOfCandsInR05CHApp = puppiIsoValues.nNumCandsInR05CHApp;
+    b_muon_puppiIsoNumOfCandsInR05NHApp = puppiIsoValues.nNumCandsInR05NHApp;
+    b_muon_puppiIsoNumOfCandsInR05PHApp = puppiIsoValues.nNumCandsInR05PHApp;
     
-    b_recoMuon_puppiIsoNumOfCandsInR05OT = puppiIsoRec.nNumCandsInR05OT;
+    b_muon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
+    b_muon_isTightCustom = isTightMuonCustom(*mu, pv0);
+    b_muon_isTight = muon::isTightMuon(*mu, pv0);
+    b_muon_isMedium = muon::isMediumMuon(*mu);
+    b_muon_isLoose = muon::isLooseMuon(*mu);
+    b_muon_isME0Muon = mu->isME0Muon();
+    b_muon_isGEMMuon = mu->isGEMMuon();
+    b_muon_isMuon = mu->isMuon();
+    b_muon_isGlobalMuon = mu->isGlobalMuon();
+    b_muon_isStandAloneMuon = mu->isStandAloneMuon();
     
-    b_recoMuon_puppiIsoNumOfCandsInR05CH = puppiIsoRec.nNumCandsInR05CH;
-    b_recoMuon_puppiIsoNumOfCandsInR05NH = puppiIsoRec.nNumCandsInR05NH;
-    b_recoMuon_puppiIsoNumOfCandsInR05PH = puppiIsoRec.nNumCandsInR05PH;
+    b_muon_isLooseMod = isLooseMod(mu);
+    b_muon_isTightModNoIP  = isTightMod(verts, simPVh, mu, false, false);
+    b_muon_isTightModIPxy  = isTightMod(verts, simPVh, mu, true,  false);
+    b_muon_isTightModIPz   = isTightMod(verts, simPVh, mu, false, true);
+    b_muon_isTightModIPxyz = isTightMod(verts, simPVh, mu, true,  true);
     
-    b_recoMuon_puppiIsoNumOfCandsInR05CHApp = puppiIsoRec.nNumCandsInR05CHApp;
-    b_recoMuon_puppiIsoNumOfCandsInR05NHApp = puppiIsoRec.nNumCandsInR05NHApp;
-    b_recoMuon_puppiIsoNumOfCandsInR05PHApp = puppiIsoRec.nNumCandsInR05PHApp;
-    
-    b_recoMuon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
-    b_recoMuon_isTightCustom = isTightMuonCustom(*mu, pv0);
-    b_recoMuon_isTight = muon::isTightMuon(*mu, pv0);
-    b_recoMuon_isMedium = muon::isMediumMuon(*mu);
-    b_recoMuon_isLoose = muon::isLooseMuon(*mu);
-    b_recoMuon_isME0Muon = mu->isME0Muon();
-    b_recoMuon_isGEMMuon = mu->isGEMMuon();
-    b_recoMuon_isMuon = mu->isMuon();
-    b_recoMuon_isGlobalMuon = mu->isGlobalMuon();
-    b_recoMuon_isStandAloneMuon = mu->isStandAloneMuon();
-    
-    b_recoMuon_isLooseMod = isLooseMod(mu);
-    b_recoMuon_isTightModNoIP  = isTightMod(vertices, simPVh, mu, false, false);
-    b_recoMuon_isTightModIPxy  = isTightMod(vertices, simPVh, mu, true,  false);
-    b_recoMuon_isTightModIPz   = isTightMod(vertices, simPVh, mu, false, true);
-    b_recoMuon_isTightModIPxyz = isTightMod(vertices, simPVh, mu, true,  true);
-    
-    b_recoMuon_noRecHitGEM = -1;
-    b_recoMuon_numberOfValidMuonGEMHits = -1;
-    b_recoMuon_numberOfValidMuonME0Hits = -1;
+    const vector<MuonChamberMatch>& chambers = mu->matches();
+    for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+      for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+	if (chamber->detector() == 5){
+	  auto me0Segment = (*(*segment).me0SegmentRef);
+	  b_muon_noRecHitME0 = me0Segment.nRecHits();
+
+	  b_muon_deltaXME0 = fabs( chamber->x - segment->x );
+	  b_muon_deltaYME0 = fabs( chamber->y - segment->y );
+	  b_muon_deltaDXDZME0 = fabs( chamber->dXdZ - segment->dXdZ );
+	  b_muon_deltaDYDZME0 = fabs( chamber->dYdZ - segment->dYdZ );
+	}
+      }
+    }
 
     const reco::Track* muonTrack = 0;  
     if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
     else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
     if (muonTrack){
-      b_recoMuon_noRecHitGEM = nGEMhit(mu);
-      b_recoMuon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
-      b_recoMuon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
+      b_muon_noRecHitGEM = nGEMhit(mu);
+      b_muon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
+      b_muon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
     }
 
-    const vector<MuonChamberMatch>& chambers = mu->matches();
-    b_recoMuon_noChamberMatch = chambers.size();
-    b_recoMuon_noSegment = 0;
-    b_recoMuon_noSegmentDT = 0;
-    b_recoMuon_noSegmentCSC = 0;
-    b_recoMuon_noSegmentRPC = 0;
-    b_recoMuon_noSegmentGEM = 0;
-    b_recoMuon_noSegmentME0 = 0;
+    std::vector<double> tmvaValues = collectTMVAvalues(*mu, pv0);
+    b_muon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
+    b_muon_tmva_mlp = mlp_->GetMvaValue(tmvaValues);
 
-    b_recoMuon_noRecHitME0 = 0;
-
-    b_recoMuon_edgeXME0 = 0;
-    b_recoMuon_edgeYME0 = 0;
-    b_recoMuon_chamberMatchXME0 = 0;
-    b_recoMuon_chamberMatchYME0 = 0;
-    b_recoMuon_chamberMatchXErrME0 = 0;
-    b_recoMuon_chamberMatchYErrME0 = 0;
-    b_recoMuon_chamberMatchDXDZME0 = 0;
-    b_recoMuon_chamberMatchDYDZME0 = 0;    
-    b_recoMuon_chamberMatchDXDZErrME0 = 0;    
-    b_recoMuon_chamberMatchDYDZErrME0 = 0;    
-
-    b_recoMuon_segmentMatchXME0 = 0;
-    b_recoMuon_segmentMatchYME0 = 0;
-    b_recoMuon_segmentMatchXErrME0 = 0;
-    b_recoMuon_segmentMatchYErrME0 = 0;
-    b_recoMuon_segmentMatchDXDZME0 = 0;
-    b_recoMuon_segmentMatchDYDZME0 = 0;    
-    b_recoMuon_segmentMatchDXDZErrME0 = 0;    
-    b_recoMuon_segmentMatchDYDZErrME0 = 0;    
-
-    b_recoMuon_distance = 0;
-    b_recoMuon_distErr = 0;
-
-    b_recoMuon_deltaXME0 = 0;
-    b_recoMuon_deltaYME0 = 0;
-    b_recoMuon_deltaXDivBySegErrME0 = 0;
-    b_recoMuon_deltaYDivBySegErrME0 = 0;
-    b_recoMuon_deltaXDivByChamErrME0 = 0;
-    b_recoMuon_deltaYDivByChamErrME0 = 0;
-    b_recoMuon_deltaDXDZME0 = 0;
-    b_recoMuon_deltaDYDZME0 = 0;
-    b_recoMuon_deltaDXDZDivBySegErrME0 = 0;
-    b_recoMuon_deltaDYDZDivBySegErrME0 = 0;
-    b_recoMuon_deltaDXDZDivByChamErrME0 = 0;
-    b_recoMuon_deltaDYDZDivByChamErrME0 = 0;
-
-    for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
-
-      //cout<< "chamber->detector() "<< chamber->detector()<<endl;
-      for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->segmentMatches.begin(); segment != chamber->segmentMatches.end(); ++segment ){
-	++b_recoMuon_noSegment;
-	if (chamber->detector() == 1){
-	  ++b_recoMuon_noSegmentDT;
-	}
-	if (chamber->detector() == 2){
-	  ++b_recoMuon_noSegmentCSC;
-	}
-      }
-      
-      for ( std::vector<reco::MuonRPCHitMatch>::const_iterator segment = chamber->rpcMatches.begin(); segment != chamber->rpcMatches.end(); ++segment ){
-	++b_recoMuon_noSegment;      
-	if (chamber->detector() == 3){
-	  ++b_recoMuon_noSegmentRPC;
-	}
-      }
-      
-      for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->gemMatches.begin(); segment != chamber->gemMatches.end(); ++segment ){
-	++b_recoMuon_noSegment;      
-	if (chamber->detector() == 4){ //gem
-	  // auto gemSegment = (*(*segment).gemSegmentRef);
-	  // b_recoMuon_noRecHitGEM += gemSegment.nRecHits();
-	  ++b_recoMuon_noSegmentGEM;
-	}
-      }
-
-      for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
-	++b_recoMuon_noSegment;      
-	if (chamber->detector() == 5){ //me0, chamber->detector() = muonSubdetId
-	  ++b_recoMuon_noSegmentME0;
-	  auto me0Segment = (*(*segment).me0SegmentRef);
-	  b_recoMuon_noRecHitME0 = me0Segment.nRecHits();
-
-	  b_recoMuon_edgeXME0 = chamber->edgeX;
-	  b_recoMuon_edgeYME0 = chamber->edgeY;
-	  b_recoMuon_chamberMatchXME0 = chamber->x; // x position of the track
-	  b_recoMuon_chamberMatchYME0 = chamber->y;
-	  b_recoMuon_chamberMatchXErrME0 = chamber->xErr;
-	  b_recoMuon_chamberMatchYErrME0 = chamber->yErr;
-	  b_recoMuon_chamberMatchDXDZME0 = chamber->dXdZ;
-	  b_recoMuon_chamberMatchDYDZME0 = chamber->dYdZ;
-	  b_recoMuon_chamberMatchDXDZErrME0 = chamber->dXdZErr;
-	  b_recoMuon_chamberMatchDYDZErrME0 = chamber->dYdZErr;
-
-	  b_recoMuon_segmentMatchXME0 = segment->x; // x position of the matched segment
-	  b_recoMuon_segmentMatchYME0 = segment->y;
-	  b_recoMuon_segmentMatchXErrME0 = segment->xErr;
-	  b_recoMuon_segmentMatchYErrME0 = segment->yErr;
-	  b_recoMuon_segmentMatchDXDZME0 = segment->dXdZ;
-	  b_recoMuon_segmentMatchDYDZME0 = segment->dYdZ;
-	  b_recoMuon_segmentMatchDXDZErrME0 = segment->dXdZErr;
-	  b_recoMuon_segmentMatchDYDZErrME0 = segment->dYdZErr;
-
-	  b_recoMuon_distance = chamber->dist();
-	  b_recoMuon_distErr = chamber->distErr();    
-
-	  //b_recoMuon_deltaXME0 = fabs( (b_recoMuon_chamberMatchXME0-b_recoMuon_segmentMatchXME0) / sqrt(pow(b_recoMuon_chamberMatchXErrME0, 2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
-	  b_recoMuon_deltaXME0 = fabs( b_recoMuon_chamberMatchXME0 - b_recoMuon_segmentMatchXME0 );
-	  b_recoMuon_deltaYME0 = fabs( b_recoMuon_chamberMatchYME0 - b_recoMuon_segmentMatchYME0 );
-	  b_recoMuon_deltaXDivBySegErrME0 = fabs( b_recoMuon_deltaXME0 / b_recoMuon_segmentMatchXErrME0 );
-	  b_recoMuon_deltaYDivBySegErrME0 = fabs( b_recoMuon_deltaYME0 / b_recoMuon_segmentMatchYErrME0 );
-	  b_recoMuon_deltaXDivByChamErrME0 = fabs( b_recoMuon_deltaXME0 / sqrt(pow(b_recoMuon_chamberMatchXErrME0,2)+pow(b_recoMuon_segmentMatchXErrME0,2)) );
-	  b_recoMuon_deltaYDivByChamErrME0 = fabs( b_recoMuon_deltaYME0 / sqrt(pow(b_recoMuon_chamberMatchYErrME0,2)+pow(b_recoMuon_segmentMatchYErrME0,2)) );
-
-	  b_recoMuon_deltaDXDZME0 = fabs( b_recoMuon_chamberMatchDXDZME0-b_recoMuon_segmentMatchDXDZME0 );
-	  b_recoMuon_deltaDYDZME0 = fabs( b_recoMuon_chamberMatchDYDZME0-b_recoMuon_segmentMatchDYDZME0 );
-	  b_recoMuon_deltaDXDZDivBySegErrME0 = fabs( b_recoMuon_deltaDXDZME0 / b_recoMuon_segmentMatchDXDZErrME0 );
-	  b_recoMuon_deltaDYDZDivBySegErrME0 = fabs( b_recoMuon_deltaDYDZME0 / b_recoMuon_segmentMatchDYDZErrME0 );
-	  b_recoMuon_deltaDXDZDivByChamErrME0 = fabs( b_recoMuon_deltaDXDZME0 / sqrt(pow(b_recoMuon_chamberMatchDXDZErrME0,2)+pow(b_recoMuon_segmentMatchDXDZErrME0,2)) );
-	  b_recoMuon_deltaDYDZDivByChamErrME0 = fabs( b_recoMuon_deltaDYDZME0 / sqrt(pow(b_recoMuon_chamberMatchDYDZErrME0,2)+pow(b_recoMuon_segmentMatchDYDZErrME0,2)) );
-
-	  //cout << "station = " << chamber->station() << endl;
-	  //cout << "detector = " << chamber->detector() << endl;
-
-	  //b_recoMuon_isMaskBestInME0ByDX = segment->isMask((*segment).BestInChamberByDX);
-	  //Mask += segment->mask;
-	  //cout << "flag:   " << (*segment).BestInChamberByDX << endl;
-	  //cout << "mask:   " << (*segment).mask << endl;
-	  //cout << "isMask: " << segment->isMask((*segment).BestInChamberByDX) << endl;
-
-	}
-      }
-      
-    }
-    
-    tmvaValues.clear();
-    tmvaValues = collectTMVAvalues(*mu, pv0);
-    b_recoMuon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
-    b_recoMuon_tmva_mlp = mlp_->GetMvaValue(tmvaValues);
-
-    b_recoMuon_global = tmvaValues[0];
-    b_recoMuon_pf = tmvaValues[1];
-    b_recoMuon_chi2 = tmvaValues[2];
-    b_recoMuon_chi2pos = tmvaValues[3];
-    b_recoMuon_trkKink = tmvaValues[4];
-    b_recoMuon_segcompati = tmvaValues[5];
-    b_recoMuon_nstations = tmvaValues[6];
-    b_recoMuon_nglobalhits = tmvaValues[7];
-    b_recoMuon_trackdxy = tmvaValues[8];
-    b_recoMuon_trackdz = tmvaValues[9];
-    b_recoMuon_ninnerhits = tmvaValues[10];
-    b_recoMuon_trackerlayers =tmvaValues[11];
-
-    recottree_->Fill();
+    b_muon_global = tmvaValues[0];
+    b_muon_pf = tmvaValues[1];
+    b_muon_chi2 = tmvaValues[2];
+    b_muon_chi2pos = tmvaValues[3];
+    b_muon_trkKink = tmvaValues[4];
+    b_muon_segcompati = tmvaValues[5];
+    b_muon_nstations = tmvaValues[6];
+    b_muon_nglobalhits = tmvaValues[7];
+    b_muon_trackdxy = tmvaValues[8];
+    b_muon_trackdz = tmvaValues[9];
+    b_muon_ninnerhits = tmvaValues[10];
+    b_muon_trackerlayers =tmvaValues[11];    
   }
-
+  tree->Fill();
 }
 
 std::vector<double> MuonAnalyser::collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const
@@ -1235,11 +700,11 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
 
 void MuonAnalyser::treereset()
 {
-  b_recoMuon_global = -9; b_recoMuon_pf = -9;
-  b_recoMuon_chi2 = -9; b_recoMuon_chi2pos = -9; b_recoMuon_trkKink = -9; b_recoMuon_segcompati = -9;
-  b_recoMuon_nglobalhits = -9; b_recoMuon_nstations = -9;
-  b_recoMuon_trackdxy = -9; b_recoMuon_trackdz = -9;
-  b_recoMuon_ninnerhits = -9; b_recoMuon_trackerlayers = -9;
+  b_muon_global = -9; b_muon_pf = -9;
+  b_muon_chi2 = -9; b_muon_chi2pos = -9; b_muon_trkKink = -9; b_muon_segcompati = -9;
+  b_muon_nglobalhits = -9; b_muon_nstations = -9;
+  b_muon_trackdxy = -9; b_muon_trackdz = -9;
+  b_muon_ninnerhits = -9; b_muon_trackerlayers = -9;
 }
 
 MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs, int nIsReco) const
@@ -1598,7 +1063,7 @@ bool MuonAnalyser::isLooseMod(const reco::Muon *muon)
   return ( isPF && (isGLB || isTrk) );
 }
 
-bool MuonAnalyser::isTightMod(const Handle<VertexCollection> &vertexHandle, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz)
+bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz)
 {
   bool result = false;
     
@@ -1621,7 +1086,6 @@ bool MuonAnalyser::isTightMod(const Handle<VertexCollection> &vertexHandle, cons
         
     //edm::Handle<reco::VertexCollection> vertexHandle; // quark2 : It is given by argument
     //iEvent.getByToken(vtx_Token,vertexHandle);
-    const reco::VertexCollection* vertices = vertexHandle.product();
         
     double distInit = 24;
     int indexFinal = 0;
@@ -1720,5 +1184,122 @@ bool MuonAnalyser::isTightMod(const Handle<VertexCollection> &vertexHandle, cons
     
   return result;
 }
-
+void MuonAnalyser::setBranches(TTree *tree)
+{
+  tree->Branch("nvertex", &b_nvertex, "nvertex/I");
+  tree->Branch("muon", "TLorentzVector", &b_muon);  
+  tree->Branch("muon_pdgId", &b_muon_pdgId, "muon_pdgId/I");
+  tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
+  tree->Branch("muon_pTresolution",&b_muon_pTresolution,"muon_pTresolution/F");
+  tree->Branch("muon_pTinvresolution",&b_muon_pTinvresolution,"muon_pTinvresolution/F");
+  tree->Branch("muon_isTightOptimized", &b_muon_isTightOptimized, "muon_isTightOptimized/O");
+  tree->Branch("muon_isTightCustom", &b_muon_isTightCustom, "muon_isTightCustom/O");
+  tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
+  tree->Branch("muon_isMedium", &b_muon_isMedium, "muon_isMedium/O");
+  tree->Branch("muon_isLoose", &b_muon_isLoose, "muon_isLoose/O");
+  tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
+  tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
+  tree->Branch("muon_isMuon", &b_muon_isMuon, "muon_isMuon/O");
+  tree->Branch("muon_isGlobalMuon", &b_muon_isGlobalMuon, "muon_isGlobalMuon/O");
+  tree->Branch("muon_isStandAloneMuon", &b_muon_isStandAloneMuon, "muon_isStandAloneMuon/O");
+  tree->Branch("muon_isLooseMod", &b_muon_isLooseMod, "muon_isLooseMod/O");
+  tree->Branch("muon_isTightModNoIP", &b_muon_isTightModNoIP, "muon_isTightModNoIP/O");
+  tree->Branch("muon_isTightModIPxy", &b_muon_isTightModIPxy, "muon_isTightModIPxy/O");
+  tree->Branch("muon_isTightModIPz", &b_muon_isTightModIPz, "muon_isTightModIPz/O");
+  tree->Branch("muon_isTightModIPxyz", &b_muon_isTightModIPxyz, "muon_isTightModIPxyz/O");
+  tree->Branch("muon_numberOfValidMuonGEMHits",&b_muon_numberOfValidMuonGEMHits,"muon_numberOfValidMuonGEMHits/I");
+  tree->Branch("muon_numberOfValidMuonME0Hits",&b_muon_numberOfValidMuonME0Hits,"muon_numberOfValidMuonME0Hits/I");
+  tree->Branch("muon_poszPV0",&b_muon_poszPV0,"muon_poszPV0/F");
+  tree->Branch("muon_poszSimPV",&b_muon_poszSimPV,"muon_poszSimPV/F");
+  tree->Branch("muon_poszMuon",&b_muon_poszMuon,"muon_poszMuon/F");
+  tree->Branch("muon_TrkIsolation03",&b_muon_TrkIso03,"muon_TrkIsolation03/F");
+  tree->Branch("muon_TrkIsolation05",&b_muon_TrkIso05,"muon_TrkIsolation05/F");
+  tree->Branch("muon_PFIsolation04",&b_muon_PFIso04,"muon_PFIsolation04/F");
+  tree->Branch("muon_PFIsolation03",&b_muon_PFIso03,"muon_PFIsolation03/F");
+  tree->Branch("muon_PFIso03ChargedHadronPt",&b_muon_PFIso03ChargedHadronPt,"muon_PFIso03ChargedHadronPt/F");
+  tree->Branch("muon_PFIso03NeutralHadronEt",&b_muon_PFIso03NeutralHadronEt,"muon_PFIso03NeutralHadronEt/F");
+  tree->Branch("muon_PFIso03PhotonEt",&b_muon_PFIso03PhotonEt,"muon_PFIso03PhotonEt/F");
+  tree->Branch("muon_PFIso03PUPt",&b_muon_PFIso03PUPt,"muon_PFIso03PUPt/F");
+  tree->Branch("muon_PFIso04ChargedHadronPt",&b_muon_PFIso04ChargedHadronPt,"muon_PFIso04ChargedHadronPt/F");
+  tree->Branch("muon_PFIso04NeutralHadronEt",&b_muon_PFIso04NeutralHadronEt,"muon_PFIso04NeutralHadronEt/F");
+  tree->Branch("muon_PFIso04PhotonEt",&b_muon_PFIso04PhotonEt,"muon_PFIso04PhotonEt/F");
+  tree->Branch("muon_PFIso04PUPt",&b_muon_PFIso04PUPt,"muon_PFIso04PUPt/F");
+  tree->Branch("muon_puppiIsoWithLep",&b_muon_puppiIsoWithLep,"muon_puppiIsoWithLep/F");
+  tree->Branch("muon_puppiIsoWithoutLep",&b_muon_puppiIsoWithoutLep,"muon_puppiIsoWithoutLep/F");
+  tree->Branch("muon_puppiIsoCombined",&b_muon_puppiIsoCombined,"muon_puppiIsoCombined/F");
+  tree->Branch("muon_puppiIsoWithLep03",&b_muon_puppiIsoWithLep03,"muon_puppiIsoWithLep03/F");
+  tree->Branch("muon_puppiIsoWithoutLep03",&b_muon_puppiIsoWithoutLep03,"muon_puppiIsoWithoutLep03/F");
+  tree->Branch("muon_puppiIsoCombined03",&b_muon_puppiIsoCombined03,"muon_puppiIsoCombined03/F");
+  tree->Branch("muon_puppiIsoWithLep05",&b_muon_puppiIsoWithLep05,"muon_puppiIsoWithLep05/F");
+  tree->Branch("muon_puppiIsoWithoutLep05",&b_muon_puppiIsoWithoutLep05,"muon_puppiIsoWithoutLep05/F");
+  tree->Branch("muon_puppiIsoCombined05",&b_muon_puppiIsoCombined05,"muon_puppiIsoCombined05/F"); tree->Branch("muon_puppiIsoWithLep03ChargedHadron",&b_muon_puppiIsoWithLep03ChargedHadron,"muon_puppiIsoWithLep03ChargedHadron/F"); tree->Branch("muon_puppiIsoWithLep03NeutralHadron",&b_muon_puppiIsoWithLep03NeutralHadron,"muon_puppiIsoWithLep03NeutralHadron/F");
+  tree->Branch("muon_puppiIsoWithLep03Photon",&b_muon_puppiIsoWithLep03Photon,"muon_puppiIsoWithLep03Photon/F"); tree->Branch("muon_puppiIsoWithLep04ChargedHadron",&b_muon_puppiIsoWithLep04ChargedHadron,"muon_puppiIsoWithLep04ChargedHadron/F"); tree->Branch("muon_puppiIsoWithLep04NeutralHadron",&b_muon_puppiIsoWithLep04NeutralHadron,"muon_puppiIsoWithLep04NeutralHadron/F");
+  tree->Branch("muon_puppiIsoWithLep04Photon",&b_muon_puppiIsoWithLep04Photon,"muon_puppiIsoWithLep04Photon/F"); tree->Branch("muon_puppiIsoWithLep05ChargedHadron",&b_muon_puppiIsoWithLep05ChargedHadron,"muon_puppiIsoWithLep05ChargedHadron/F"); tree->Branch("muon_puppiIsoWithLep05NeutralHadron",&b_muon_puppiIsoWithLep05NeutralHadron,"muon_puppiIsoWithLep05NeutralHadron/F");
+  tree->Branch("muon_puppiIsoWithLep05Photon",&b_muon_puppiIsoWithLep05Photon,"muon_puppiIsoWithLep05Photon/F"); tree->Branch("muon_puppiIsoWithoutLep03ChargedHadron",&b_muon_puppiIsoWithoutLep03ChargedHadron,"muon_puppiIsoWithoutLep03ChargedHadron/F"); tree->Branch("muon_puppiIsoWithoutLep03NeutralHadron",&b_muon_puppiIsoWithoutLep03NeutralHadron,"muon_puppiIsoWithoutLep03NeutralHadron/F");
+  tree->Branch("muon_puppiIsoWithoutLep03Photon",&b_muon_puppiIsoWithoutLep03Photon,"muon_puppiIsoWithoutLep03Photon/F"); tree->Branch("muon_puppiIsoWithoutLep04ChargedHadron",&b_muon_puppiIsoWithoutLep04ChargedHadron,"muon_puppiIsoWithoutLep04ChargedHadron/F"); tree->Branch("muon_puppiIsoWithoutLep04NeutralHadron",&b_muon_puppiIsoWithoutLep04NeutralHadron,"muon_puppiIsoWithoutLep04NeutralHadron/F");
+  tree->Branch("muon_puppiIsoWithoutLep04Photon",&b_muon_puppiIsoWithoutLep04Photon,"muon_puppiIsoWithoutLep04Photon/F"); tree->Branch("muon_puppiIsoWithoutLep05ChargedHadron",&b_muon_puppiIsoWithoutLep05ChargedHadron,"muon_puppiIsoWithoutLep05ChargedHadron/F"); tree->Branch("muon_puppiIsoWithoutLep05NeutralHadron",&b_muon_puppiIsoWithoutLep05NeutralHadron,"muon_puppiIsoWithoutLep05NeutralHadron/F");
+  tree->Branch("muon_puppiIsoWithoutLep05Photon",&b_muon_puppiIsoWithoutLep05Photon,"muon_puppiIsoWithoutLep05Photon/F");
+  tree->Branch("muon_puppiIsoNumOfCands",&b_muon_puppiIsoNumOfCands,"muon_puppiIsoNumOfCands/I");
+  tree->Branch("muon_puppiIsoNumOfCandsInR05",&b_muon_puppiIsoNumOfCandsInR05,"muon_puppiIsoNumOfCandsInR05/I");
+  tree->Branch("muon_puppiIsoNumOfCandsOutR05",&b_muon_puppiIsoNumOfCandsOutR05,"muon_puppiIsoNumOfCandsOutR05/I");
+  tree->Branch("muon_puppiIsoNumOfCandsInR05OT",&b_muon_puppiIsoNumOfCandsInR05OT,"muon_puppiIsoNumOfCandsInR05OT/I");
+  tree->Branch("muon_puppiIsoNumOfCandsInR05CH",&b_muon_puppiIsoNumOfCandsInR05CH,"muon_puppiIsoNumOfCandsInR05CH/I");
+  tree->Branch("muon_puppiIsoNumOfCandsInR05NH",&b_muon_puppiIsoNumOfCandsInR05NH,"muon_puppiIsoNumOfCandsInR05NH/I");
+  tree->Branch("muon_puppiIsoNumOfCandsInR05PH",&b_muon_puppiIsoNumOfCandsInR05PH,"muon_puppiIsoNumOfCandsInR05PH/I"); tree->Branch("muon_puppiIsoNumOfCandsInR05CHApp",&b_muon_puppiIsoNumOfCandsInR05CHApp,"muon_puppiIsoNumOfCandsInR05CHApp/I"); tree->Branch("muon_puppiIsoNumOfCandsInR05NHApp",&b_muon_puppiIsoNumOfCandsInR05NHApp,"muon_puppiIsoNumOfCandsInR05NHApp/I"); tree->Branch("muon_puppiIsoNumOfCandsInR05PHApp",&b_muon_puppiIsoNumOfCandsInR05PHApp,"muon_puppiIsoNumOfCandsInR05PHApp/I");
+  tree->Branch("muon_noChamberMatch", &b_muon_noChamberMatch, "muon_noChamberMatch/I");
+  tree->Branch("muon_noSegment", &b_muon_noSegment, "muon_noSegment/I");
+  tree->Branch("muon_noSegmentDT", &b_muon_noSegmentDT, "muon_noSegmentDT/I");
+  tree->Branch("muon_noSegmentCSC", &b_muon_noSegmentCSC, "muon_noSegmentCSC/I");
+  tree->Branch("muon_noSegmentRPC", &b_muon_noSegmentRPC, "muon_noSegmentRPC/I");
+  tree->Branch("muon_noSegmentGEM", &b_muon_noSegmentGEM, "muon_noSegmentGEM/I");
+  tree->Branch("muon_noSegmentME0", &b_muon_noSegmentME0, "muon_noSegmentME0/I");
+  tree->Branch("muon_noRecHitGEM", &b_muon_noRecHitGEM, "muon_noRecHitGEM/I");
+  tree->Branch("muon_noRecHitME0", &b_muon_noRecHitME0, "muon_noRecHitME0/I");
+  tree->Branch("muon_edgeXME0", &b_muon_edgeXME0, "muon_edgeXME0/F");
+  tree->Branch("muon_edgeYME0", &b_muon_edgeYME0, "muon_edgeYME0/F");
+  tree->Branch("muon_chamberMatchXME0", &b_muon_chamberMatchXME0, "muon_chamberMatchXME0/F");
+  tree->Branch("muon_chamberMatchYME0", &b_muon_chamberMatchYME0, "muon_chamberMatchYME0/F");
+  tree->Branch("muon_chamberMatchXErrME0", &b_muon_chamberMatchXErrME0, "muon_chamberMatchXErrME0/F");
+  tree->Branch("muon_chamberMatchYErrME0", &b_muon_chamberMatchYErrME0, "muon_chamberMatchYErrME0/F");
+  tree->Branch("muon_chamberMatchDXDZME0", &b_muon_chamberMatchDXDZME0, "muon_chamberMatchDXDZME0/F");
+  tree->Branch("muon_chamberMatchDYDZME0", &b_muon_chamberMatchDYDZME0, "muon_chamberMatchDYDZME0/F");
+  tree->Branch("muon_chamberMatchDXDZErrME0", &b_muon_chamberMatchDXDZErrME0, "muon_chamberMatchDXDZErrME0/F");
+  tree->Branch("muon_chamberMatchDYDZErrME0", &b_muon_chamberMatchDYDZErrME0, "muon_chamberMatchDYDZErrME0/F");
+  tree->Branch("muon_segmentMatchXME0", &b_muon_segmentMatchXME0, "muon_segmentMatchXME0/F");
+  tree->Branch("muon_segmentMatchYME0", &b_muon_segmentMatchYME0, "muon_segmentMatchYME0/F");
+  tree->Branch("muon_segmentMatchXErrME0", &b_muon_segmentMatchXErrME0, "muon_segmentMatchXErrME0/F");
+  tree->Branch("muon_segmentMatchYErrME0", &b_muon_segmentMatchYErrME0, "muon_segmentMatchYErrME0/F");
+  tree->Branch("muon_segmentMatchDXDZME0", &b_muon_segmentMatchDXDZME0, "muon_segmentMatchDXDZME0/F");
+  tree->Branch("muon_segmentMatchDYDZME0", &b_muon_segmentMatchDYDZME0, "muon_segmentMatchDYDZME0/F");
+  tree->Branch("muon_segmentMatchDXDZErrME0", &b_muon_segmentMatchDXDZErrME0, "muon_segmentMatchDXDZErrME0/F");
+  tree->Branch("muon_segmentMatchDYDZErrME0", &b_muon_segmentMatchDYDZErrME0, "muon_segmentMatchDYDZErrME0/F");
+  tree->Branch("muon_deltaXME0", &b_muon_deltaXME0, "muon_deltaXME0/F");
+  tree->Branch("muon_deltaYME0", &b_muon_deltaYME0, "muon_deltaYME0/F");
+  tree->Branch("muon_deltaXDivBySegErrME0", &b_muon_deltaXDivBySegErrME0, "muon_deltaXDivBySegErrME0/F");
+  tree->Branch("muon_deltaYDivBySegErrME0", &b_muon_deltaYDivBySegErrME0, "muon_deltaYDivBySegErrME0/F");
+  tree->Branch("muon_deltaXDivByChamErrME0", &b_muon_deltaXDivByChamErrME0, "muon_deltaXDivByChamErrME0/F");
+  tree->Branch("muon_deltaYDivByChamErrME0", &b_muon_deltaYDivByChamErrME0, "muon_deltaYDivByChamErrME0/F");
+  tree->Branch("muon_deltaDXDZME0", &b_muon_deltaDXDZME0, "muon_deltaDXDZME0/F");
+  tree->Branch("muon_deltaDYDZME0", &b_muon_deltaDYDZME0, "muon_deltaDYDZME0/F");
+  tree->Branch("muon_deltaDXDZDivBySegErrME0", &b_muon_deltaDXDZDivBySegErrME0, "muon_deltaDXDZDivBySegErrME0/F");
+  tree->Branch("muon_deltaDYDZDivBySegErrME0", &b_muon_deltaDYDZDivBySegErrME0, "muon_deltaDYDZDivBySegErrME0/F");
+  tree->Branch("muon_deltaDXDZDivByChamErrME0", &b_muon_deltaDXDZDivByChamErrME0, "muon_deltaDXDZDivByChamErrME0/F");
+  tree->Branch("muon_deltaDYDZDivByChamErrME0", &b_muon_deltaDYDZDivByChamErrME0, "muon_deltaDYDZDivByChamErrME0/F");
+  tree->Branch("muon_distance", &b_muon_distance, "muon_distance/F");
+  tree->Branch("muon_distErr", &b_muon_distErr, "muon_distErr/F");
+  tree->Branch("muon_isGlobalMuon", &b_muon_global, "muon_isGlobalMuon/O");
+  tree->Branch("muon_isPFMuon", &b_muon_pf, "muon_isPFMuon/O");
+  tree->Branch("muon_normalizedChi2", &b_muon_chi2, "muon_normalizedChi2/F");
+  tree->Branch("muon_chi2LocalPosition", &b_muon_chi2pos, "muon_chi2LocalPosition/F");
+  tree->Branch("muon_trkKink", &b_muon_trkKink, "muon_trkKink/F");
+  tree->Branch("muon_segmentCompatibility", &b_muon_segcompati, "muon_segmentCompatibility/F");
+  tree->Branch("muon_numberOfValidMuonHits", &b_muon_nglobalhits, "muon_numberOfValidMuonHits/I");
+  tree->Branch("muon_numberOfMatchedStations", &b_muon_nstations, "muon_numberOfMatchedStations/I");
+  tree->Branch("muon_pv0pos_dxy", &b_muon_trackdxy, "muon_pv0pos_dxy/F");
+  tree->Branch("muon_pv0pos_dz", &b_muon_trackdz, "muon_pv0pos_dz/F");
+  tree->Branch("muon_numberOfValidPixelHits", &b_muon_ninnerhits, "muon_numberOfValidPixelHits/I");
+  tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/F");
+  tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
+  tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
+}
 DEFINE_FWK_MODULE(MuonAnalyser);
