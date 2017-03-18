@@ -31,7 +31,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/pnfs/user/jlee/pfmuon/src/21211.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D4_GenSimHLBeamSpotFull+DigiFullTrigger_2023D4+RecoFullGlobal_2023D4+HARVESTFullGlobal_2023D4/step3.root'
+      'file:/cms/home/jlee/scratch/pfmuon/src/step3.root'
       #'file:step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
@@ -65,8 +65,8 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     muAssocLabel = cms.InputTag("muonAssociatorByHitsHelper"),
     tpSelector = muonTPSet, 
 )
-process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3)
-process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3)
+process.MuonAnalyser.tpSelector.maxRapidity = cms.double(2.5)
+process.MuonAnalyser.tpSelector.minRapidity = cms.double(-2.5)
 
 process.load('CommonTools.PileupAlgos.Puppi_cff')
 process.pfNoLepPUPPI = cms.EDFilter("PdgIdCandViewSelector",
