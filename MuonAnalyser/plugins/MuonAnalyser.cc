@@ -154,7 +154,8 @@ private:
   TTree* recottree_;
 
   TLorentzVector b_muon;
-  bool b_muon_signal,b_muon_pdgId;
+  bool b_muon_signal;
+  int b_muon_pdgId;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
   bool b_muon_isME0Muon, b_muon_isGEMMuon;
