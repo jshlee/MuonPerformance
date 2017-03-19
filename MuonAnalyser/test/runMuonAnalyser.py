@@ -32,7 +32,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
       #'file:/cms/home/jlee/scratch/pfmuon/src/step3.root'
-      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre4/rereco/zmmD4/step3_000.root'
+      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre4/rereco/zmmD4PU140/step3_000.root'
       #'file:step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
@@ -64,8 +64,15 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     simVertexCollection = cms.InputTag("g4SimHits"),
     muonLabel = cms.InputTag("muons"),
     muAssocLabel = cms.InputTag("muonAssociatorByHitsHelper"),
-    tpSelector = muonTPSet, 
+    tpSelector = muonTPSet,
+    puppiIsolationChargedHadrons = cms.InputTag("muonIsolationPUPPI","h+-DR030-ThresholdVeto000-ConeVeto000"),
+    puppiIsolationNeutralHadrons = cms.InputTag("muonIsolationPUPPI","h0-DR030-ThresholdVeto000-ConeVeto001"),
+    puppiIsolationPhotons        = cms.InputTag("muonIsolationPUPPI","gamma-DR030-ThresholdVeto000-ConeVeto001"),
+    puppiNoLepIsolationChargedHadrons = cms.InputTag("muonIsolationPUPPINoLep","h+-DR030-ThresholdVeto000-ConeVeto000"),
+    puppiNoLepIsolationNeutralHadrons = cms.InputTag("muonIsolationPUPPINoLep","h0-DR030-ThresholdVeto000-ConeVeto001"),
+    puppiNoLepIsolationPhotons        = cms.InputTag("muonIsolationPUPPINoLep","gamma-DR030-ThresholdVeto000-ConeVeto001"),    
 )
+
 process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3.0)
 process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3.0)
 
@@ -74,8 +81,8 @@ process.particleFlowNoLep = cms.EDFilter("PdgIdCandViewSelector",
                                     src = cms.InputTag("particleFlow"), 
                                     pdgId = cms.vint32( 1,2,22,111,130,310,2112,211,-211,321,-321,999211,2212,-2212 )
                                     )
-process.puppiNoLep = process.puppi.clone()
-process.puppiNoLep.candName = cms.InputTag('particleFlowNoLep') 
+process.puppiNoLep = process.puppi.clone(candName = cms.InputTag('particleFlowNoLep'))
+
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
 process.load("PhysicsTools.PatAlgos.slimming.offlineSlimmedPrimaryVertices_cfi")
@@ -84,40 +91,34 @@ process.load("PhysicsTools.PatAlgos.slimming.packedPFCandidates_cfi")
 IsoConeDefinitions = cms.VPSet(
         cms.PSet( isolationAlgo = cms.string('MuonPFIsolationWithConeVeto'),
                   coneSize = cms.double(0.3),
-                  #VetoThreshold = cms.double(0.0),
+                  VetoThreshold = cms.double(0.0),
                   VetoConeSize = cms.double(0.0001),
                   isolateAgainst = cms.string('h+'),
                   miniAODVertexCodes = cms.vuint32(2,3) ),
         cms.PSet( isolationAlgo = cms.string('MuonPFIsolationWithConeVeto'),
                   coneSize = cms.double(0.3),
-                  #VetoThreshold = cms.double(0.5),
+                  VetoThreshold = cms.double(0.0),
                   VetoConeSize = cms.double(0.01),
                   isolateAgainst = cms.string('h0'),
                   miniAODVertexCodes = cms.vuint32(2,3) ),
         cms.PSet( isolationAlgo = cms.string('MuonPFIsolationWithConeVeto'),
                   coneSize = cms.double(0.3),
-                  #VetoThreshold = cms.double(0.5),
+                  VetoThreshold = cms.double(0.0),
                   VetoConeSize = cms.double(0.01),
                   isolateAgainst = cms.string('gamma'),
-                  miniAODVertexCodes = cms.vuint32(2,3) ),
+                  miniAODVertexCodes = cms.vuint32(2,3) ),                  
 )
 
 process.muonIsolationPUPPI = cms.EDProducer( "CITKPFIsolationSumProducerForPUPPI",
                 srcToIsolate = cms.InputTag("muons"),
-                srcForIsolationCone = cms.InputTag('particleFlow'),
-                puppiValueMap = cms.InputTag('puppi'),
+                srcForIsolationCone = cms.InputTag('packedPFCandidates'),
+                puppiValueMap = cms.InputTag(''),
                 isolationConeDefinitions = IsoConeDefinitions
 )
-process.muonIsolationPUPPINoLep = cms.EDProducer( "CITKPFIsolationSumProducerForPUPPI",
-                srcToIsolate = cms.InputTag("muons"),
-                srcForIsolationCone = cms.InputTag('particleFlowNoLep'),
-                puppiValueMap = cms.InputTag('puppiNoLep'),
-                isolationConeDefinitions = IsoConeDefinitions
-)
-#IsoConeDefinitions04 = IsoConeDefinitions03.clone(coneSize = cms.double(0.4))
-#muonIsolationAODPUPPI04 = muonIsolationAODPUPPI03.clone(isolationConeDefinitions = IsoConeDefinitions04)
+process.muonIsolationPUPPINoLep = process.muonIsolationPUPPI.clone(usePUPPINoLepton = cms.bool(True))
 
 process.p = cms.Path(process.muonAssociatorByHitsHelper
+                         +process.particleFlowNoLep+process.puppiNoLep
                          +process.packedPFCandidates
                          +process.muonIsolationPUPPI+process.muonIsolationPUPPINoLep
                          +process.MuonAnalyser)

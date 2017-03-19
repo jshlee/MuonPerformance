@@ -48,6 +48,15 @@ enum particleType{
 };
 
 class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+  struct PUPPIIsolation {
+    float charged_hadrons;
+    float neutral_hadrons;
+    float photons;
+    float NoLep_charged_hadrons;
+    float NoLep_neutral_hadrons;
+    float NoLep_photons;
+  };
+  
   struct puppiIso {
     int nNumCands;
     int nNumCandsInR05;
@@ -125,7 +134,7 @@ public:
   bool isPH( long pdgid ) const;
 
   void setBranches(TTree *tree);
-  void fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muon* mu, bool isSignal, int pdgId, const reco::VertexCollection* verts, const SimVertex simPVh, const std::vector<pat::PackedCandidate> * candidates);
+  void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId);
   
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -184,6 +193,9 @@ private:
   float b_muon_PFIso04ChargedHadronPt, b_muon_PFIso04NeutralHadronEt;
   float b_muon_PFIso04PhotonEt, b_muon_PFIso04PUPt;
   float b_muon_TrkIso05; float b_muon_TrkIso03;
+  float b_muon_puppiIso, b_muon_puppiIsoNoLep;
+  float b_muon_puppiIso_ChargedHadron, b_muon_puppiIso_NeutralHadron, b_muon_puppiIso_Photon;  
+  float b_muon_puppiIsoNoLep_ChargedHadron, b_muon_puppiIsoNoLep_NeutralHadron, b_muon_puppiIsoNoLep_Photon;  
   float b_muon_puppiIsoWithLep, b_muon_puppiIsoWithoutLep, b_muon_puppiIsoCombined;
   float b_muon_puppiIsoWithLep03, b_muon_puppiIsoWithoutLep03, b_muon_puppiIsoCombined03;
   float b_muon_puppiIsoWithLep05, b_muon_puppiIsoWithoutLep05, b_muon_puppiIsoCombined05;
@@ -208,7 +220,17 @@ private:
   float b_tmva_bdt; float b_tmva_mlp;
   ReadBDT* bdt_;
   ReadMLP* mlp_;
-  
+
+  edm::Handle<edm::ValueMap<float>> PUPPIIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPIIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPIIsolation_photons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons;
+  const reco::VertexCollection* vertexes_;
+  SimVertex simVertex_;
+  const std::vector<pat::PackedCandidate> * candidates_;
+
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DToken_;
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DBSToken_;
@@ -220,6 +242,12 @@ private:
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
   edm::EDGetTokenT <std::vector< pat::PackedCandidate> > tokenPackedCandidate ;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPIIsolation_charged_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPIIsolation_neutral_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPIIsolation_photons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
 
   TrackingParticleSelector tpSelector_;
 };
@@ -239,6 +267,13 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
   tokenPackedCandidate = consumes <std::vector< pat::PackedCandidate> > ( edm::InputTag( std::string("packedPFCandidates"), std::string(""),std::string("") ) );
 
+  PUPPIIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(pset.getParameter<edm::InputTag>("puppiIsolationChargedHadrons"));
+  PUPPIIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(pset.getParameter<edm::InputTag>("puppiIsolationNeutralHadrons"));
+  PUPPIIsolation_photons_ = consumes<edm::ValueMap<float> >(pset.getParameter<edm::InputTag>("puppiIsolationPhotons"));
+  PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(pset.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
+  PUPPINoLeptonsIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(pset.getParameter<edm::InputTag>("puppiNoLepIsolationNeutralHadrons"));
+  PUPPINoLeptonsIsolation_photons_ = consumes<edm::ValueMap<float> >(pset.getParameter<edm::InputTag>("puppiNoLepIsolationPhotons"));
+  
   ParameterSet tpset = pset.getParameter<ParameterSet>("tpSelector");
   tpSelector_ = TrackingParticleSelector(tpset.getParameter<double>("ptMin"),
                                          tpset.getParameter<double>("minRapidity"),
@@ -290,19 +325,19 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(vtx4DBSToken_, vertices4DBS); 
   iEvent.getByToken(vtxBSToken_,   verticesBS); 
   
-  if (vertices->empty()) { cout << "noPV" << endl; return; }
-  const reco::VertexCollection* verts = vertices.product();
+  vertexes_ = vertices.product();
+  if (vertexes_->empty()) { cout << "no PV" << endl; return; }
 
   Handle<std::vector<SimVertex> > simVertexCollection;
   iEvent.getByToken(simVertexToken_, simVertexCollection);  
-  const SimVertex simPVh = *(simVertexCollection->begin());
+  simVertex_ = simVertexCollection->at(0);
   
-  h_vertex->Fill(vertices->front().position().z() - simPVh.position().z());  
-  h_vertexBS->Fill(  verticesBS->front().position().z()   - simPVh.position().z());
-  h_vertex1D->Fill(  vertices1D->front().position().z()   - simPVh.position().z());
-  h_vertex1DBS->Fill(vertices1DBS->front().position().z() - simPVh.position().z());
-  h_vertex4D->Fill(  vertices4D->front().position().z()   - simPVh.position().z());
-  h_vertex4DBS->Fill(vertices4DBS->front().position().z() - simPVh.position().z());
+  h_vertex->Fill(vertexes_->at(0).position().z() - simVertex_.position().z());  
+  h_vertexBS->Fill(  verticesBS->front().position().z()   - simVertex_.position().z());
+  h_vertex1D->Fill(  vertices1D->front().position().z()   - simVertex_.position().z());
+  h_vertex1DBS->Fill(vertices1DBS->front().position().z() - simVertex_.position().z());
+  h_vertex4D->Fill(  vertices4D->front().position().z()   - simVertex_.position().z());
+  h_vertex4DBS->Fill(vertices4DBS->front().position().z() - simVertex_.position().z());
   
   Handle<TrackingParticleCollection> simHandle;
   iEvent.getByToken(simToken_, simHandle);
@@ -312,8 +347,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   edm::Handle<std::vector< pat::PackedCandidate> > Candidates_Collection ;
   iEvent.getByToken( tokenPackedCandidate , Candidates_Collection ) ; 
-  const std::vector<pat::PackedCandidate> * candidates = Candidates_Collection.product();
-  
+  candidates_ = Candidates_Collection.product();
+  if (candidates_->empty()) { cout << "no PackedCandidate :: something is wrong" << endl;}
+
   Handle<MuonToTrackingParticleAssociator> associatorBase;
   iEvent.getByToken(muAssocToken_, associatorBase);
   MuonToTrackingParticleAssociator const* assoByHits = associatorBase.product();
@@ -321,6 +357,13 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   assoByHits->associateMuons(muonToSimColl, simToMuonColl, muonHandle, reco::GlobalTk, simHandle);
   reco::MuonToSimCollection trkToSimColl; reco::SimToMuonCollection simToTrkColl;  
   assoByHits->associateMuons(trkToSimColl, simToTrkColl, muonHandle, reco::InnerTk, simHandle);
+
+  iEvent.getByToken(PUPPIIsolation_charged_hadrons_, PUPPIIsolation_charged_hadrons);
+  iEvent.getByToken(PUPPIIsolation_neutral_hadrons_, PUPPIIsolation_neutral_hadrons);
+  iEvent.getByToken(PUPPIIsolation_photons_, PUPPIIsolation_photons);  
+  iEvent.getByToken(PUPPINoLeptonsIsolation_charged_hadrons_, PUPPINoLeptonsIsolation_charged_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
   
   vector<const Muon*> signalMuons; signalMuons.clear();
 
@@ -332,32 +375,37 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( ! tpSelector_(*simTP) ) continue;
 
     TLorentzVector gentlv(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
+    edm::RefToBase<reco::Muon> muonRef;
     const Muon* mu = NULL;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
-	mu = MuRefV.begin()->first.get();
-	signalMuons.push_back(mu);	
+	muonRef = MuRefV.begin()->first;
+	mu = muonRef.get();
+	signalMuons.push_back(mu);
       }
     }
+    
     if (!mu){// matching to tracker for tracker muons
       if ( simToTrkColl.find(simRef) != simToTrkColl.end() ) {
 	vector<pair<RefToBase<Muon>, double> > MuRefV = simToTrkColl[simRef];      
 	if ( !MuRefV.empty()) {
-	  const Muon* trkMu = MuRefV.begin()->first.get();
-	  if (!trkMu->isGlobalMuon()){
-	    mu = trkMu;
-	    signalMuons.push_back(mu);	
+	  edm::RefToBase<reco::Muon> trkMu = MuRefV.begin()->first;
+	  mu = trkMu.get();
+	  if (!mu->isGlobalMuon()){
+	    signalMuons.push_back(mu);
+	    muonRef = trkMu;
 	  }
 	}
       }
     }
-    fillBranches(genttree_, gentlv, mu, true, simTP->pdgId(), verts, simPVh, candidates);
+
+    fillBranches(genttree_, gentlv, muonRef, true, simTP->pdgId());
   }
 
   // reco muon loop - for fake rate
   for (size_t i = 0; i < muonHandle->size(); ++i) {    
-    auto muRef = muonHandle->refAt(i);
+    edm::RefToBase<reco::Muon> muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
     TLorentzVector recotlv(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
     bool isMuon_signal = false;
@@ -386,17 +434,17 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
 
-    fillBranches(recottree_, recotlv, mu, isMuon_signal, pdgId, verts, simPVh, candidates);
+    fillBranches(recottree_, recotlv, muRef, isMuon_signal, pdgId);
   }
 
 }
 
-void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muon* mu, bool isSignal, int pdgId, const reco::VertexCollection* verts, const SimVertex simPVh, const std::vector<pat::PackedCandidate> * candidates)
+void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId)
 {
   b_muon = tlv;
   b_muon_signal = isSignal;
   b_muon_pdgId = pdgId;
-  reco::Vertex pv0 = verts->at(0);
+  reco::Vertex pv0 = vertexes_->at(0);
     
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
@@ -437,6 +485,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muo
   b_muon_PFIso04ChargedHadronPt = 0; b_muon_PFIso04NeutralHadronEt = 0;
   b_muon_PFIso04PhotonEt = 0; b_muon_PFIso04PUPt = 0;
   b_muon_TrkIso05 = 0;  b_muon_TrkIso03 = 0;
+  b_muon_puppiIso = 0; b_muon_puppiIso_ChargedHadron = 0; b_muon_puppiIso_NeutralHadron = 0; b_muon_puppiIso_Photon = 0;
+  b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
   b_muon_puppiIsoWithLep = 0; b_muon_puppiIsoWithoutLep = 0; b_muon_puppiIsoCombined = 0;
   b_muon_puppiIsoWithLep03 = 0; b_muon_puppiIsoWithoutLep03 = 0; b_muon_puppiIsoCombined03 = 0;
   b_muon_puppiIsoWithLep05 = 0; b_muon_puppiIsoWithoutLep05 = 0; b_muon_puppiIsoCombined05 = 0;
@@ -458,12 +508,13 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muo
 
   b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0;
   b_tmva_bdt = 0;  b_tmva_mlp = 0;
-  
+
+  const Muon* mu = muref.get();
   if (mu){
     b_muon_pTresolution = (b_muon.Pt()-mu->pt())/b_muon.Pt();
     b_muon_pTinvresolution = (1/b_muon.Pt() - 1/mu->pt())/(1/b_muon.Pt());
     b_muon_poszPV0       = pv0.position().z();
-    b_muon_poszSimPV     = simPVh.position().z();
+    b_muon_poszSimPV     = simVertex_.position().z();
     b_muon_poszMuon      = mu->muonBestTrack()->vz();
     
     b_muon_TrkIso03 = mu->isolationR03().sumPt/mu->pt();
@@ -481,7 +532,16 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muo
     b_muon_PFIso04PhotonEt        = mu->pfIsolationR04().sumPhotonEt;
     b_muon_PFIso04PUPt            = mu->pfIsolationR04().sumPUPt;   
 
-    puppiIso puppiIsoValues = getPuppiIso( mu, candidates, 0);
+    b_muon_puppiIso_ChargedHadron = (*PUPPIIsolation_charged_hadrons)[muref];
+    b_muon_puppiIso_NeutralHadron = (*PUPPIIsolation_neutral_hadrons)[muref];
+    b_muon_puppiIso_Photon = (*PUPPIIsolation_photons)[muref];
+    b_muon_puppiIso = (b_muon_puppiIso_ChargedHadron+b_muon_puppiIso_NeutralHadron+b_muon_puppiIso_Photon)/mu->pt();
+    b_muon_puppiIsoNoLep_ChargedHadron = (*PUPPINoLeptonsIsolation_charged_hadrons)[muref];
+    b_muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
+    b_muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
+    b_muon_puppiIsoNoLep = (b_muon_puppiIsoNoLep_ChargedHadron+b_muon_puppiIsoNoLep_NeutralHadron+b_muon_puppiIsoNoLep_Photon)/mu->pt();
+    
+    puppiIso puppiIsoValues = getPuppiIso( mu, candidates_, 0);
     //cout << "pIso.combined "<< pIso.combined  <<endl;
 
     b_muon_puppiIsoWithLep    = puppiIsoValues.withLep;
@@ -546,10 +606,10 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, const reco::Muo
     b_muon_isStandAloneMuon = mu->isStandAloneMuon();
     
     b_muon_isLooseMod = isLooseMod(mu);
-    b_muon_isTightModNoIP  = isTightMod(verts, simPVh, mu, false, false);
-    b_muon_isTightModIPxy  = isTightMod(verts, simPVh, mu, true,  false);
-    b_muon_isTightModIPz   = isTightMod(verts, simPVh, mu, false, true);
-    b_muon_isTightModIPxyz = isTightMod(verts, simPVh, mu, true,  true);
+    b_muon_isTightModNoIP  = isTightMod(vertexes_, simVertex_, mu, false, false);
+    b_muon_isTightModIPxy  = isTightMod(vertexes_, simVertex_, mu, true,  false);
+    b_muon_isTightModIPz   = isTightMod(vertexes_, simVertex_, mu, false, true);
+    b_muon_isTightModIPxyz = isTightMod(vertexes_, simVertex_, mu, true,  true);
     
     const vector<MuonChamberMatch>& chambers = mu->matches();
     for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
@@ -1232,6 +1292,14 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_PFIso04NeutralHadronEt",&b_muon_PFIso04NeutralHadronEt,"muon_PFIso04NeutralHadronEt/F");
   tree->Branch("muon_PFIso04PhotonEt",&b_muon_PFIso04PhotonEt,"muon_PFIso04PhotonEt/F");
   tree->Branch("muon_PFIso04PUPt",&b_muon_PFIso04PUPt,"muon_PFIso04PUPt/F");
+  tree->Branch("muon_puppiIso",&b_muon_puppiIso,"muon_puppiIso/F");
+  tree->Branch("muon_puppiIso_ChargedHadron",&b_muon_puppiIso_ChargedHadron,"muon_puppiIso_ChargedHadron/F");
+  tree->Branch("muon_puppiIso_NeutralHadron",&b_muon_puppiIso_NeutralHadron,"muon_puppiIso_NeutralHadron/F");
+  tree->Branch("muon_puppiIso_Photon",&b_muon_puppiIso_Photon,"muon_puppiIso_Photon/F");
+  tree->Branch("muon_puppiIsoNoLep",&b_muon_puppiIsoNoLep,"muon_puppiIsoNoLep/F");
+  tree->Branch("muon_puppiIsoNoLep_ChargedHadron",&b_muon_puppiIsoNoLep_ChargedHadron,"muon_puppiIsoNoLep_ChargedHadron/F");
+  tree->Branch("muon_puppiIsoNoLep_NeutralHadron",&b_muon_puppiIsoNoLep_NeutralHadron,"muon_puppiIsoNoLep_NeutralHadron/F");
+  tree->Branch("muon_puppiIsoNoLep_Photon",&b_muon_puppiIsoNoLep_Photon,"muon_puppiIsoNoLep_Photon/F");
   tree->Branch("muon_puppiIsoWithLep",&b_muon_puppiIsoWithLep,"muon_puppiIsoWithLep/F");
   tree->Branch("muon_puppiIsoWithoutLep",&b_muon_puppiIsoWithoutLep,"muon_puppiIsoWithoutLep/F");
   tree->Branch("muon_puppiIsoCombined",&b_muon_puppiIsoCombined,"muon_puppiIsoCombined/F");
