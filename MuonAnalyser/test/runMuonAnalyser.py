@@ -81,4 +81,4 @@ process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
 process.load("PhysicsTools.PatAlgos.slimming.offlineSlimmedPrimaryVertices_cfi")
 process.load("PhysicsTools.PatAlgos.slimming.packedPFCandidates_cfi")
 
-process.p = cms.Path(process.packedPFCandidates+process.muonAssociatorByHitsHelper+process.MuonAnalyser)
+process.p = cms.Path(process.muonAssociatorByHitsHelper+process.packedPFCandidates+process.MuonAnalyser)
