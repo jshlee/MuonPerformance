@@ -66,8 +66,8 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     muAssocLabel = cms.InputTag("muonAssociatorByHitsHelper"),
     tpSelector = muonTPSet, 
 )
-process.MuonAnalyser.tpSelector.maxRapidity = cms.double(2.5)
-process.MuonAnalyser.tpSelector.minRapidity = cms.double(-2.5)
+process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3)
+process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3)
 
 process.load('CommonTools.PileupAlgos.Puppi_cff')
 process.pfNoLepPUPPI = cms.EDFilter("PdgIdCandViewSelector",
