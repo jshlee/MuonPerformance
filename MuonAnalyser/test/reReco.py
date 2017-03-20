@@ -22,12 +22,12 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/relval/CMSSW_9_0_0_pre4/RelValZMM_14/GEN-SIM-RECO/PU25ns_90X_upgrade2023_realistic_v3_D4TPU200c2-v1/10000/DC1FE5F6-08F0-E611-AF87-0CC47A4D7670.root'),
+    fileNames = cms.untracked.vstring('/store/relval/CMSSW_9_0_0_pre4/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v3_2023D4Timing-v1/10000/04013655-A9EC-E611-9783-0CC47A4C8E98.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -43,6 +43,34 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 # Output definition
+slimOutputCommands = cms.untracked.vstring('drop *_*_*_*',
+'keep *_simSiPixelDigis_*_*',
+'keep *_siPixelClusters_*_*',
+'keep *_genParticles_*_*',
+'keep *_electronGsfTracks_*_*',
+'keep *_*Muon*_*_*',
+'keep *_*Segments*_*_*',
+'keep *_*GEM*_*_*',
+'keep *_*ME0*_*_*',
+'keep *_*DT*_*_*',
+'keep *_*CSC*_*_*',
+'keep *_*RPC*_*_*',
+'keep *_*offlinePrimaryVertices*_*_*',
+'keep *_*particleFlow*_*_*',
+'keep TrackingParticles_*_*_*',
+'keep TrackingVertexs_*_*_*',
+'keep *Muons_*_*_*',
+'keep SimVertexs_g4SimHits_*_*',
+'keep SimTracks_g4SimHits_*_*',
+'keep PSimHits_g4SimHits_TrackerHits*_*',
+'keep *_*_*Muon*_*',
+'keep *_dt1DRecHits_*_*',
+'keep recoTrack*_*_*_*',
+'keep *_ak4PFJets_*_*',
+'keep *_inclusiveCandidateSecondaryVertices*_*_*',
+'keep TrackingRecHits*_*_*_*',
+'keep CrossingFrame*_*_*_*',
+)
 
 process.FEVTDEBUGHLToutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
@@ -51,7 +79,7 @@ process.FEVTDEBUGHLToutput = cms.OutputModule("PoolOutputModule",
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(10485760),
     fileName = cms.untracked.string('step3.root'),
-    outputCommands = process.FEVTDEBUGHLTEventContent.outputCommands,
+    outputCommands = slimOutputCommands,
     splitLevel = cms.untracked.int32(0)
 )
 
