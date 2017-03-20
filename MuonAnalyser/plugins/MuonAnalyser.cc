@@ -158,7 +158,7 @@ private:
   int b_muon_pdgId;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
-  bool b_muon_isME0Muon, b_muon_isGEMMuon, b_muon_isRPCMuon;
+  bool b_muon_isME0Muon, b_muon_isGEMMuon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
   bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon, b_muon_isPFMuon;
   bool b_muon_isLooseMod;
   bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
@@ -450,7 +450,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
   b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isGEMMuon = 0; b_muon_isRPCMuon = 0;
+  b_muon_isME0Muon = 0; b_muon_isGEMMuon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
   b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
   b_muon_isLooseMod = 0;
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
@@ -603,6 +603,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isME0Muon = mu->isME0Muon();
     b_muon_isGEMMuon = mu->isGEMMuon();
     b_muon_isRPCMuon = mu->isRPCMuon();
+    b_muon_isCaloMuon = mu->isCaloMuon();
+    b_muon_isTrackerMuon = mu->isTrackerMuon();
     b_muon_isMuon = mu->isMuon();
     b_muon_isGlobalMuon = mu->isGlobalMuon();
     b_muon_isStandAloneMuon = mu->isStandAloneMuon();
@@ -1271,6 +1273,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
   tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
   tree->Branch("muon_isRPCMuon", &b_muon_isRPCMuon, "muon_isRPCMuon/O");
+  tree->Branch("muon_isCaloMuon", &b_muon_isCaloMuon, "muon_isCaloMuon/O");
+  tree->Branch("muon_isTrackerMuon", &b_muon_isTrackerMuon, "muon_isTrackerMuon/O");
   tree->Branch("muon_isMuon", &b_muon_isMuon, "muon_isMuon/O");
   tree->Branch("muon_isGlobalMuon", &b_muon_isGlobalMuon, "muon_isGlobalMuon/O");
   tree->Branch("muon_isStandAloneMuon", &b_muon_isStandAloneMuon, "muon_isStandAloneMuon/O");
