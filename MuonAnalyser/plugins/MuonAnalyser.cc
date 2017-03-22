@@ -366,7 +366,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
   iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
   
-  vector<const Muon*> signalMuons; signalMuons.clear();
+  //vector<const Muon*> signalMuons; signalMuons.clear();
 
   // gen muon loop for efficinecy 
   for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
@@ -375,6 +375,9 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     // select good gen muons
     if ( ! tpSelector_(*simTP) ) continue;
 
+    bool isSignalMuon = abs(simTP->pdgId())==13 && !simTP->genParticles().empty() && (simTP->eventId().event() == 0) && (simTP->eventId().bunchCrossing() == 0);
+    if (!isSignalMuon) continue;
+    
     TLorentzVector gentlv(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
     edm::RefToBase<reco::Muon> muonRef;
     const Muon* mu = NULL;
@@ -383,7 +386,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if ( !MuRefV.empty()) {
 	muonRef = MuRefV.begin()->first;
 	mu = muonRef.get();
-	signalMuons.push_back(mu);
+	//signalMuons.push_back(mu);
       }
     }
     
@@ -394,34 +397,36 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  edm::RefToBase<reco::Muon> trkMu = MuRefV.begin()->first;
 	  mu = trkMu.get();
 	  if (!mu->isGlobalMuon()){
-	    signalMuons.push_back(mu);
+	    //signalMuons.push_back(mu);
 	    muonRef = trkMu;
 	  }
 	}
       }
     }
-
     fillBranches(genttree_, gentlv, muonRef, true, simTP->pdgId());
   }
 
+  
   // reco muon loop - for fake rate
   for (size_t i = 0; i < muonHandle->size(); ++i) {    
     edm::RefToBase<reco::Muon> muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
     TLorentzVector recotlv(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
-    bool isMuon_signal = false;
-    for (auto signal : signalMuons){
-      if (mu == signal){
-	isMuon_signal = true;
-	break;
-      }
-    }
+    // bool isMuon_signal = false;
+    // for (auto signal : signalMuons){
+    //   if (mu == signal){
+    // 	isMuon_signal = true;
+    // 	break;
+    //   }
+    // }
+    
     int pdgId = 0;
+    const TrackingParticle* simTP = NULL;
     if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
       auto trkRefV = muonToSimColl[muRef];
       if ( !trkRefV.empty()) {
-	const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
-	pdgId = trkParticle->pdgId();
+	simTP = trkRefV.begin()->first.get();
+	pdgId = simTP->pdgId();	
 	// cout << "trkParticle " << trkParticle->pdgId() << " pt = " << trkParticle->pt()<< " eta = " << trkParticle->eta()<< endl;
       }
     }
@@ -429,13 +434,15 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if ( trkToSimColl.find(muRef) != trkToSimColl.end() ) {
 	auto trkRefV = trkToSimColl[muRef];
 	if ( !trkRefV.empty()) {
-	  const TrackingParticle* trkParticle = trkRefV.begin()->first.get();
-	  pdgId = trkParticle->pdgId();
+	  simTP = trkRefV.begin()->first.get();
+	  pdgId = simTP->pdgId();	
 	}
       }
     }
-
-    fillBranches(recottree_, recotlv, muRef, isMuon_signal, pdgId);
+    bool isSignalMuon = false;
+    if (simTP)
+      isSignalMuon = abs(simTP->pdgId())==13 && !simTP->genParticles().empty() && (simTP->eventId().event() == 0) && (simTP->eventId().bunchCrossing() == 0);
+    fillBranches(recottree_, recotlv, muRef, isSignalMuon, pdgId);
   }
 
 }

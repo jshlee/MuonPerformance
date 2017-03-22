@@ -32,9 +32,9 @@ process.MessageLogger.cout = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
       #'file:/cms/home/jlee/scratch/pfmuon/src/step3.root'
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre4/rereco/zmmD4PU140/step3_000.root'
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre4/rereco/qcdD4/step3_000.root'
-      'file:step3.root'
+      'file:/xrootd/store/user/jlee/RelValZMM_14/crab_zmmD4_me0seed/170319_133103/0000/step3_1.root'
+      #'file:/xrootd/store/user/jlee/RelValZMM_14/crab_zmmD4PU140_me0seed/170319_133447/0000/step3_1.root'
+      #'file:step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
