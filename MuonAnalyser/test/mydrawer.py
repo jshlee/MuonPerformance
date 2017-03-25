@@ -26,7 +26,7 @@ def drawSampleName(samplename):
     tex2.SetTextSize(0.04)
     tex2.DrawLatex(0.18, 0.85, samplename)
 
-def draw(h_init, y_name, hlists, name, text):
+def draw(h_init, y_name, hlists, name, text, muonid):
     #Plot style
     setMarkerStyle(hlists[0], 4, 20) #blue, circle
     setMarkerStyle(hlists[1], 1, 34) #black, cross
@@ -63,23 +63,25 @@ def draw(h_init, y_name, hlists, name, text):
 
     canv.Modified()
     canv.Update()
-    canv.SaveAs("%s_%s_%s.png"%(plotvar,id,name))
+    canv.SaveAs("%s_%s_%s.png"%(plotvar,muonid,name))
 
 
-datadir = '/xrootd/store/user/tt8888tt/muon/'
-filenames = ["zmm.root", "zmm140.root", "zmm200.root"]
+#datadir = '/xrootd/store/user/tt8888tt/muon/'
+#filenames = ["zmm.root", "zmm140.root", "zmm200.root"]
+datadir = ''
+filenames = ["out.root", "out.root", "out.root"]
 #filenames = ["backup2/zmm.root", "zmm.root", "zmm.root"]
 
-id = sys.argv[1]
+muonid = sys.argv[1]
 binning_l = [[20,5,105],[30,0,3],[30,-3,3],[30,-3,3],[40,60,260]]
-rangecut = "muon.Pt()>5&&abs(muon.Eta())<2.4"
+rangecut = "muon.Pt()>0&&abs(muon.Eta())<2.4"
 
 for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon.Phi()", "nvertex"]):
     #Get histos
     hl_eff = []
-    hl_eff.append(getEff(datadir+filenames[0], "MuonAnalyser/gen", "PU 0",   binning_l[i], plotvar,  rangecut, "%s&&muon_is%s"%(rangecut,id)))
-    hl_eff.append(getEff(datadir+filenames[1], "MuonAnalyser/gen", "PU 140", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,id)))
-    hl_eff.append(getEff(datadir+filenames[2], "MuonAnalyser/gen", "PU 200", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,id)))
+    hl_eff.append(getEff(datadir+filenames[0], "MuonAnalyser/gen", "PU 0",   binning_l[i], plotvar,  rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[1], "MuonAnalyser/gen", "PU 140", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[2], "MuonAnalyser/gen", "PU 200", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
 
     #Backgorund rate
     hl_bkg = []
@@ -89,18 +91,18 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
     nevents_pu140 = tfile.Get("MuonAnalyser/nevents").Integral()
     tfile = ROOT.TFile(datadir+filenames[2])
     nevents_pu200 = tfile.Get("MuonAnalyser/nevents").Integral()
-    hl_bkg.append(makeTH1(datadir+filenames[0], "MuonAnalyser/reco", "PU 0",   binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,id)))
-    hl_bkg.append(makeTH1(datadir+filenames[1], "MuonAnalyser/reco", "PU 140", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,id)))
-    hl_bkg.append(makeTH1(datadir+filenames[2], "MuonAnalyser/reco", "PU 200", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,id)))
+    hl_bkg.append(makeTH1(datadir+filenames[0], "MuonAnalyser/reco", "PU 0",   binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+    hl_bkg.append(makeTH1(datadir+filenames[1], "MuonAnalyser/reco", "PU 140", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+    hl_bkg.append(makeTH1(datadir+filenames[2], "MuonAnalyser/reco", "PU 200", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
     hl_bkg[0].Scale(1/nevents_pu0)
     hl_bkg[1].Scale(1/nevents_pu140)
     hl_bkg[2].Scale(1/nevents_pu200)
 
     #Fake rate
     hl_fake = []
-    hl_fake.append(getEff(datadir+filenames[0], "MuonAnalyser/reco", "PU0",   binning_l[i], plotvar, "%s&&muon_is%s"%(rangecut,id), "%s&&!muon_signal&&muon_is%s"%(rangecut,id)))
-    hl_fake.append(getEff(datadir+filenames[1], "MuonAnalyser/reco", "PU140", binning_l[i], plotvar, "%s&&muon_is%s"%(rangecut,id), "%s&&!muon_signal&&muon_is%s"%(rangecut,id)))
-    hl_fake.append(getEff(datadir+filenames[2], "MuonAnalyser/reco", "PU200", binning_l[i], plotvar, "%s&&muon_is%s"%(rangecut,id), "%s&&!muon_signal&&muon_is%s"%(rangecut,id)))
+    hl_fake.append(getEff(datadir+filenames[0], "MuonAnalyser/reco", "PU0",   binning_l[i], plotvar, "%s&&muon_is%s"%(rangecut,muonid), "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+    hl_fake.append(getEff(datadir+filenames[1], "MuonAnalyser/reco", "PU140", binning_l[i], plotvar, "%s&&muon_is%s"%(rangecut,muonid), "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+    hl_fake.append(getEff(datadir+filenames[2], "MuonAnalyser/reco", "PU200", binning_l[i], plotvar, "%s&&muon_is%s"%(rangecut,muonid), "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
 
     #Set X axis name
     x_name = "Muon "
@@ -121,19 +123,19 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
     h_init2 = h_init.Clone()
 
     #Set Y axis name
-    y_name = id+" "
-    if "Custom" in id: y_name = "TightNoVtx Muon "
+    y_name = muonid+" "
+    if "Custom" in muonid: y_name = "TightNoVtx Muon "
 
     h_init.SetMaximum(1.15)
     h_init.SetMinimum(0.4)
-    draw(h_init, y_name+"Efficiency", hl_eff, "eff", text)
+    draw(h_init, y_name+"Efficiency", hl_eff, "eff", text, muonid)
 
     h_init2.GetYaxis().SetLabelSize(0.035)
     h_init2.GetYaxis().SetTitleSize(0.050)
     h_init2.GetYaxis().SetTitleOffset(1.2)
     h_init3 = h_init2.Clone()
     h_init2.SetMaximum(max(h.GetMaximum() for h in hl_bkg)*2.5)
-    draw(h_init2, y_name+"Background Rate", hl_bkg, "bkgrate", text)
+    draw(h_init2, y_name+"Background Rate", hl_bkg, "bkgrate", text, muonid)
     
     maxY = hl_fake[2].GetEfficiency(0)
     for j in range(binning_l[i][0]):
@@ -141,4 +143,4 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
         if maxY > x: continue
         maxY = x
     h_init3.SetMaximum(maxY*2.5)
-    draw(h_init3, y_name+"Fake Rate", hl_fake, "fakerate", text)
+    draw(h_init3, y_name+"Fake Rate", hl_fake, "fakerate", text, muonid)
