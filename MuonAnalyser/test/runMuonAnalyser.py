@@ -31,11 +31,11 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      '/store/relval/CMSSW_9_0_0_pre5/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v4_D4T-v1/00000/0E75D0DF-0501-E711-8018-0025905B85F6.root',  
+      #'/store/relval/CMSSW_9_0_0_pre5/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v4_D4T-v1/00000/0E75D0DF-0501-E711-8018-0025905B85F6.root',  
       #'file:/cms/home/jlee/scratch/gemSeeding/src/crab/step3.root'
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_000.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_001.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_002.root',
+      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_000.root',
+      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_001.root',
+      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_002.root',
       #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_003.root',
       #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_004.root',
       #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_005.root',
@@ -54,13 +54,6 @@ filelst = open(dir+"pu0.txt", "r")
 #process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
-
-import SimMuon.MCTruth.MuonAssociatorByHits_cfi
-tpToLooseSelMuonAssociation = SimMuon.MCTruth.MuonAssociatorByHits_cfi.muonAssociatorByHits.clone()
-tpToLooseSelMuonAssociation.tpTag = 'mix:MergedTrackTruth'
-tpToLooseSelMuonAssociation.tracksTag = 'muons'
-tpToLooseSelMuonAssociation.UseTracker = True
-tpToLooseSelMuonAssociation.UseMuon = True
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
 process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
