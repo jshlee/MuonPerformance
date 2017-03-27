@@ -366,43 +366,33 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
   iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
   
-  //vector<const Muon*> signalMuons; signalMuons.clear();
-
   // gen muon loop for efficinecy 
   for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
     TrackingParticleRef simRef(simHandle, i);
     const TrackingParticle* simTP = simRef.get();
     // select good gen muons
-    if ( ! tpSelector_(*simTP) ) continue;
-
+    //if ( ! tpSelector_(*simTP) ) continue;
     bool isSignalMuon = abs(simTP->pdgId())==13 && !simTP->genParticles().empty() && (simTP->eventId().event() == 0) && (simTP->eventId().bunchCrossing() == 0);
     if (!isSignalMuon) continue;
     
     TLorentzVector gentlv(simRef->momentum().x(), simRef->momentum().y(), simRef->momentum().z(), simRef->energy() );
     edm::RefToBase<reco::Muon> muonRef;
-    const Muon* mu = NULL;
     if ( simToMuonColl.find(simRef) != simToMuonColl.end() ) {
       vector<pair<RefToBase<Muon>, double> > MuRefV = simToMuonColl[simRef];      
       if ( !MuRefV.empty()) {
-	muonRef = MuRefV.begin()->first;
-	mu = muonRef.get();
-	//signalMuons.push_back(mu);
+    	muonRef = MuRefV.begin()->first;
+      }
+    }
+    else if ( simToTrkColl.find(simRef) != simToTrkColl.end() ) {
+      vector<pair<RefToBase<Muon>, double> > trRefV = simToTrkColl[simRef];      
+      if ( !trRefV.empty()) {
+	edm::RefToBase<reco::Muon> trkMu = trRefV.begin()->first;
+	const Muon* mu = trkMu.get();
+	if (!mu->isGlobalMuon())
+	  muonRef = trkMu;
       }
     }
     
-    if (!mu){// matching to tracker for tracker muons
-      if ( simToTrkColl.find(simRef) != simToTrkColl.end() ) {
-	vector<pair<RefToBase<Muon>, double> > MuRefV = simToTrkColl[simRef];      
-	if ( !MuRefV.empty()) {
-	  edm::RefToBase<reco::Muon> trkMu = MuRefV.begin()->first;
-	  mu = trkMu.get();
-	  if (!mu->isGlobalMuon()){
-	    //signalMuons.push_back(mu);
-	    muonRef = trkMu;
-	  }
-	}
-      }
-    }
     fillBranches(genttree_, gentlv, muonRef, true, simTP->pdgId());
   }
 
@@ -412,25 +402,19 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     edm::RefToBase<reco::Muon> muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
     TLorentzVector recotlv(mu->momentum().x(), mu->momentum().y(), mu->momentum().z(), mu->energy() );
-    // bool isMuon_signal = false;
-    // for (auto signal : signalMuons){
-    //   if (mu == signal){
-    // 	isMuon_signal = true;
-    // 	break;
-    //   }
-    // }
     
     int pdgId = 0;
     const TrackingParticle* simTP = NULL;
-    if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
-      auto trkRefV = muonToSimColl[muRef];
-      if ( !trkRefV.empty()) {
-	simTP = trkRefV.begin()->first.get();
-	pdgId = simTP->pdgId();	
-	// cout << "trkParticle " << trkParticle->pdgId() << " pt = " << trkParticle->pt()<< " eta = " << trkParticle->eta()<< endl;
+    if (mu->isGlobalMuon()){
+      if ( muonToSimColl.find(muRef) != muonToSimColl.end() ) {
+	auto trkRefV = muonToSimColl[muRef];
+	if ( !trkRefV.empty()) {
+	  simTP = trkRefV.begin()->first.get();
+	  pdgId = simTP->pdgId();	
+	}
       }
     }
-    if (pdgId == 0 && !mu->isGlobalMuon()){
+    else {
       if ( trkToSimColl.find(muRef) != trkToSimColl.end() ) {
 	auto trkRefV = trkToSimColl[muRef];
 	if ( !trkRefV.empty()) {
@@ -623,20 +607,25 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isTightModIPz   = isTightMod(vertexes_, simVertex_, mu, false, true);
     b_muon_isTightModIPxyz = isTightMod(vertexes_, simVertex_, mu, true,  true);
     
-    const vector<MuonChamberMatch>& chambers = mu->matches();
-    for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
-      for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
-	if (chamber->detector() == 5){
-	  auto me0Segment = (*(*segment).me0SegmentRef);
+    // ME0SegmentRef me0SegBest;
+    // float me0SegBestX = 1000;
+    //const vector<MuonChamberMatch>& chambers = mu->matches();
+    for (auto chamber : mu->matches()){
+      for (auto segment : chamber.me0Matches){
+	if (chamber.detector() == 5){
+	  auto me0Segment = (*segment.me0SegmentRef);
 	  b_muon_noRecHitME0 = me0Segment.nRecHits();
 
-	  b_muon_deltaXME0 = fabs( chamber->x - segment->x );
-	  b_muon_deltaYME0 = fabs( chamber->y - segment->y );
-	  b_muon_deltaDXDZME0 = fabs( chamber->dXdZ - segment->dXdZ );
-	  b_muon_deltaDYDZME0 = fabs( chamber->dYdZ - segment->dYdZ );
+	  b_muon_deltaXME0 = abs( chamber.x - segment.x );
+	  b_muon_deltaYME0 = abs( chamber.y - segment.y );
+	  b_muon_deltaDXDZME0 = abs( chamber.dXdZ - segment.dXdZ );
+	  b_muon_deltaDYDZME0 = abs( chamber.dYdZ - segment.dYdZ );
 	}
       }
     }
+	
+    // for( std::vector<MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+    //   for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber.me0Matches.begin(); segment != chamber.me0Matches.end(); ++segment ){
 
     const reco::Track* muonTrack = 0;  
     if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
@@ -686,8 +675,8 @@ std::vector<double> MuonAnalyser::collectTMVAvalues(const reco::Muon& mu, reco::
   if ( mu.globalTrack().isNonnull() ){ values.push_back(mu.globalTrack()->hitPattern().numberOfValidMuonHits()); }
   else { values.push_back(dummyVal); }
   if ( mu.muonBestTrack().isNonnull() ){
-    values.push_back(fabs(mu.muonBestTrack()->dxy(pv0.position())));
-    values.push_back(fabs(mu.muonBestTrack()->dz(pv0.position())));
+    values.push_back(abs(mu.muonBestTrack()->dxy(pv0.position())));
+    values.push_back(abs(mu.muonBestTrack()->dz(pv0.position())));
   }
   else {
     values.push_back(dummyVal);
@@ -722,8 +711,8 @@ bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) con
   if ( !(mu.globalTrack()->normalizedChi2()<10.) ) return false;
   if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 0) ) return false;
   if ( !(mu.numberOfMatchedStations() > 1) ) return false;
-  if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.2) ) return false;
-  //if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
+  if ( !(abs(mu.muonBestTrack()->dxy(pv0.position())) < 0.2) ) return false;
+  //if ( !(abs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
   if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 0) ) return false;
   if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5) ) return false;
   return true;
@@ -739,8 +728,8 @@ bool MuonAnalyser::isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex
   if ( !(mu.globalTrack()->normalizedChi2() < 2.) ) return false; // < 10.
   if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 10) ) return false; // > 0
   if ( !(mu.numberOfMatchedStations() > 1) ) return false;
-  if ( !(fabs(mu.muonBestTrack()->dxy(pv0.position())) < 0.02) ) return false; // < 0.2
-  //if ( !(fabs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
+  if ( !(abs(mu.muonBestTrack()->dxy(pv0.position())) < 0.02) ) return false; // < 0.2
+  //if ( !(abs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
   if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 3) ) return false; // > 0
   if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 7) ) return false; // > 5
   return true;
@@ -844,8 +833,8 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
       // calc DR
       nNumCands++;
 
-      double d_eta = fabs( cand->eta() - mu->eta() ) ;
-      double d_phi = fabs( cand->phi() - mu->phi() ) ; 
+      double d_eta = abs( cand->eta() - mu->eta() ) ;
+      double d_phi = abs( cand->phi() - mu->phi() ) ; 
       d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
       double dR2 = d_eta * d_eta  + d_phi * d_phi ;
     
@@ -1175,7 +1164,7 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
       //double vtxY = (*vertices)[i].y();
       double vtxZ = (*vertices)[i].z();
             
-      double dist = fabs(muonZ - vtxZ);
+      double dist = abs(muonZ - vtxZ);
       //std::cout<<"dist "<<dist<<std::endl;
       if(dist < distInit){
                 
@@ -1192,14 +1181,14 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
         
     if(vtxCoord[0] > 1.5 && vtxCoord[0] < 3.5){//Mu and nu gun samples
             
-      ipxySim = fabs(muon->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
-      ipzSim = fabs(muon->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
+      ipxySim = abs(muon->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
+      ipzSim = abs(muon->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
             
     }
     else if(vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){//DY samples
             
-      ipxySim = fabs(muon->muonBestTrack()->dxy(math::XYZPoint(pointDY.x(),pointDY.y(),pointDY.z())));
-      ipzSim = fabs(muon->muonBestTrack()->dz(math::XYZPoint(pointDY.x(),pointDY.y(),pointDY.z())));
+      ipxySim = abs(muon->muonBestTrack()->dxy(math::XYZPoint(pointDY.x(),pointDY.y(),pointDY.z())));
+      ipzSim = abs(muon->muonBestTrack()->dz(math::XYZPoint(pointDY.x(),pointDY.y(),pointDY.z())));
             
     }
     bool ipxySimBool = ipxySim < 0.2;
@@ -1220,7 +1209,7 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
             
       if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){
                 
-	ipxy = fabs(muon->muonBestTrack()->dxy((*vertices)[indexFinal].position())) < 0.2;
+	ipxy = abs(muon->muonBestTrack()->dxy((*vertices)[indexFinal].position())) < 0.2;
 	//std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dxy|: "<<ipxy<<std::endl;
                 
       }
@@ -1238,7 +1227,7 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
             
       if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){
                 
-	ipz = fabs(muon->muonBestTrack()->dz((*vertices)[indexFinal].position())) < 0.5;
+	ipz = abs(muon->muonBestTrack()->dz((*vertices)[indexFinal].position())) < 0.5;
 	//std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dz|: "<<ipz<<std::endl;
                 
       }
