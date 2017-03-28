@@ -170,9 +170,9 @@ private:
   int b_muon_ninnerhits; float b_muon_trackerlayers;
   float b_muon_poszPV0, b_muon_poszSimPV, b_muon_poszMuon;
 
-  float b_muon_ME0deltaX, b_muon_ME0deltaY, b_muon_ME0deltaDXDZ, b_muon_ME0deltaDYDZ; int b_muon_ME0noRecHit;
-  float b_muon_GE11deltaX, b_muon_GE11deltaY, b_muon_GE11deltaDXDZ, b_muon_GE11deltaDYDZ; int b_muon_GE11noRecHit;
-  float b_muon_GE21deltaX, b_muon_GE21deltaY, b_muon_GE21deltaDXDZ, b_muon_GE21deltaDYDZ; int b_muon_GE21noRecHit;
+  float b_muon_ME0deltaX, b_muon_ME0deltaY, b_muon_ME0deltaDXDZ, b_muon_ME0deltaDYDZ, b_muon_ME0pullX, b_muon_ME0pullY, b_muon_ME0dPhi; int b_muon_ME0noRecHit;
+  float b_muon_GE11deltaX, b_muon_GE11deltaY, b_muon_GE11deltaDXDZ, b_muon_GE11deltaDYDZ, b_muon_GE11pullX, b_muon_GE11pullY, b_muon_GE11dPhi; int b_muon_GE11noRecHit;
+  float b_muon_GE21deltaX, b_muon_GE21deltaY, b_muon_GE21deltaDXDZ, b_muon_GE21deltaDYDZ, b_muon_GE21pullX, b_muon_GE21pullY, b_muon_GE21dPhi; int b_muon_GE21noRecHit;
   
   float b_muon_PFIso04; float b_muon_PFIso03;
   float b_muon_PFIso03ChargedHadronPt, b_muon_PFIso03NeutralHadronEt;
@@ -432,10 +432,10 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_isLooseMod = 0;
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
 
-  b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 0; b_muon_ME0deltaDXDZ = 0; b_muon_ME0deltaDYDZ = 0; b_muon_ME0noRecHit = 0;
-  b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 0; b_muon_GE11deltaDXDZ = 0; b_muon_GE11deltaDYDZ = 0; b_muon_GE11noRecHit = 0;
-  b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 0; b_muon_GE21deltaDXDZ = 0; b_muon_GE21deltaDYDZ = 0; b_muon_GE21noRecHit = 0;
-  
+  b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 0; b_muon_ME0deltaDXDZ = 0; b_muon_ME0deltaDYDZ = 0; b_muon_ME0noRecHit = 0; b_muon_ME0pullX = 0; b_muon_ME0pullY = 0; b_muon_ME0dPhi = 0;
+  b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 0; b_muon_GE11deltaDXDZ = 0; b_muon_GE11deltaDYDZ = 0; b_muon_GE11noRecHit = 0; b_muon_GE11pullX = 0; b_muon_GE11pullY = 0; b_muon_GE11dPhi = 0;
+  b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 0; b_muon_GE21deltaDXDZ = 0; b_muon_GE21deltaDYDZ = 0; b_muon_GE21noRecHit = 0; b_muon_GE21pullX = 0; b_muon_GE21pullY = 0; b_muon_GE21dPhi = 0;
+
   b_muon_global = 0;  b_muon_pf = 0;
   b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segcompati = 0;
   b_muon_chi2 = 0;  b_muon_nglobalhits = 0;  b_muon_nstations = 0;
@@ -586,11 +586,14 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	if (chamber.detector() == 5){
 	  auto me0Segment = (*segment.me0SegmentRef);
 	  me0SegX = abs( chamber.x - segment.x );	  
-	  if (me0SegX < b_muon_ME0deltaX){
-	    b_muon_ME0deltaX    = me0SegX;
-	    b_muon_ME0deltaY    = abs( chamber.y - segment.y );
-	    b_muon_ME0deltaDXDZ = abs( chamber.dXdZ - segment.dXdZ );
-	    b_muon_ME0deltaDYDZ = abs( chamber.dYdZ - segment.dYdZ );
+	  if (me0SegX < abs(b_muon_ME0deltaX)){
+	    b_muon_ME0deltaX    = ( chamber.x - segment.x );
+	    b_muon_ME0deltaY    = ( chamber.y - segment.y );
+	    b_muon_ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
+	    b_muon_ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
+	    b_muon_ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);	      
+	    b_muon_ME0deltaDXDZ = ( chamber.dXdZ - segment.dXdZ );
+	    b_muon_ME0deltaDYDZ = ( chamber.dYdZ - segment.dYdZ );
 	    b_muon_ME0noRecHit  = me0Segment.nRecHits();
 	  }
 	}
@@ -599,22 +602,28 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	if (chamber.detector() == 4){
 	  auto gemSegment = (*segment.gemSegmentRef);
 	  if (gemSegment.gemDetId().station() == 1){
-	    ge11SegX = abs( chamber.x - segment.x );	  
-	    if (ge11SegX < b_muon_GE11deltaX){
-	      b_muon_GE11deltaX    = ge11SegX;
-	      b_muon_GE11deltaY    = abs( chamber.y - segment.y );
-	      b_muon_GE11deltaDXDZ = abs( chamber.dXdZ - segment.dXdZ );
-	      b_muon_GE11deltaDYDZ = abs( chamber.dYdZ - segment.dYdZ );
+	    ge11SegX = abs( chamber.x - segment.x );
+	    if (ge11SegX < abs(b_muon_GE11deltaX)){
+	      b_muon_GE11deltaX    = ( chamber.x - segment.x );
+	      b_muon_GE11deltaY    = ( chamber.y - segment.y );
+	      b_muon_GE11pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
+	      b_muon_GE11pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
+	      b_muon_GE11dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);	      
+	      b_muon_GE11deltaDXDZ = ( chamber.dXdZ - segment.dXdZ );
+	      b_muon_GE11deltaDYDZ = ( chamber.dYdZ - segment.dYdZ );
 	      b_muon_GE11noRecHit  = gemSegment.nRecHits();	      
 	    }
 	  }
 	  if (gemSegment.gemDetId().station() == 2){
 	    ge21SegX = abs( chamber.x - segment.x );	  
-	    if (ge21SegX < b_muon_GE21deltaX){
-	      b_muon_GE21deltaX    = ge21SegX;
-	      b_muon_GE21deltaY    = abs( chamber.y - segment.y );
-	      b_muon_GE21deltaDXDZ = abs( chamber.dXdZ - segment.dXdZ );
-	      b_muon_GE21deltaDYDZ = abs( chamber.dYdZ - segment.dYdZ );
+	    if (ge21SegX < abs(b_muon_GE21deltaX)){
+	      b_muon_GE21deltaX    = ( chamber.x - segment.x );
+	      b_muon_GE21deltaY    = ( chamber.y - segment.y );
+	      b_muon_GE21pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
+	      b_muon_GE21pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
+	      b_muon_GE21dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);	      
+	      b_muon_GE21deltaDXDZ = ( chamber.dXdZ - segment.dXdZ );
+	      b_muon_GE21deltaDYDZ = ( chamber.dYdZ - segment.dYdZ );
 	      b_muon_GE21noRecHit  = gemSegment.nRecHits();	      
 	    }
 	  }
@@ -1293,18 +1302,27 @@ void MuonAnalyser::setBranches(TTree *tree)
 
   tree->Branch("muon_ME0deltaX", &b_muon_ME0deltaX, "muon_ME0deltaX/F");  
   tree->Branch("muon_ME0deltaY", &b_muon_ME0deltaY, "muon_ME0deltaY/F");  
+  tree->Branch("muon_ME0pullX", &b_muon_ME0pullX, "muon_ME0pullX/F");  
+  tree->Branch("muon_ME0pullY", &b_muon_ME0pullY, "muon_ME0pullY/F");  
+  tree->Branch("muon_ME0dPhi", &b_muon_ME0dPhi, "muon_ME0dPhi/F");  
   tree->Branch("muon_ME0deltaDXDZ", &b_muon_ME0deltaDXDZ, "muon_ME0deltaDXDZ/F");  
   tree->Branch("muon_ME0deltaDYDZ", &b_muon_ME0deltaDYDZ, "muon_ME0deltaDYDZ/F");  
   tree->Branch("muon_ME0noRecHit", &b_muon_ME0noRecHit, "muon_ME0noRecHit/I");  
 
   tree->Branch("muon_GE11deltaX", &b_muon_GE11deltaX, "muon_GE11deltaX/F");  
   tree->Branch("muon_GE11deltaY", &b_muon_GE11deltaY, "muon_GE11deltaY/F");  
+  tree->Branch("muon_GE11pullX", &b_muon_GE11pullX, "muon_GE11pullX/F");  
+  tree->Branch("muon_GE11pullY", &b_muon_GE11pullY, "muon_GE11pullY/F");  
+  tree->Branch("muon_GE11dPhi", &b_muon_GE11dPhi, "muon_GE11dPhi/F");  
   tree->Branch("muon_GE11deltaDXDZ", &b_muon_GE11deltaDXDZ, "muon_GE11deltaDXDZ/F");  
   tree->Branch("muon_GE11deltaDYDZ", &b_muon_GE11deltaDYDZ, "muon_GE11deltaDYDZ/F");  
   tree->Branch("muon_GE11noRecHit", &b_muon_GE11noRecHit, "muon_GE11noRecHit/I");  
   
   tree->Branch("muon_GE21deltaX", &b_muon_GE21deltaX, "muon_GE21deltaX/F");  
   tree->Branch("muon_GE21deltaY", &b_muon_GE21deltaY, "muon_GE21deltaY/F");  
+  tree->Branch("muon_GE21pullX", &b_muon_GE21pullX, "muon_GE21pullX/F");  
+  tree->Branch("muon_GE21pullY", &b_muon_GE21pullY, "muon_GE21pullY/F");  
+  tree->Branch("muon_GE21dPhi", &b_muon_GE21dPhi, "muon_GE21dPhi/F");  
   tree->Branch("muon_GE21deltaDXDZ", &b_muon_GE21deltaDXDZ, "muon_GE21deltaDXDZ/F");  
   tree->Branch("muon_GE21deltaDYDZ", &b_muon_GE21deltaDYDZ, "muon_GE21deltaDYDZ/F");  
   tree->Branch("muon_GE21noRecHit", &b_muon_GE21noRecHit, "muon_GE21noRecHit/I");  
