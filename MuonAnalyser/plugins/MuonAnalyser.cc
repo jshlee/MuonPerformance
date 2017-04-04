@@ -114,6 +114,8 @@ public:
   ~MuonAnalyser();
   
   bool isGlobalTightMuon( const Muon* muonRef );
+  bool isME0MuonLoose( const Muon* muonRef );
+  bool isME0MuonTight( const Muon* muonRef );
   bool isTrackerTightMuon( const reco::Muon *muonRef );
   bool isIsolatedMuon( const reco::Muon *muonRef );
 
@@ -158,7 +160,7 @@ private:
   int b_muon_pdgId;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
-  bool b_muon_isME0Muon, b_muon_isGEMMuon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
+  bool b_muon_isME0Muon, b_muon_isME0MuonLoose,b_muon_isME0MuonTight, b_muon_isGEMMuon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
   bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon, b_muon_isPFMuon;
   bool b_muon_isLooseMod;
   bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
@@ -427,7 +429,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
   b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isGEMMuon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
+  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isGEMMuon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
   b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
   b_muon_isLooseMod = 0;
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
@@ -563,6 +565,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isMedium = muon::isMediumMuon(*mu);
     b_muon_isLoose = muon::isLooseMuon(*mu);
     b_muon_isME0Muon = mu->isME0Muon();
+    b_muon_isME0MuonLoose = isME0MuonLoose(mu);
+    b_muon_isME0MuonTight = isME0MuonTight(mu);
     b_muon_isGEMMuon = mu->isGEMMuon();
     b_muon_isRPCMuon = mu->isRPCMuon();
     b_muon_isCaloMuon = mu->isCaloMuon();
@@ -995,7 +999,52 @@ bool MuonAnalyser::isPH( long pdgidAbs ) const{
   if( pdgidAbs == 22 ) return true ; // Photon
   return false;
 }
-
+bool MuonAnalyser::isME0MuonLoose( const reco::Muon *mu ) {
+  float me0SegX = 100;
+  for (auto chamber : mu->matches()){
+    for (auto segment : chamber.me0Matches){
+      if (chamber.detector() == 5){
+	auto me0Segment = (*segment.me0SegmentRef);
+	me0SegX = abs( chamber.x - segment.x );	  
+	if (me0SegX < abs(b_muon_ME0deltaX)){
+	  float ME0deltaX    = ( chamber.x - segment.x );
+	  float ME0deltaY    = ( chamber.y - segment.y );
+	  float ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
+	  float ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
+	  float ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);
+	  if (ME0deltaX < 3 || ME0pullX < 3)
+	    if (ME0deltaY < 3 || ME0pullY < 3)
+	      if (ME0dPhi < 0.5)
+		return true;
+	}
+      }
+    }
+  }
+  return false;
+}
+bool MuonAnalyser::isME0MuonTight( const reco::Muon *mu ) {
+  float me0SegX = 100;
+  for (auto chamber : mu->matches()){
+    for (auto segment : chamber.me0Matches){
+      if (chamber.detector() == 5){
+	auto me0Segment = (*segment.me0SegmentRef);
+	me0SegX = abs( chamber.x - segment.x );	  
+	if (me0SegX < abs(b_muon_ME0deltaX)){
+	  float ME0deltaX    = ( chamber.x - segment.x );
+	  float ME0deltaY    = ( chamber.y - segment.y );
+	  float ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
+	  float ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
+	  float ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);
+	  if (ME0deltaX < 3 || ME0pullX < 3)
+	    if (ME0deltaY < 3 || ME0pullY < 3)
+	      if (ME0dPhi < 0.1)
+		return true;
+	}
+      }
+    }
+  }
+  return false;
+}
 bool MuonAnalyser::isGlobalTightMuon( const reco::Muon *muonRef ) {
 
   //if ( !muonRef.isNonnull() ) return false;
@@ -1273,6 +1322,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isStandAloneMuon", &b_muon_isStandAloneMuon, "muon_isStandAloneMuon/O");
   tree->Branch("muon_isPFMuon", &b_muon_isPFMuon, "muon_isPFMuon/O");
   tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
+  tree->Branch("muon_isME0MuonLoose", &b_muon_isME0MuonLoose, "muon_isME0MuonLoose/O");
+  tree->Branch("muon_isME0MuonTight", &b_muon_isME0MuonTight, "muon_isME0MuonTight/O");
   tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
   tree->Branch("muon_isRPCMuon", &b_muon_isRPCMuon, "muon_isRPCMuon/O");
   tree->Branch("muon_isCaloMuon", &b_muon_isCaloMuon, "muon_isCaloMuon/O");
