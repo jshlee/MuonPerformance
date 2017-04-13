@@ -314,6 +314,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(vtx4DBSToken_, vertices4DBS); 
   iEvent.getByToken(vtxBSToken_,   verticesBS); 
   
+  b_nvertex = vertices->size();
+  
   vertexes_ = vertices.product();
   if (vertexes_->empty()) { cout << "no PV" << endl; return; }
 
