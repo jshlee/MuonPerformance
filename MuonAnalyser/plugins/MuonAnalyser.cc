@@ -1288,18 +1288,20 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
         
     if(useIPz == true){
             
-      if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){
+      if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){//DY samples
                 
 	ipz = abs(muon->muonBestTrack()->dz((*vertices)[indexFinal].position())) < 0.5;
 	if (debug)
-	  std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dz|: "<<ipz<<std::endl;
+	  std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dz|: "<<muon->muonBestTrack()->dz((*vertices)[indexFinal].position())<<std::endl;
                 
       }
       else if(vtxCoord[0] > 1.5 && vtxCoord[0] < 3.5){
                 
 	ipz = ipzSimBool;
-	if (debug)
+	if (debug){
 	  std::cout<<"vx: "<<point.x()<<" vy: "<<point.y()<<" vz: "<<point.z()<<" |Dz|: "<<ipz<<std::endl;
+	  std::cout<<"ipzSimBool: "<<ipzSimBool <<std::endl;
+	}
                 
       }
             
