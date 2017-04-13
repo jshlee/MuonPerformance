@@ -31,11 +31,13 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
+      'file:/cms/home/jlee/scratch/gemSeeding/src/batch/step3.root'
+      #'/store/relval/CMSSW_9_1_0_pre1/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v9_D4Timing-v1/00000/0C650B46-2719-E711-9B1C-0025905A60FE.root',  
       #'/store/relval/CMSSW_9_0_0_pre5/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v4_D4T-v1/00000/0E75D0DF-0501-E711-8018-0025905B85F6.root',  
       #'file:/cms/home/jlee/scratch/gemSeeding/src/crab/step3.root'
-      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_000.root',
-      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_001.root',
-      'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_002.root',
+      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_000.root',
+      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_001.root',
+      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_002.root',
       #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_003.root',
       #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_004.root',
       #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_005.root',
@@ -128,7 +130,9 @@ process.muonIsolationPUPPI = cms.EDProducer( "CITKPFIsolationSumProducerForPUPPI
 process.muonIsolationPUPPINoLep = process.muonIsolationPUPPI.clone(usePUPPINoLepton = cms.bool(True))
 
 process.p = cms.Path(process.muonAssociatorByHitsHelper
+                         +process.primaryVertexAssociation
+                         +process.puppi
                          +process.particleFlowNoLep+process.puppiNoLep
-                         +process.packedPFCandidates
+                         +process.offlineSlimmedPrimaryVertices+process.packedPFCandidates
                          +process.muonIsolationPUPPI+process.muonIsolationPUPPINoLep
                          +process.MuonAnalyser)
