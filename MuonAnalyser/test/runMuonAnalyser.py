@@ -12,7 +12,7 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2023_realistic_v1', '')
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(365))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
 
 """
@@ -31,7 +31,8 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/cms/home/jlee/scratch/gemSeeding/src/batch/step3.root'
+      #'file:/cms/home/jlee/scratch/gemSeeding/src/batch/step3.root'
+      '/store/user/jlee/CMSSW_9_0_0_pre4/rereco/zmmD4/step3_006.root',
       #'/store/relval/CMSSW_9_1_0_pre1/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v9_D4Timing-v1/00000/0C650B46-2719-E711-9B1C-0025905A60FE.root',  
       #'/store/relval/CMSSW_9_0_0_pre5/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v4_D4T-v1/00000/0E75D0DF-0501-E711-8018-0025905B85F6.root',  
       #'file:/cms/home/jlee/scratch/gemSeeding/src/crab/step3.root'

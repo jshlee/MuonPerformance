@@ -124,7 +124,8 @@ public:
   bool isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex pv0) const;
   
   bool isLooseMod(const reco::Muon *muon);
-  bool isTightMod(const reco::VertexCollection* vertices, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz);
+  bool isTightMod(const reco::VertexCollection* vertices, const SimVertex &simPVh, const reco::Muon *muon,
+		  bool useIPxy, bool useIPz, bool debug);
   
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
   int nGEMhit(const reco::Muon * mu) const;
@@ -623,10 +624,21 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isPFMuon = mu->isPFMuon();
     
     b_muon_isLooseMod = isLooseMod(mu);
-    b_muon_isTightModNoIP  = isTightMod(vertexes_, simVertex_, mu, false, false);
-    b_muon_isTightModIPxy  = isTightMod(vertexes_, simVertex_, mu, true,  false);
-    b_muon_isTightModIPz   = isTightMod(vertexes_, simVertex_, mu, false, true);
-    b_muon_isTightModIPxyz = isTightMod(vertexes_, simVertex_, mu, true,  true);
+    b_muon_isTightModNoIP  = isTightMod(vertexes_, simVertex_, mu, false, false, false);
+    b_muon_isTightModIPxy  = isTightMod(vertexes_, simVertex_, mu, true,  false, false);
+    b_muon_isTightModIPz   = isTightMod(vertexes_, simVertex_, mu, false, true, false);
+    b_muon_isTightModIPxyz = isTightMod(vertexes_, simVertex_, mu, true,  true, false);
+
+    if (b_muon_isTightCustom != b_muon_isTightModIPxyz){
+      if (abs(mu->eta()) > 1.4 && abs(mu->eta()) < 2.0) {
+	cout << "b_muon_isTightCustom "<< b_muon_isTightCustom
+	     << " b_muon_isTightModIPxyz "<< isTightMod(vertexes_, simVertex_, mu, true,  true, true)
+	     << endl;
+	cout << "isPFMuon "<< mu->isPFMuon()
+	     << " isPFMuonMod "<< (isGlobalTightMuon(mu) || isTrackerTightMuon(mu) || isIsolatedMuon(mu))
+	     << endl;
+      }
+    }
     
     float me0SegX = 100;
     float ge11SegX = 100;
@@ -754,37 +766,34 @@ bool MuonAnalyser::isLooseMuonCustom(const reco::Muon& mu) const
   return true;
 }
 
-bool MuonAnalyser::isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const
+bool MuonAnalyser::isTightMuonCustom(const reco::Muon& muon, reco::Vertex vtx) const
 {
-  if ( !(mu.isGlobalMuon()) ) return false;
-  if ( !(mu.isPFMuon()) ) return false;
-  if ( !(mu.globalTrack().isNonnull()) )  return false;
-  if ( !(mu.muonBestTrack().isNonnull()) ) return false;
-  if ( !(mu.innerTrack().isNonnull()) ) return false;
-  if ( !(mu.globalTrack()->normalizedChi2()<10.) ) return false;
-  if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 0) ) return false;
-  if ( !(mu.numberOfMatchedStations() > 1) ) return false;
-  if ( !(abs(mu.muonBestTrack()->dxy(pv0.position())) < 0.2) ) return false;
-  //if ( !(abs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
-  if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 0) ) return false;
-  if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5) ) return false;
-  return true;
+  if ( !muon.isPFMuon() || !muon.isGlobalMuon() ) return false;
+  
+  bool muID = muon::isGoodMuon(muon,muon::GlobalMuonPromptTight) && (muon.numberOfMatchedStations() > 1);
+      
+  bool hits = muon.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 &&
+    muon.innerTrack()->hitPattern().numberOfValidPixelHits() > 0; 
+  
+  bool ip = fabs(muon.muonBestTrack()->dxy(vtx.position())) < 0.2;
+          //&& fabs(muon.muonBestTrack()->dz(vtx.position())) < 0.5;
+  
+  return muID && hits && ip;
 }
 
-bool MuonAnalyser::isTightMuonCustomOptimized(const reco::Muon& mu, reco::Vertex pv0) const
+bool MuonAnalyser::isTightMuonCustomOptimized(const reco::Muon& muon, reco::Vertex vtx) const
 {
-  if ( !(mu.isGlobalMuon()) ) return false;
-  if ( !(mu.isPFMuon()) ) return false;
-  if ( !(mu.globalTrack().isNonnull()) )  return false;
-  if ( !(mu.muonBestTrack().isNonnull()) ) return false;
-  if ( !(mu.innerTrack().isNonnull()) ) return false;
-  if ( !(mu.globalTrack()->normalizedChi2() < 2.) ) return false; // < 10.
-  if ( !(mu.globalTrack()->hitPattern().numberOfValidMuonHits() > 10) ) return false; // > 0
-  if ( !(mu.numberOfMatchedStations() > 1) ) return false;
-  if ( !(abs(mu.muonBestTrack()->dxy(pv0.position())) < 0.02) ) return false; // < 0.2
-  //if ( !(abs(mu.muonBestTrack()->dz(pv0.position())) < 0.5) ) return false;
-  if ( !(mu.innerTrack()->hitPattern().numberOfValidPixelHits() > 3) ) return false; // > 0
-  if ( !(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 7) ) return false; // > 5
+  if ( !muon.isPFMuon() || !muon.isGlobalMuon() ) return false;
+  if ( !(muon.globalTrack().isNonnull()) )  return false;
+  if ( !(muon.muonBestTrack().isNonnull()) ) return false;
+  if ( !(muon.innerTrack().isNonnull()) ) return false;
+  if ( !(muon.globalTrack()->normalizedChi2() < 2.) ) return false; // < 10.
+  if ( !(muon.globalTrack()->hitPattern().numberOfValidMuonHits() > 10) ) return false; // > 0
+  if ( !(muon.numberOfMatchedStations() > 1) ) return false;
+  if ( !(abs(muon.muonBestTrack()->dxy(vtx.position())) < 0.02) ) return false; // < 0.2
+  //if ( !(abs(muon.muonBestTrack()->dz(vtx.position())) < 0.5) ) return false;
+  if ( !(muon.innerTrack()->hitPattern().numberOfValidPixelHits() > 3) ) return false; // > 0
+  if ( !(muon.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 7) ) return false; // > 5
   return true;
 }
 
@@ -1242,7 +1251,7 @@ bool MuonAnalyser::isLooseMod(const reco::Muon *muon)
   return ( isPF && (isGLB || isTrk) );
 }
 
-bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz)
+bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimVertex &simPVh, const reco::Muon *muon, bool useIPxy, bool useIPz, bool debug = false)
 {
   bool result = false;
     
@@ -1335,16 +1344,20 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
         
     if(useIPz == true){
             
-      if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){
+      if(vertices->size() !=0 && vtxCoord[0] > 0.5 && vtxCoord[0] < 1.5){//DY samples
                 
 	ipz = abs(muon->muonBestTrack()->dz((*vertices)[indexFinal].position())) < 0.5;
-	//std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dz|: "<<ipz<<std::endl;
+	if (debug)
+	  std::cout<<"vx: "<<pointDY.x()<<" vy: "<<pointDY.y()<<" vz: "<<pointDY.z()<<" |Dz|: "<<muon->muonBestTrack()->dz((*vertices)[indexFinal].position())<<std::endl;
                 
       }
       else if(vtxCoord[0] > 1.5 && vtxCoord[0] < 3.5){
                 
 	ipz = ipzSimBool;
-	//std::cout<<"vx: "<<point.x()<<" vy: "<<point.y()<<" vz: "<<point.z()<<" |Dz|: "<<ipz<<std::endl;
+	if (debug){
+	  std::cout<<"vx: "<<point.x()<<" vy: "<<point.y()<<" vz: "<<point.z()<<" |Dz|: "<<ipz<<std::endl;
+	  std::cout<<"ipzSimBool: "<<ipzSimBool <<std::endl;
+	}
                 
       }
             
@@ -1354,8 +1367,9 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
     bool validPxlHit = muon->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
     //bool validPxlHit = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement(3,2) > 0;
     //bool validPxlHit = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement(4,3) > 0;
-        
-    //std::cout<<trkLayMeas<<" "<<isGlb<<" "<<isPF<<" "<<chi2<<" "<<validHits<<" "<<matchedSt<<" "<<ipxy<<" "<<ipz<<" "<<validPxlHit<<std::endl;
+
+    if (debug)
+      std::cout<<trkLayMeas<<" "<<isGlb<<" "<<isPF<<" "<<chi2<<" "<<validHits<<" "<<matchedSt<<" "<<ipxy<<" "<<ipz<<" "<<validPxlHit<<std::endl;
         
     if(trkLayMeas && isGlb && isPF && chi2 && validHits && matchedSt && ipxy && ipz && validPxlHit) result = true;
         
