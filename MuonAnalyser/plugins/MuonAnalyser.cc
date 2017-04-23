@@ -22,6 +22,7 @@
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/Associations/interface/MuonToTrackingParticleAssociator.h"
 #include "SimDataFormats/Vertex/interface/SimVertex.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimMuon/MCTruth/interface/MuonToSimAssociatorByHits.h"
 #include "SimTracker/Common/interface/TrackingParticleSelector.h"
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
@@ -156,6 +157,8 @@ private:
   TTree* genttree_;
   TTree* recottree_;
 
+  int b_pu_density, b_pu_numInteractions;
+  
   TLorentzVector b_muon;
   bool b_muon_signal;
   int b_muon_pdgId;
@@ -230,6 +233,7 @@ private:
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxBSToken_;
   edm::EDGetTokenT<TrackingParticleCollection> simToken_;
   edm::EDGetTokenT<std::vector<SimVertex> > simVertexToken_;
+  edm::EDGetTokenT<std::vector<PileupSummaryInfo>> putoken;
   edm::EDGetTokenT<edm::View<reco::Muon> > muonToken_;
   edm::EDGetTokenT<reco::MuonToTrackingParticleAssociator> muAssocToken_;
   edm::EDGetTokenT <std::vector< pat::PackedCandidate> > tokenPackedCandidate ;
@@ -254,6 +258,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   simVertexToken_ = consumes<std::vector<SimVertex> >(pset.getParameter<edm::InputTag> ("simVertexCollection"));  
+  putoken = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
   muonToken_ = consumes<View<Muon> >(pset.getParameter<InputTag>("muonLabel"));
   muAssocToken_ = consumes<reco::MuonToTrackingParticleAssociator>(pset.getParameter<InputTag>("muAssocLabel"));
   tokenPackedCandidate = consumes <std::vector< pat::PackedCandidate> > ( edm::InputTag( std::string("packedPFCandidates"), std::string(""),std::string("") ) );
@@ -324,6 +329,19 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   Handle<std::vector<SimVertex> > simVertexCollection;
   iEvent.getByToken(simVertexToken_, simVertexCollection);  
   simVertex_ = simVertexCollection->at(0);
+
+  edm::Handle<std::vector <PileupSummaryInfo> > PupInfo;
+  iEvent.getByToken(putoken, PupInfo);
+  b_pu_density = 0; b_pu_numInteractions = 0;
+  std::vector<PileupSummaryInfo>::const_iterator ipu;
+  for (ipu = PupInfo->begin(); ipu != PupInfo->end(); ++ipu) {
+    if ( ipu->getBunchCrossing() != 0 ) continue; // storing detailed PU info only for BX=0
+    for (unsigned int i=0; i<ipu->getPU_zpositions().size(); ++i) {
+      if ( abs((ipu->getPU_zpositions())[i] - simVertex_.position().z()) < 0.1 )
+	++b_pu_density;
+      ++b_pu_numInteractions;
+    }
+  }
   
   h_vertex->Fill(vertexes_->at(0).position().z() - simVertex_.position().z());  
   h_vertexBS->Fill(  verticesBS->front().position().z()   - simVertex_.position().z());
@@ -451,7 +469,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     
     nIsFromPV += ( -0.5 < dVZ && dVZ < 0.5 ? 1 : 0 );
     
-    printf("-PUPPIW%i %i %0.4f %0.7f\n", (int)nIDAbs, nIsFromPV, cand->puppiWeight(), dVZ);
+    //printf("-PUPPIW%i %i %0.4f %0.7f\n", (int)nIDAbs, nIsFromPV, cand->puppiWeight(), dVZ);
   }
   // test end
 
@@ -1380,6 +1398,8 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
 void MuonAnalyser::setBranches(TTree *tree)
 {
   tree->Branch("nvertex", &b_nvertex, "nvertex/I");
+  tree->Branch("pu_density", &b_pu_density, "pu_density/I");
+  tree->Branch("pu_numInteractions", &b_pu_numInteractions, "pu_numInteractions/I");
   tree->Branch("muon", "TLorentzVector", &b_muon);  
   tree->Branch("muon_pdgId", &b_muon_pdgId, "muon_pdgId/I");
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
