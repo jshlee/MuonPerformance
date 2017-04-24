@@ -162,6 +162,7 @@ private:
   TLorentzVector b_muon;
   bool b_muon_signal;
   int b_muon_pdgId;
+  int b_muon_no;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
   bool b_muon_isME0Muon, b_muon_isME0MuonLoose,b_muon_isME0MuonTight, b_muon_isGEMMuon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
@@ -376,7 +377,8 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
   iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
   
-  // gen muon loop for efficinecy 
+  // gen muon loop for efficinecy
+  b_muon_no = 0;
   for (TrackingParticleCollection::size_type i=0; i<simHandle->size(); i++) {
     TrackingParticleRef simRef(simHandle, i);
     const TrackingParticle* simTP = simRef.get();
@@ -408,6 +410,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   
   // reco muon loop - for fake rate
+  b_muon_no = 0;
   for (size_t i = 0; i < muonHandle->size(); ++i) {    
     edm::RefToBase<reco::Muon> muRef = muonHandle->refAt(i);
     const Muon* mu = muRef.get();
@@ -480,6 +483,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon = tlv;
   b_muon_signal = isSignal;
   b_muon_pdgId = pdgId;
+  ++b_muon_no;
   reco::Vertex pv0 = vertexes_->at(0);
     
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
@@ -1401,6 +1405,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("pu_density", &b_pu_density, "pu_density/I");
   tree->Branch("pu_numInteractions", &b_pu_numInteractions, "pu_numInteractions/I");
   tree->Branch("muon", "TLorentzVector", &b_muon);  
+  tree->Branch("muon_no", &b_muon_no, "muon_no/I");
   tree->Branch("muon_pdgId", &b_muon_pdgId, "muon_pdgId/I");
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
   tree->Branch("muon_pTresolution",&b_muon_pTresolution,"muon_pTresolution/F");
