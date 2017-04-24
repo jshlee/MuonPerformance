@@ -194,7 +194,7 @@ strSampleSig = dicSampleType[ strTypePU ][ "file_sig" ]
 strSampleBkg = dicSampleType[ strTypePU ][ "file_bkg" ]
 
 strCutPT  = "15"
-strCutEta = "2.4"
+strCutEta = "2.8"
 
 strDPV = "0.5"
 
@@ -203,20 +203,18 @@ id = sys.argv[ 3 ]
 
 strCutDef = ""
 
-strCutDefKin = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
-
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
 #strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 if id in arrListID: 
-    strCutDef = strCutDefKin + " && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin + " && muon_is%(ID)s"%{"ID":id, "dPV": strDPV}
+        strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && muon_is%(ID)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 else: 
-    strCutDef = strCutDefKin + " && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin
+        strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 strCutSig = strCutDef + " && muon_signal"
 strCutBkg = strCutDef
 

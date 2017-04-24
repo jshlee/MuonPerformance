@@ -109,16 +109,16 @@ datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
 binMain = [1500, 0, 6.0]
 
 arrPlotvar = [
-    {"name": "PUPPIWL", "plotvar": "muon_puppiIsoWithLep03",    "title": "PUPPI - with lepton, R = 0.3", 
+    {"name": "PUPPIWL", "plotvar": "muon_puppiIsoWithLep",    "title": "PUPPI - with lepton, R = 0.4", 
         "color": 4, "shape": 20}, # blue,  filled circle
-    {"name": "PUPPINL", "plotvar": "muon_puppiIsoWithoutLep03", "title": "PUPPI - without lepton, R = 0.3", 
+    {"name": "PUPPINL", "plotvar": "muon_puppiIsoWithoutLep", "title": "PUPPI - without lepton, R = 0.4", 
         "color": 2, "shape": 21}, # red,   filled square
-    #{"name": "PUPPICB", "plotvar": "muon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
-    #    "color": 3, "shape": 34}, # green, filled cross
-    {"name": "PUPPINEWWL", "plotvar": "muon_puppiIso",      "title": "new PUPPI - with lepton, R = 0.4(?)", 
+    {"name": "PUPPICB", "plotvar": "muon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
         "color": 3, "shape": 34}, # green, filled cross
-    {"name": "PUPPINEWNL", "plotvar": "muon_puppiIsoNoLep", "title": "new PUPPI - without lepton, R = 0.4(?)", 
-        "color": 1, "shape": 21}, # black, star
+    #{"name": "PUPPINEWWL", "plotvar": "muon_puppiIso",      "title": "new PUPPI - with lepton, R = 0.4(?)", 
+    #    "color": 3, "shape": 34}, # green, filled cross
+    #{"name": "PUPPINEWNL", "plotvar": "muon_puppiIsoNoLep", "title": "new PUPPI - without lepton, R = 0.4(?)", 
+    #    "color": 1, "shape": 21}, # black, star
     
     {"name": "PF", "plotvar": "muon_PFIsolation04",      "title": "PF Isolation, R = 0.4", 
         "color": 6, "shape": 25}, # pink,  unfilled square
@@ -203,20 +203,19 @@ id = sys.argv[ 3 ]
 
 strCutDef = ""
 
-strCutDefKin = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
-
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
 #strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
+strCutKin = "muon.Pt() > %(pT)s && 2.4 < abs(muon.Eta()) && abs(muon.Eta()) < 3.0"
 if id in arrListID: 
-    strCutDef = strCutDefKin + " && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = ( strCutKin + " && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s" )%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin + " && muon_is%(ID)s"%{"ID":id, "dPV": strDPV}
+        strCutDef = ( strCutKin + " && muon_is%(ID)s" )%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 else: 
-    strCutDef = strCutDefKin + " && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = ( strCutKin + " && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s" )%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin
+        strCutDef = strCutKin%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 strCutSig = strCutDef + " && muon_signal"
 strCutBkg = strCutDef
 
@@ -300,10 +299,11 @@ if strVtxCut == "withvtxcut":
 
 if id in arrListID:
     drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%(PU)s) and QCD events\n"
-        "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
+        #"p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
+        "p_{T} > %(pT)s GeV, 2.4 < |#eta| < 3.0, ME0 Muon%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
 else:
     drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%(PU)s) and QCD events\n"
-        "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
+        "p_{T} > %(pT)s GeV, 2.4 < |#eta| < 3.0%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
 
 leg.SetTextFont(61)
 leg.SetTextSize(0.04)

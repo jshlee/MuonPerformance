@@ -50,8 +50,6 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
     fBkgRejPrev = 1.0
     
     nPerf = 0.0
-    fSigEffChosen = 0.0
-    fBkgRejChosen = 0.0
     
     for i in range(binning[ 0 ] + 2): 
       # DO NOT confuse this : 0th bin has all underflows, while (binning[0] + 1)-th bin has all overflows
@@ -64,13 +62,9 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
       if "sigeff" in dicRef: 
           if fSigEffPrev <= dicRef[ "sigeff" ] and dicRef[ "sigeff" ] <= fSigEff: 
             nPerf = i
-            fSigEffChosen = fSigEff
-            fBkgRejChosen = fBkgRej
       elif "bkgrej" in dicRef: 
           if fBkgRej <= dicRef[ "bkgrej" ] and dicRef[ "bkgrej" ] <= fBkgRejPrev: 
             nPerf = i
-            fSigEffChosen = fSigEff
-            fBkgRejChosen = fBkgRej
       
       arrSigEff.append(fSigEff)
       arrBkgRej.append(fBkgRej)
@@ -85,8 +79,7 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
     graphROC.SetTitle(title)
     
     return {"graph": copy.deepcopy(graphROC), 
-        "performance": binning[1] + nPerf * ( binning[2] - binning[1] ) / binning[0], 
-        "sigeff": fSigEffChosen, "bkgrej": fBkgRejChosen}
+        "performance": binning[1] + nPerf * ( binning[2] - binning[1] ) / binning[0]}
 
 
 def drawSampleName(samplename):
@@ -203,20 +196,18 @@ id = sys.argv[ 3 ]
 
 strCutDef = ""
 
-strCutDefKin = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
-
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
 #strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 if id in arrListID: 
-    strCutDef = strCutDefKin + " && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin + " && muon_is%(ID)s"%{"ID":id, "dPV": strDPV}
+        strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && muon_is%(ID)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 else: 
-    strCutDef = strCutDefKin + " && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin
+        strCutDef = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 strCutSig = strCutDef + " && muon_signal"
 strCutBkg = strCutDef
 
@@ -261,7 +252,7 @@ for dicPlotvar in arrPlotvar:
     dicPlotvar[ "graph" ].SetMaximum(1.1)
     
     #print "%s; %s; %s; %s; %0.5f"%(id, strTypePU, sys.argv[ 2 ], dicPlotvar[ "title" ], dicRes[ "performance" ])
-    print "%s; %s; %s; %s%s; %0.3f; %0.3f"%(strVtxCut, strDataType, dicPlotvar[ "name" ], id, strTypePU, dicRes[ "performance" ], dicRes[ "bkgrej" ])
+    print "%s; %s; %s; %s%s; %0.3f"%(strVtxCut, strDataType, dicPlotvar[ "name" ], id, strTypePU, dicRes[ "performance" ])
     
     #dicNewRes = {}
     

@@ -1,6 +1,6 @@
 ###############################################################################
 ## 
-## 20170326 : upgraded for cleaned-up analyser
+## 20170403 : for ME0 muon; in high eta (2.4 ~ 3.0) region
 ## 
 ###############################################################################
 
@@ -46,7 +46,7 @@ dicVars = {
 
 dicIsoCutValAll = {}
 
-fIsoCutVal = open("isovaluecutlist.txt")
+fIsoCutVal = open("isovaluecutlist_ME0.txt")
 
 #for strLine:
 while True:
@@ -91,12 +91,12 @@ dicIsoFile = {
 }
 
 dicIsoTitle = {
-  "PF":         "%(ID)s Muon, cut by PF isolation", 
-  "PUPPIWL":    "%(ID)s Muon, cut by PUPPI isolation with lepton", 
-  "PUPPINL":    "%(ID)s Muon, cut by PUPPI isolation without lepton", 
-  "PUPPICB":    "%(ID)s Muon, cut by combined PUPPI isolation", 
-  "PUPPINEWWL": "%(ID)s Muon, cut by new PUPPI isolation with lepton", 
-  "PUPPINEWNL": "%(ID)s Muon, cut by new PUPPI isolation without lepton", 
+  "PF":         "ME0 Muon, cut by PF isolation", 
+  "PUPPIWL":    "ME0 Muon, cut by PUPPI isolation with lepton", 
+  "PUPPINL":    "ME0 Muon, cut by PUPPI isolation without lepton", 
+  "PUPPICB":    "ME0 Muon, cut by combined PUPPI isolation", 
+  "PUPPINEWWL": "ME0 Muon, cut by new PUPPI isolation with lepton", 
+  "PUPPINEWNL": "ME0 Muon, cut by new PUPPI isolation without lepton", 
 }
 
 arrLegend = [
@@ -114,7 +114,8 @@ arrX = [
 #for strRelRe in ["relval", "rereco"]: 
 for strIsVtxCut in ["novtxcut", "withvtxcut"]: 
   for strRelRe in ["rereco"]: 
-    for strID in ["Loose", "Tight", "LooseMod", "TightModNoIP"]: 
+    #for strID in ["Loose", "Tight", "LooseMod", "TightModNoIP"]: 
+    for strID in ["ME0Muon"]: 
       for strTree in ["gen", "reco"]: 
         #for strIsoType in ["PF", "PUPPIWL", "PUPPINL", "PUPPICB"]: 
         for strIsoType in ["PF", "PUPPIWL", "PUPPINL", "PUPPINEWWL", "PUPPINEWNL"]: 
@@ -153,7 +154,7 @@ for strIsVtxCut in ["novtxcut", "withvtxcut"]:
 
             dicInput = {
               #"cut": "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < 0.5", 
-              "cut": "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s", 
+              "cut": "muon.Pt() > %(pT)s && 2.4 < abs(muon.Eta()) && abs(muon.Eta()) < 3.0", 
               "plotvar": "muon_PFIsolation04", 
               "binning": [100,0,0.5], 
               
@@ -163,7 +164,7 @@ for strIsVtxCut in ["novtxcut", "withvtxcut"]:
                 "ID":  "Loose"
               }, 
               
-              "title": "Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} and QCD events, p_{T} > %(pT)s GeV, |#eta| < %(Eta)s", 
+              "title": "Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} and QCD events, p_{T} > %(pT)s GeV, 2.4 < |#eta| < 3.0", 
               "ytitle": strYAxis, 
               
               "filename": "PF04ALL_Tight.png", 
@@ -237,14 +238,14 @@ for strIsVtxCut in ["novtxcut", "withvtxcut"]:
             if strIsVtxCut == "withvtxcut" and strTree == "reco": 
               dicOutput[ "bkgdenominator" ] = {"name": "vertex reco vs sim", "min": -0.5, "max": 0.5}
             
-            strDir = "20170326/effbkgplots_" + strIsVtxCut + "/" + strRelRe + "/" + strID + "/" + strDest
+            strDir = "20170403/effbkgplots_" + strIsVtxCut + "/" + strRelRe + "/" + strID + "/" + strDest
             strFilename = dicX[ "prefix" ] + "_" + strIsoType
             
             dicOutput[ "filename" ] = "plots/" + strDir + "/" + strFilename + ".png"
             strJSONFile = strDir + "/" + strFilename + ".json"
             
-            for dicLegend in arrLegend: 
-              if dicLegend[ "tree" ] == strTree and dicLegend[ "var" ] == dicOutput[ "plotvar" ]: 
+            for dicLegend[ "tree" ] == strTree and dicLegend in arrLegend: 
+              if dicLegend[ "var" ] == dicOutput[ "plotvar" ]: 
                 dicNewLegend = {}
                 
                 dicNewLegend[ "left" ]   = dicLegend[ "legend" ][ 0 ]
