@@ -1,4 +1,4 @@
-\import math, array, ROOT, copy, CMS_lumi, tdrstyle
+import math, array, ROOT, copy, CMS_lumi, tdrstyle
 import PhysicsTools.PythonAnalysis.rootplot.core as rootplotcore
 tdrstyle.setTDRStyle()
 
