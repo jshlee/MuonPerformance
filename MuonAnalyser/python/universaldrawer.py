@@ -69,6 +69,7 @@
 ##     "effrate" : See "effrate" key (if it is not given but "effrate" key is there, it turns on)
 ##     "bkgrate" : See "bkgrate" key (if it is not given but "bkgrate" key is there, it turns on)
 ##     "accumulated" : drawing accumulated plot
+##     "divide" : similar to "effrate", but it is for more general case
 ## 
 ## "normoff" (V) : If this key is there, plots are normalized. Note that it is turned on default!
 ##   (not for "effrate")
@@ -79,14 +80,19 @@
 ## 
 ## "max" (V) : you can set the maximum of the plot.
 ## 
-## "effrate" (C) : This variable contains a cut condition of nominator 
+## "effrate" (C) : This variable contains an additional cut condition of nominator 
 ##   for efficiency (or fake) rate plot.
+##   (so, the cut condition of nominator is (cut condition in "cut") + "effrate".)
 ## 
 ## "bkgrate" (C) : This variable contains a cut condition of nominator 
 ##   for background rate plot, where the denominator is the total number of events
 ## 
 ## "bkgdenominator" (D) : It contains the information for how to set denominator; 
 ##   it contains the name of histogram and the range
+## 
+## "divide" (C) : This variable contains a cut condition of nominator 
+##   for background rate plot, where the denominator is the total number of events
+##   Unlike "effrate", it is quite independent of "cut".
 ## 
 ## "legend" (D) : you can customize the position and size of the legend.
 ##   It should be given as a dictionary with keys "left", "top", "right", "bottom".
@@ -123,6 +129,9 @@
 ## "extradrawopt" (V) : Extra option for drawing histogram.
 ##   For more information, see ROOT:TH1.
 ## 
+## "legendopt" (V) : Extra option for legend.
+##   For more information, see ROOT:TLegend.
+## 
 ## "size" (V) : the size of point in the histogram.
 ## 
 ########################################################################################
@@ -132,14 +141,18 @@ import ROOT, copy, os, sys, json
 import MuonPerformance.MuonAnalyser.CMS_lumi as CMS_lumi
 import MuonPerformance.MuonAnalyser.tdrstyle as tdrstyle
 from MuonPerformance.MuonAnalyser.histoHelper import *
+
+
 ROOT.gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
 
 def setMarkerStyle(h,color,style,size):
-    h.SetMarkerColor(color)
-    h.SetMarkerStyle(style)
-    h.SetMarkerSize(size)
+    if style != "": 
+        h.SetMarkerColor(color)
+        h.SetMarkerStyle(style)
+        h.SetMarkerSize(size)
+    
     h.SetLineColor(color)
     h.SetLineWidth(2)
 
@@ -223,15 +236,28 @@ def getBkg(filename,treename,title,binning,plotvar,numcut,denconf):
     return copy.deepcopy(h1)
 
 
-def drawSampleName(samplename, fX, fY):
-    #fX = 0.18
-    #fY = 0.85
-    fSizeTex = 0.038
+def getDivide(filename,treename,title,binning,plotvar,dencut,numcut):
+    h1 = makeTH1(filename,treename,title+"_den",binning,plotvar,dencut)
+    h2 = makeTH1(filename,treename,title+"_num",binning,plotvar,numcut)
     
+    hist = ROOT.TH1D("hist_" + title, title, binning[0], binning[1], binning[2])
+    
+    for i in range(binning[ 0 ] + 2): 
+        fValDen = h1.GetBinContent(i)
+        fValNum = h2.GetBinContent(i)
+        
+        if fValDen == 0.0: continue
+        
+        hist.SetBinContent(i, fValNum / fValDen)
+    
+    return copy.deepcopy(hist)
+
+
+def drawSampleName(samplename, fX, fY, fSizeTex):
     tex2 = ROOT.TLatex()
     
     tex2.SetNDC()
-    tex2.SetTextFont(42)
+    tex2.SetTextFont(62)
     tex2.SetTextSize(fSizeTex)
     
     for i, strLine in enumerate(samplename.split("\n")): 
@@ -258,8 +284,15 @@ def drawPlotFromDict(dicMainCmd):
         dicCutConfig = dicMainCmd[ "cutconfig" ]
         
         strHistTitle = dicMainCmd[ "title" ]
+        
         x_name = "Muon " + dicMainCmd[ "xtitle" ]
         y_name = "Muon " + dicMainCmd[ "ytitle" ]
+        
+        if "nomu_inxtitle" in dicMainCmd and dicMainCmd[ "nomu_inxtitle" ]: 
+            x_name = dicMainCmd[ "xtitle" ]
+        
+        if "nomu_inytitle" in dicMainCmd and dicMainCmd[ "nomu_inytitle" ]: 
+            y_name = dicMainCmd[ "ytitle" ]
         
         strFilename = dicMainCmd[ "filename" ]
         
@@ -267,6 +300,7 @@ def drawPlotFromDict(dicMainCmd):
 
     except KeyError, strErr:
         print "Error: the JSON file does not contain a required key: %s"%strErr
+        exit(1)
 
     # Variables which can have a defalut value
     strPlotvar = "" # It must be determined either in "general" or "vars"
@@ -281,6 +315,7 @@ def drawPlotFromDict(dicMainCmd):
     fMax = -1000000000
 
     strCutNum = ""
+    strCutByDiv = ""
 
     fLegLeft   = 0.50
     fLegTop    = 0.65
@@ -291,6 +326,7 @@ def drawPlotFromDict(dicMainCmd):
     
     fTitleX = 0.18
     fTitleY = 0.85
+    fTitleSize = 0.038
     
     bNormalOff = False
     
@@ -303,7 +339,7 @@ def drawPlotFromDict(dicMainCmd):
     
     if "plottype" in dicMainCmd: 
         listPossible = [
-            "normal", "effrate", "bkgrate", "accumulated"
+            "normal", "effrate", "bkgrate", "accumulated", "divide"
         ]
         
         if dicMainCmd[ "plottype" ] not in listPossible: 
@@ -335,9 +371,18 @@ def drawPlotFromDict(dicMainCmd):
         dicBkgDen = dicMainCmd[ "bkgdenominator" ]
         strPlotType = "bkgrate"
     
+    if "divide" in dicMainCmd: 
+        strCutByDiv = dicMainCmd[ "divide" ]
+        strPlotType = "divide"
+    
     if "titlepos" in dicMainCmd: 
-        fTitleX = dicMainCmd[ "titlepos" ][ 0 ]
-        fTitleY = dicMainCmd[ "titlepos" ][ 1 ]
+        if dicMainCmd[ "titlepos" ] is list: 
+            fTitleX = dicMainCmd[ "titlepos" ][ 0 ]
+            fTitleY = dicMainCmd[ "titlepos" ][ 1 ]
+        elif dicMainCmd[ "titlepos" ] is dict: 
+            if "x" in dicMainCmd[ "titlepos" ]: fTitleX = dicMainCmd[ "titlepos" ][ "x" ]
+            if "y" in dicMainCmd[ "titlepos" ]: fTitleY = dicMainCmd[ "titlepos" ][ "y" ]
+            if "size" in dicMainCmd[ "titlepos" ]: fTitleSize = dicMainCmd[ "titlepos" ][ "size" ]
 
     if "legend" in dicMainCmd: 
         try: 
@@ -384,6 +429,7 @@ def drawPlotFromDict(dicMainCmd):
         if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
         if "effrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "effrate" ]
         if "bkgrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "bkgrate" ]
+        if "divide"  in varHead: strCutByDiv =   varHead[ "divide" ]
         
         if strPlotType == "normal": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
@@ -411,11 +457,18 @@ def drawPlotFromDict(dicMainCmd):
             varHead[ "hist" ] = getH1_Accumulated(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
+        elif strPlotType == "divide": 
+            print "Num : %s\nDen : %s"%(strCutByDiv%dicCutConfig, strCut%dicCutConfig)
+            # Drawing efficiency / fake rate plot
+            varHead[ "hist" ] = getDivide(datadir + varHead[ "filename" ], strTree, 
+                varHead[ "title" ], binCurr, strPlotvar, 
+                strCut%dicCutConfig,       # cut for denominator
+                strCutByDiv%dicCutConfig)  # cut for nominator
         
         fSizeDot = 1.0
         if "size" in varHead: fSizeDot = varHead[ "size" ]
         
-        setMarkerStyle(varHead[ "hist" ], varHead[ "color" ], varHead[ "shape" ], fSizeDot)
+        setMarkerStyle(varHead[ "hist" ], varHead[ "color" ], "" if "shape" not in varHead else varHead[ "shape" ], fSizeDot)
         
         if nIsUseMin == 0 and fMin > varHead[ "hist" ].GetMinimum(): 
             fMin = varHead[ "hist" ].GetMinimum()
@@ -449,7 +502,7 @@ def drawPlotFromDict(dicMainCmd):
     if "Loose" in dicCutConfig[ "ID" ]: 
         dicCutConfig[ "ID" ] = "Loose"
     
-    drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY)
+    drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY, fTitleSize)
     
     dicCutConfig[ "ID" ] = strTmpID
 
@@ -461,9 +514,11 @@ def drawPlotFromDict(dicMainCmd):
     for varHead in arrVars: 
         strExtraOpt = ""
         if "extradrawopt" in varHead: strExtraOpt = varHead[ "extradrawopt" ]
-        
         varHead[ "hist" ].Draw(strExtraOpt + "same")
-        leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), "pl")
+        
+        strLegendOpt = "pl"
+        if "legendopt" in varHead: strLegendOpt = varHead[ "legendopt" ]
+        leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), strLegendOpt)
 
     leg.SetTextFont(61)
     leg.SetTextSize(fLegTextSize)
@@ -474,7 +529,7 @@ def drawPlotFromDict(dicMainCmd):
     iPos = 0
     iPeriod = 0
     if( iPos==0 ): CMS_lumi.relPosX = 0.12
-    CMS_lumi.extraText = "Simulation"
+    CMS_lumi.extraText = "Working Progress"
     CMS_lumi.lumi_sqrtS = "14 TeV"
     CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
 

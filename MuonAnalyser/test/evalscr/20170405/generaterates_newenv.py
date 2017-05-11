@@ -1,11 +1,11 @@
 ###############################################################################
 ## 
-## 20170321 : the beginning
+## 20170405 : more eta (0 ~ 2.8) region
 ## 
 ###############################################################################
 
 
-import sys, json
+import sys, os, json
 
 
 #strOTP = "OT_"
@@ -15,29 +15,29 @@ dicVars = {
   "rereco": {
     "gen": [
       {"title": "Phase II Signal PU0 - pre4", 
-        "filename": "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/ZMM_PU0_pre6/ZMM_PU0_pre6.root", 
+        "filename": "/xrootd/store/user/tt8888tt/muon/zmm.root", 
         "color": 4, 
         "shape": 20}, 
       {"title": "Phase II Signal PU140 - pre4", 
-        "filename": "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/ZMM_PU140_pre6/ZMM_PU140_pre6.root",
+        "filename": "/xrootd/store/user/tt8888tt/muon/zmm140.root",
         "color": 1, 
         "shape": 34}, 
       {"title": "Phase II Signal PU200 - pre4", 
-        "filename": "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/ZMM_PU200_pre6/ZMM_PU200_pre6.root",
+        "filename": "/xrootd/store/user/tt8888tt/muon/zmm200.root",
         "color": 2, 
         "shape": 21}, 
     ], 
     "reco": [
       {"title": "Phase II QCD PU0 - pre4", 
-        "filename": "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/QCD_PU0_pre6/QCD_PU0_pre6.root", 
+        "filename": "/xrootd/store/user/tt8888tt/muon/qcd.root", 
         "color": 4, 
         "shape": 20}, 
       {"title": "Phase II QCD PU140 - pre4", 
-        "filename": "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/QCD_PU140_pre6/QCD_PU140_pre6.root",
+        "filename": "/xrootd/store/user/tt8888tt/muon/qcd140.root",
         "color": 1, 
         "shape": 34}, 
       {"title": "Phase II QCD PU200 - pre4", 
-        "filename": "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/QCD_PU200_pre6/QCD_PU200_pre6.root",
+        "filename": "/xrootd/store/user/tt8888tt/muon/qcd200.root",
         "color": 2, 
         "shape": 21}
     ]
@@ -46,7 +46,7 @@ dicVars = {
 
 dicIsoCutValAll = {}
 
-fIsoCutVal = open("isovaluecutlist.txt")
+fIsoCutVal = open("isovaluecutlist_moreeta.txt")
 
 #for strLine:
 while True:
@@ -71,244 +71,6 @@ while True:
     dicIsoCutValAll[ strVtxCut ][ strDataType ][ strIsoType ] = {}
   
   dicIsoCutValAll[ strVtxCut ][ strDataType ][ strIsoType ][ strIDPU ] = strIsoVal
-
-dicIsoCutValNoVtx = {
-  "relval": {
-    "PF":      {
-      "LoosePU0": "0.316",
-      "LoosePU140": "0.772",
-      "LoosePU200": "1",
-      "LooseModPU0": "0.324",
-      "LooseModPU140": "1.08",
-      "LooseModPU200": "1.424",
-      "TightPU0": "0.16",
-      "TightPU140": "0.472",
-      "TightPU200": "0.64",
-      "TightModNoIPPU0": "0.164",
-      "TightModNoIPPU140": "0.78",
-      "TightModNoIPPU200": "1.044",
-    }, 
-    "PUPPIWL": {
-      "LoosePU0": "0.324",
-      "LoosePU140": "0.636",
-      "LoosePU200": "0.652",
-      "LooseModPU0": "0.332",
-      "LooseModPU140": "0.748",
-      "LooseModPU200": "0.752",
-      "TightPU0": "0.168",
-      "TightPU140": "0.432",
-      "TightPU200": "0.456",
-      "TightModNoIPPU0": "0.172",
-      "TightModNoIPPU140": "0.52",
-      "TightModNoIPPU200": "0.516",
-    }, 
-    "PUPPINL": {
-      "LoosePU0": "0.292",
-      "LoosePU140": "0.336",
-      "LoosePU200": "0.352",
-      "LooseModPU0": "0.3",
-      "LooseModPU140": "0.368",
-      "LooseModPU200": "0.372",
-      "TightPU0": "0.152",
-      "TightPU140": "0.188",
-      "TightPU200": "0.196",
-      "TightModNoIPPU0": "0.152",
-      "TightModNoIPPU140": "0.212",
-      "TightModNoIPPU200": "0.22",
-    },  
-    "PUPPICB": {
-      "LoosePU0": "0.308",
-      "LoosePU140": "0.448",
-      "LoosePU200": "0.464",
-      "LooseModPU0": "0.316",
-      "LooseModPU140": "0.516",
-      "LooseModPU200": "0.516",
-      "TightPU0": "0.16",
-      "TightPU140": "0.288",
-      "TightPU200": "0.304",
-      "TightModNoIPPU0": "0.164",
-      "TightModNoIPPU140": "0.34",
-      "TightModNoIPPU200": "0.344",
-    },  
-  }, 
-  "rereco": {
-    "PF":      {
-      "LoosePU0": "0.328",
-      "LoosePU140": "1.06",
-      "LoosePU200": "1.328",
-      "LooseModPU0": "0.324",
-      "LooseModPU140": "1.06",
-      "LooseModPU200": "1.328",
-      "TightPU0": "0.164",
-      "TightPU140": "0.732",
-      "TightPU200": "0.94",
-      "TightModNoIPPU0": "0.164",
-      "TightModNoIPPU140": "0.76",
-      "TightModNoIPPU200": "0.968",
-    }, 
-    "PUPPIWL": {
-      "LoosePU0": "0.332",
-      "LoosePU140": "0.752",
-      "LoosePU200": "0.756",
-      "LooseModPU0": "0.332",
-      "LooseModPU140": "0.752",
-      "LooseModPU200": "0.756",
-      "TightPU0": "0.172",
-      "TightPU140": "0.528",
-      "TightPU200": "0.548",
-      "TightModNoIPPU0": "0.172",
-      "TightModNoIPPU140": "0.524",
-      "TightModNoIPPU200": "0.52",
-    }, 
-    "PUPPINL": {
-      "LoosePU0": "0.3",
-      "LoosePU140": "0.376",
-      "LoosePU200": "0.384",
-      "LooseModPU0": "0.3",
-      "LooseModPU140": "0.376",
-      "LooseModPU200": "0.384",
-      "TightPU0": "0.152",
-      "TightPU140": "0.212",
-      "TightPU200": "0.22",
-      "TightModNoIPPU0": "0.152",
-      "TightModNoIPPU140": "0.216",
-      "TightModNoIPPU200": "0.228",
-    },  
-    "PUPPICB": {
-      "LoosePU0": "0.316",
-      "LoosePU140": "0.528",
-      "LoosePU200": "0.524",
-      "LooseModPU0": "0.312",
-      "LooseModPU140": "0.524",
-      "LooseModPU200": "0.524",
-      "TightPU0": "0.16",
-      "TightPU140": "0.344",
-      "TightPU200": "0.36",
-      "TightModNoIPPU0": "0.16",
-      "TightModNoIPPU140": "0.344",
-      "TightModNoIPPU200": "0.352",
-    }, 
-  }
-}
-
-dicIsoCutValWithVtx = {
-  "relval": {
-    "PF":      {
-      "LoosePU0": "0.316",
-      "LoosePU140": "0.74",
-      "LoosePU200": "0.968",
-      "LooseModPU0": "0.324",
-      "LooseModPU140": "1.032",
-      "LooseModPU200": "1.352",
-      "TightPU0": "0.16",
-      "TightPU140": "0.472",
-      "TightPU200": "0.64",
-      "TightModNoIPPU0": "0.164",
-      "TightModNoIPPU140": "0.756",
-      "TightModNoIPPU200": "1.012",
-    }, 
-    "PUPPIWL": {
-      "LoosePU0": "0.324",
-      "LoosePU140": "0.628",
-      "LoosePU200": "0.668",
-      "LooseModPU0": "0.332",
-      "LooseModPU140": "0.744",
-      "LooseModPU200": "0.764",
-      "TightPU0": "0.168",
-      "TightPU140": "0.432",
-      "TightPU200": "0.456",
-      "TightModNoIPPU0": "0.172",
-      "TightModNoIPPU140": "0.524",
-      "TightModNoIPPU200": "0.54",
-    }, 
-    "PUPPINL": {
-      "LoosePU0": "0.292",
-      "LoosePU140": "0.312",
-      "LoosePU200": "0.336",
-      "LooseModPU0": "0.3",
-      "LooseModPU140": "0.356",
-      "LooseModPU200": "0.36",
-      "TightPU0": "0.152",
-      "TightPU140": "0.188",
-      "TightPU200": "0.196",
-      "TightModNoIPPU0": "0.152",
-      "TightModNoIPPU140": "0.204",
-      "TightModNoIPPU200": "0.212",
-    },  
-    "PUPPICB": {
-      "LoosePU0": "0.308",
-      "LoosePU140": "0.432",
-      "LoosePU200": "0.468",
-      "LooseModPU0": "0.316",
-      "LooseModPU140": "0.508",
-      "LooseModPU200": "0.52",
-      "TightPU0": "0.16",
-      "TightPU140": "0.288",
-      "TightPU200": "0.304",
-      "TightModNoIPPU0": "0.164",
-      "TightModNoIPPU140": "0.34",
-      "TightModNoIPPU200": "0.352",
-    },  
-  }, 
-  "rereco": {
-    "PF":      {
-      "LoosePU0": "0.328",
-      "LoosePU140": "1.012",
-      "LoosePU200": "1.268",
-      "LooseModPU0": "0.324",
-      "LooseModPU140": "1.012",
-      "LooseModPU200": "1.268",
-      "TightPU0": "0.164",
-      "TightPU140": "0.732",
-      "TightPU200": "0.94",
-      "TightModNoIPPU0": "0.164",
-      "TightModNoIPPU140": "0.732",
-      "TightModNoIPPU200": "0.940",
-    }, 
-    "PUPPIWL": {
-      "LoosePU0": "0.332",
-      "LoosePU140": "0.748",
-      "LoosePU200": "0.772",
-      "LooseModPU0": "0.332",
-      "LooseModPU140": "0.748",
-      "LooseModPU200": "0.772",
-      "TightPU0": "0.172",
-      "TightPU140": "0.528",
-      "TightPU200": "0.548",
-      "TightModNoIPPU0": "0.172",
-      "TightModNoIPPU140": "0.524",
-      "TightModNoIPPU200": "0.548",
-    }, 
-    "PUPPINL": {
-      "LoosePU0": "0.3",
-      "LoosePU140": "0.36",
-      "LoosePU200": "0.372",
-      "LooseModPU0": "0.3",
-      "LooseModPU140": "0.36",
-      "LooseModPU200": "0.372",
-      "TightPU0": "0.152",
-      "TightPU140": "0.212",
-      "TightPU200": "0.22",
-      "TightModNoIPPU0": "0.152",
-      "TightModNoIPPU140": "0.212",
-      "TightModNoIPPU200": "0.22",
-    },  
-    "PUPPICB": {
-      "LoosePU0": "0.316",
-      "LoosePU140": "0.516",
-      "LoosePU200": "0.528",
-      "LooseModPU0": "0.312",
-      "LooseModPU140": "0.516",
-      "LooseModPU200": "0.528",
-      "TightPU0": "0.16",
-      "TightPU140": "0.344",
-      "TightPU200": "0.36",
-      "TightModNoIPPU0": "0.16",
-      "TightModNoIPPU140": "0.344",
-      "TightModNoIPPU200": "0.36",
-    }, 
-  }
-}
 
 dicIsoCutPre = {
   "PF":         "muon_PFIsolation04 < ", 
@@ -338,12 +100,12 @@ dicIsoTitle = {
 }
 
 arrLegend = [
-  {"var": "muon.Pt()",      "legend": [0.15, 0.63, 0.50, 0.78]}, 
-  {"var": "abs(muon.Eta())", "legend": [0.15, 0.20, 0.50, 0.40]}, 
+  {"tree": "gen",  "var": "muon.Pt()",       "legend": [0.15, 0.63, 0.50, 0.78]}, 
+  {"tree": "reco", "var": "abs(muon.Eta())", "legend": [0.15, 0.20, 0.50, 0.40]}, 
 ]
 
 arrX = [
-  {"var": "muon.Pt()", "bin": [20, 5, 105],  "axis": "p_{T} (GeV)", "prefix": "Pt"}, 
+  {"var": "muon.Pt()", "bin": [20, 5, 105],  "axis": "p_{T}", "prefix": "Pt"}, 
   {"var": "abs(muon.Eta())", "bin": [25, 0, 2.5],  "axis": "|#eta|", "prefix": "Eta"}, 
   {"var": "muon.Phi()", "bin": [32, 0, 3.2], "axis": "#phi",  "prefix": "Phi"}, 
   {"var": "nvertex", "bin": [60, 0, 240], "axis": "Numer of vertex", "prefix": "NV", "min": 0}, 
@@ -378,7 +140,7 @@ for strIsVtxCut in ["novtxcut", "withvtxcut"]:
               }
             else:
               fMin = 0.00
-              fMax = 0.05
+              fMax = 0.35
               
               strYAxis = "Background Rate"
               
@@ -397,7 +159,7 @@ for strIsVtxCut in ["novtxcut", "withvtxcut"]:
               
               "cutconfig": {
                 "pT":  "15", 
-                "Eta": "2.4", 
+                "Eta": "2.8", 
                 "ID":  "Loose"
               }, 
               
@@ -475,7 +237,7 @@ for strIsVtxCut in ["novtxcut", "withvtxcut"]:
             if strIsVtxCut == "withvtxcut" and strTree == "reco": 
               dicOutput[ "bkgdenominator" ] = {"name": "vertex reco vs sim", "min": -0.5, "max": 0.5}
             
-            strDir = "20170321/effbkgplots_" + strIsVtxCut + "/" + strRelRe + "/" + strID + "/" + strDest
+            strDir = "20170405/effbkgplots_" + strIsVtxCut + "/" + strRelRe + "/" + strID + "/" + strDest
             strFilename = dicX[ "prefix" ] + "_" + strIsoType
             
             dicOutput[ "filename" ] = "plots/" + strDir + "/" + strFilename + ".png"

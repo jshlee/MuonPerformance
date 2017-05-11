@@ -1,0 +1,11 @@
+Usage
+
+- All followings should be run at ($CMSSW_BASE)/src/MuonPerformance/MuonAnalyser/test
+
+- If you want to draw all roc curves, run 
+    bash evalscr/20170423/rocrun.sh
+
+- If you want to draw all plots of isolation value, run 
+    bash evalscr/20170423/isorun.sh
+
+

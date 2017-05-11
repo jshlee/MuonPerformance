@@ -16,8 +16,8 @@ def setMarkerStyle(h,color,style):
 
 def getRefSigEff(fileSig,treename,cutSig,cutIso):
     binning = [3000,0,30]
-    hSigDen = makeTH1(fileSig,treename,"RefSigEffDen",binning,"muon_PFIsolation04",cutSig)
-    hSigNum = makeTH1(fileSig,treename,"RefSigEffNum",binning,"muon_PFIsolation04",cutSig+" && "+cutIso)
+    hSigDen = makeTH1(fileSig,treename,"RefSigEffDen",binning,"recoMuon_PFIsolation04",cutSig)
+    hSigNum = makeTH1(fileSig,treename,"RefSigEffNum",binning,"recoMuon_PFIsolation04",cutSig+" && "+cutIso)
     
     fMSigDen = hSigDen.Integral(0, binning[ 0 ] + 1)
     fMSigNum = hSigNum.Integral(0, binning[ 0 ] + 1)
@@ -27,8 +27,8 @@ def getRefSigEff(fileSig,treename,cutSig,cutIso):
 
 def getRefBkgRej(fileBkg,treename,cutBkg,cutIso):
     binning = [3000,0,30]
-    hBkgDen = makeTH1(fileBkg,treename,"RefBkgRejDen",binning,"muon_PFIsolation04",cutBkg)
-    hBkgNum = makeTH1(fileBkg,treename,"RefBkgRejNum",binning,"muon_PFIsolation04",cutBkg+" && "+cutIso)
+    hBkgDen = makeTH1(fileBkg,treename,"RefBkgRejDen",binning,"recoMuon_PFIsolation04",cutBkg)
+    hBkgNum = makeTH1(fileBkg,treename,"RefBkgRejNum",binning,"recoMuon_PFIsolation04",cutBkg+" && "+cutIso)
     
     fMBkgDen = hBkgDen.Integral(0, binning[ 0 ] + 1)
     fMBkgNum = hBkgNum.Integral(0, binning[ 0 ] + 1)
@@ -109,18 +109,18 @@ datadir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/test/'
 binMain = [1500, 0, 6.0]
 
 arrPlotvar = [
-    {"name": "PUPPIWL", "plotvar": "muon_puppiIsoWithLep03",    "title": "PUPPI - with lepton, R = 0.3", 
+    {"name": "PUPPIWL", "plotvar": "recoMuon_puppiIsoWithLep03",    "title": "PUPPI - with lepton, R = 0.3", 
         "color": 4, "shape": 20}, # blue,  filled circle
-    {"name": "PUPPINL", "plotvar": "muon_puppiIsoWithoutLep03", "title": "PUPPI - without lepton, R = 0.3", 
+    {"name": "PUPPINL", "plotvar": "recoMuon_puppiIsoWithoutLep03", "title": "PUPPI - without lepton, R = 0.3", 
         "color": 2, "shape": 21}, # red,   filled square
-    #{"name": "PUPPICB", "plotvar": "muon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
-    #    "color": 3, "shape": 34}, # green, filled cross
-    {"name": "PUPPINEWWL", "plotvar": "muon_puppiIso",      "title": "new PUPPI - with lepton, R = 0.4(?)", 
+    {"name": "PUPPICB", "plotvar": "recoMuon_puppiIsoCombined",   "title": "PUPPI - combined (ratio : 0.5)", 
         "color": 3, "shape": 34}, # green, filled cross
-    {"name": "PUPPINEWNL", "plotvar": "muon_puppiIsoNoLep", "title": "new PUPPI - without lepton, R = 0.4(?)", 
-        "color": 1, "shape": 21}, # black, star
+    #{"name": "PUPPINEWWL", "plotvar": "muon_puppiIso",      "title": "new PUPPI - with lepton, R = 0.4(?)", 
+    #    "color": 3, "shape": 34}, # green, filled cross
+    #{"name": "PUPPINEWNL", "plotvar": "muon_puppiIsoNoLep", "title": "new PUPPI - without lepton, R = 0.4(?)", 
+    #    "color": 1, "shape": 21}, # black, star
     
-    {"name": "PF", "plotvar": "muon_PFIsolation04",      "title": "PF Isolation, R = 0.4", 
+    {"name": "PF", "plotvar": "recoMuon_PFIsolation04",      "title": "PF Isolation, R = 0.4", 
         "color": 6, "shape": 25}, # pink,  unfilled square
 ]
 
@@ -130,9 +130,9 @@ dicSampleType = {
     "PU200": {"title": "PU 200", "file_signal": "puppi_PU200.root"}, 
 }
 """
-#strPathSamp = "/cms/scratch/quark2930/Work/muon_upgrade/samples/"
+strPathSamp = "/cms/scratch/quark2930/Work/muon_upgrade/samples/"
 #strPathSamp = "/cms/scratch/gwheo/muonPerf_900_pre6/src/MuonPerformance/MuonAnalyser/test/"
-strPathSamp = "/xrootd/store/user/tt8888tt/muon/"
+#strPathSamp = "/xrootd/store/user/tt8888tt/muon/"
 # rereco
 """
 dicSampleType = {
@@ -193,7 +193,7 @@ strPUTitle = dicSampleType[ strTypePU ][ "title" ]
 strSampleSig = dicSampleType[ strTypePU ][ "file_sig" ]
 strSampleBkg = dicSampleType[ strTypePU ][ "file_bkg" ]
 
-strCutPT  = "15"
+strCutPT  = "-5"
 strCutEta = "2.4"
 
 strDPV = "0.5"
@@ -203,21 +203,19 @@ id = sys.argv[ 3 ]
 
 strCutDef = ""
 
-strCutDefKin = "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta}
-
 #strCutRecNor = "recoMuon.Pt() > 5 && recoMuon_isMuon"
 #strCutRecNor = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4"
 #strCutDef = "recoMuon.Pt() > 5 && abs(recoMuon.Eta()) < 2.4 && recoMuon_is%s"%id
 if id in arrListID: 
-    strCutDef = strCutDefKin + " && muon_is%(ID)s && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s && recoMuon_is%(ID)s && abs(recoMuon_poszPV0 - recoMuon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin + " && muon_is%(ID)s"%{"ID":id, "dPV": strDPV}
+        strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s && recoMuon_is%(ID)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
 else: 
-    strCutDef = strCutDefKin + " && abs(muon_poszPV0 - muon_poszSimPV) < %(dPV)s"%{"ID":id, "dPV": strDPV}
+    strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s && abs(recoMuon_poszPV0 - recoMuon_poszSimPV) < %(dPV)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
     if sys.argv[ 2 ] == "2" or sys.argv[ 2 ] == "4": 
-        strCutDef = strCutDefKin
-strCutSig = strCutDef + " && muon_signal"
+        strCutDef = "recoMuon.Pt() > %(pT)s && abs(recoMuon.Eta()) < %(Eta)s"%{"pT":strCutPT, "Eta": strCutEta, "ID":id, "dPV": strDPV}
+strCutSig = strCutDef + " && recoMuon_signal"
 strCutBkg = strCutDef
 
 
@@ -225,10 +223,10 @@ strCutIsoPF = ""
 fSigEff = 0.0
 
 if "Tight" in id: 
-    strCutIsoPF = "muon_PFIsolation04 < 0.15"
+    strCutIsoPF = "recoMuon_PFIsolation04 < 0.15"
     fSigEff = 0.95
 else: 
-    strCutIsoPF = "muon_PFIsolation04 < 0.25"
+    strCutIsoPF = "recoMuon_PFIsolation04 < 0.25"
     fSigEff = 0.98
 
 #fRefBkgRej = getRefBkgRej(strSampleBkg, "MuonAnalyser/reco", 
@@ -300,10 +298,10 @@ if strVtxCut == "withvtxcut":
 
 if id in arrListID:
     drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%(PU)s) and QCD events\n"
-        "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, %(ID)s Muon%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
+        "|#eta| < %(Eta)s, %(ID)s Muon%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
 else:
     drawSampleName(("Z/#gamma^{*}#rightarrow#font[12]{#mu#mu} (%(PU)s) and QCD events\n"
-        "p_{T} > %(pT)s GeV, |#eta| < %(Eta)s%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
+        "|#eta| < %(Eta)s%(VtxCut)s")%{"PU": strPUTitle, "pT": strCutPT, "Eta": strCutEta, "ID": id, "VtxCut": strAddTitleVtx})
 
 leg.SetTextFont(61)
 leg.SetTextSize(0.04)
