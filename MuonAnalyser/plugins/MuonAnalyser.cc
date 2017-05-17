@@ -171,7 +171,7 @@ private:
   int b_muon_no;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
-  bool b_muon_isME0Muon, b_muon_isME0MuonLoose,b_muon_isME0MuonTight, b_muon_isGEMMuon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
+  bool b_muon_isME0Muon, b_muon_isME0MuonLoose,b_muon_isME0MuonTight, b_muon_isGEMMuon, b_muon_isGE11Muon, b_muon_isGE21Muon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
   bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon, b_muon_isPFMuon;
   bool b_muon_isLooseMod;
   bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
@@ -183,6 +183,7 @@ private:
   int b_muon_ninnerhits; float b_muon_trackerlayers;
   float b_muon_poszPV0, b_muon_poszSimPV, b_muon_poszMuon;
 
+  float b_muon_ME0segX, b_muon_ME0chamX;
   float b_muon_ME0deltaX, b_muon_ME0deltaY, b_muon_ME0deltaDXDZ, b_muon_ME0deltaDYDZ, b_muon_ME0pullX, b_muon_ME0pullY, b_muon_ME0dPhi, b_muon_ME0dEta;
   int b_muon_ME0noRecHit;
   float b_muon_GE11deltaX, b_muon_GE11deltaY, b_muon_GE11deltaDXDZ, b_muon_GE11deltaDYDZ, b_muon_GE11pullX, b_muon_GE11pullY, b_muon_GE11dPhi, b_muon_GE11dEta;
@@ -509,11 +510,12 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
   b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isGEMMuon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
+  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isGEMMuon = 0; b_muon_isGE11Muon = 0; b_muon_isGE21Muon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
   b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
   b_muon_isLooseMod = 0;
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
 
+  b_muon_ME0segX = 0; b_muon_ME0chamX = 0;
   b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 0; b_muon_ME0deltaDXDZ = 0; b_muon_ME0deltaDYDZ = 0; b_muon_ME0noRecHit = 0; b_muon_ME0pullX = 0; b_muon_ME0pullY = 0; b_muon_ME0dPhi = -1; b_muon_ME0dEta = -1;
   b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 0; b_muon_GE11deltaDXDZ = 0; b_muon_GE11deltaDYDZ = 0; b_muon_GE11noRecHit = 0; b_muon_GE11pullX = 0; b_muon_GE11pullY = 0; b_muon_GE11dPhi = -1; b_muon_GE11dEta = -1;
   b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 0; b_muon_GE21deltaDXDZ = 0; b_muon_GE21deltaDYDZ = 0; b_muon_GE21noRecHit = 0; b_muon_GE21pullX = 0; b_muon_GE21pullY = 0; b_muon_GE21dPhi = -1; b_muon_GE21dEta = -1;
@@ -689,6 +691,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
       for (auto segment : chamber.me0Matches){
 	if (chamber.detector() == 5){
 	  auto me0Segment = (*segment.me0SegmentRef);
+      b_muon_ME0segX = segment.x;
+      b_muon_ME0chamX = chamber.x;
 	  me0SegX = abs( chamber.x - segment.x );	  
 	  if (me0SegX < abs(b_muon_ME0deltaX)){
 	    b_muon_ME0deltaX    = ( chamber.x - segment.x );
@@ -713,6 +717,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	if (chamber.detector() == 4){
 	  auto gemSegment = (*segment.gemSegmentRef);
 	  if (gemSegment.gemDetId().station() == 1){
+        b_muon_isGE11Muon = 1;
 	    ge11SegX = abs( chamber.x - segment.x );
 	    if (ge11SegX < abs(b_muon_GE11deltaX)){
 	      b_muon_GE11deltaX    = ( chamber.x - segment.x );
@@ -733,6 +738,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    }
 	  }
 	  if (gemSegment.gemDetId().station() == 2){
+        b_muon_isGE21Muon = 1;
 	    ge21SegX = abs( chamber.x - segment.x );	  
 	    if (ge21SegX < abs(b_muon_GE21deltaX)){
 	      b_muon_GE21deltaX    = ( chamber.x - segment.x );
@@ -1463,6 +1469,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isME0MuonLoose", &b_muon_isME0MuonLoose, "muon_isME0MuonLoose/O");
   tree->Branch("muon_isME0MuonTight", &b_muon_isME0MuonTight, "muon_isME0MuonTight/O");
   tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
+  tree->Branch("muon_isGE11Muon", &b_muon_isGE11Muon, "muon_isGE11Muon/O");
+  tree->Branch("muon_isGE21Muon", &b_muon_isGE21Muon, "muon_isGE21Muon/O");
   tree->Branch("muon_isRPCMuon", &b_muon_isRPCMuon, "muon_isRPCMuon/O");
   tree->Branch("muon_isCaloMuon", &b_muon_isCaloMuon, "muon_isCaloMuon/O");
 
@@ -1489,6 +1497,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
 
+  tree->Branch("muon_ME0segX", &b_muon_ME0segX, "muon_ME0segX/F");  
+  tree->Branch("muon_ME0chamX", &b_muon_ME0chamX, "muon_ME0chamX/F");  
   tree->Branch("muon_ME0deltaX", &b_muon_ME0deltaX, "muon_ME0deltaX/F");  
   tree->Branch("muon_ME0deltaY", &b_muon_ME0deltaY, "muon_ME0deltaY/F");  
   tree->Branch("muon_ME0pullX", &b_muon_ME0pullX, "muon_ME0pullX/F");  
