@@ -32,7 +32,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
       #'file:step3.root'
-      '/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/00A9B1AB-642E-E711-9759-0025905B85CA.root',
+      #'/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/00A9B1AB-642E-E711-9759-0025905B85CA.root',
       #'/store/relval/CMSSW_9_1_0_pre1/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v9_D4Timing-v1/00000/0C650B46-2719-E711-9B1C-0025905A60FE.root',  
       #'/store/relval/CMSSW_9_0_0_pre5/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v4_D4T-v1/00000/0E75D0DF-0501-E711-8018-0025905B85F6.root',  
       #'/store/relval/CMSSW_9_1_0_pre1/RelValZMM_13/GEN-SIM-RECO/PU25ns_90X_mcRun2_asymptotic_v5-v1/00000/40559096-AE10-E711-A8EE-0CC47A4C8ED8.root'
@@ -51,10 +51,10 @@ process.source = cms.Source("PoolSource",
 )
 
 #to run for entire sample
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_0_0_pre2/TenMu_'
-filelst = open(dir+"pu0.txt", "r")
+dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_1_0_pre3/'
+filelst = open(dir+"ZMM_PU0_910_pre3_relval.txt", "r")
 #filelst = open(dir+"pu200.txt", "r")
-#process.source.fileNames = filelst.readlines()
+process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
