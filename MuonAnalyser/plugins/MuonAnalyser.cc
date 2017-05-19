@@ -515,7 +515,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_isLooseMod = 0;
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
 
-  b_muon_ME0segX = 0; b_muon_ME0chamX = 0;
+  b_muon_ME0segX = 100; b_muon_ME0chamX = 100;
   b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 0; b_muon_ME0deltaDXDZ = 0; b_muon_ME0deltaDYDZ = 0; b_muon_ME0noRecHit = 0; b_muon_ME0pullX = 0; b_muon_ME0pullY = 0; b_muon_ME0dPhi = -1; b_muon_ME0dEta = -1;
   b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 0; b_muon_GE11deltaDXDZ = 0; b_muon_GE11deltaDYDZ = 0; b_muon_GE11noRecHit = 0; b_muon_GE11pullX = 0; b_muon_GE11pullY = 0; b_muon_GE11dPhi = -1; b_muon_GE11dEta = -1;
   b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 0; b_muon_GE21deltaDXDZ = 0; b_muon_GE21deltaDYDZ = 0; b_muon_GE21noRecHit = 0; b_muon_GE21pullX = 0; b_muon_GE21pullY = 0; b_muon_GE21dPhi = -1; b_muon_GE21dEta = -1;
