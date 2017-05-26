@@ -48,7 +48,7 @@ def draw(h_init, y_name, hlists, name, text):
     setMarkerStyle(hlists[0], 4, 20) #blue, circle
     setMarkerStyle(hlists[1], 1, 34) #black, cross
     setMarkerStyle(hlists[2], 2, 21) #red, square
-    setMarkerStyle(hlists[3], 3, 31) #green, patrol
+    #setMarkerStyle(hlists[3], 3, 31) #green, patrol
 
     #Set canvas
     #canv = makeCanvas(plotvar+name, False)
@@ -86,7 +86,9 @@ def draw(h_init, y_name, hlists, name, text):
 
 #datadir = './'
 datadir = '/xrootd/store/user/tt8888tt/muon/'
-filenames = ["zmm.root", "zmm140.root", "zmm200.root", "run2.root"]
+filenames = ["zmm.root", "zmm140.root", "zmm200.root"]
+#filenames = ["zmm.root", "zmm140.root", "zmm200.root", "run2.root"]
+#filenames = ["relval_"+x for x in filenames]
 
 muonid = sys.argv[1]
 binning_l = [[20,5,105],[24,0,2.4],[24,-2.4,2.4],[30,-3,3],[40,60,260],[20,0,10],[40,60,260]]
@@ -102,7 +104,7 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
     hl_eff.append(getEff(datadir+filenames[0], "MuonAnalyser/gen", "PhaseII 2023D4Timing PU 0, pre4",   binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
     hl_eff.append(getEff(datadir+filenames[1], "MuonAnalyser/gen", "PhaseII 2023D4Timing PU 140, pre4", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
     hl_eff.append(getEff(datadir+filenames[2], "MuonAnalyser/gen", "PhaseII 2023D4Timing PU 200, pre4", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
-    hl_eff.append(getEff(datadir+filenames[3], "MuonAnalyser/gen", "Run 2", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    #hl_eff.append(getEff(datadir+filenames[3], "MuonAnalyser/gen", "Run 2", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
 
     #Backgorund rate
     hl_bkg = []
@@ -110,22 +112,24 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
         hl_bkg.append(makeTH1(datadir+filenames[0], "MuonAnalyser/reco", "PhaseII 2023D4Timing PU 0, pre4",   binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
         hl_bkg.append(makeTH1(datadir+filenames[1], "MuonAnalyser/reco", "PhaseII 2023D4Timing PU 140, pre4", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
         hl_bkg.append(makeTH1(datadir+filenames[2], "MuonAnalyser/reco", "PhaseII 2023D4Timing PU 200, pre4", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
-        hl_bkg.append(makeTH1(datadir+filenames[3], "MuonAnalyser/reco", "Run 2", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
-        for i in range(len(hl_bkg)):
-            divByNevents(datadir+filenames[i], hl_bkg[i])
+        #hl_bkg.append(makeTH1(datadir+filenames[3], "MuonAnalyser/reco", "Run 2", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        for j in range(len(hl_bkg)):
+            divByNevents(datadir+filenames[j], hl_bkg[j])
 
     else:
         hl_bkg = []
         hl_bkg.append(getEff(datadir+filenames[0], "MuonAnalyser/reco", "PhaseII 2023D4Timing PU0, pre4",   binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
         hl_bkg.append(getEff(datadir+filenames[1], "MuonAnalyser/reco", "PhaseII 2023D4Timing PU140, pre4", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
         hl_bkg.append(getEff(datadir+filenames[2], "MuonAnalyser/reco", "PhaseII 2023D4Timing PU200, pre4", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
-        hl_bkg.append(getEff(datadir+filenames[3], "MuonAnalyser/reco", "Run2", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        #hl_bkg.append(getEff(datadir+filenames[3], "MuonAnalyser/reco", "Run2", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
     if "density" in plotvar: plotvar = plotvar.split('/')[0]
 
     #Set X axis name
     x_name = "Muon "
     if "Pt"  in plotvar: x_name = x_name+"p_{T}"
-    elif "Eta" in plotvar: x_name = x_name+"|#eta|"
+    elif "Eta" in plotvar:
+        x_name = x_name+"#eta"
+        if "abs" in plotvar: x_name = "|"+x_name+"|"
     elif "Phi" in plotvar: x_name = x_name+"#phi"
     elif "vertex" in plotvar : x_name = "Number of vertex"
     elif "density" in plotvar : x_name = "PU density (number of PU per mm)"
@@ -158,4 +162,6 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
         for j in range(binning_l[i][0]):
             x = hl_bkg[2].GetEfficiency(j)
             if maxY < x: maxY = x
+        h_init2.SetMaximum(maxY*2)
     draw(h_init2, "Average "+y_name+"Bkg Multiplicity", hl_bkg, "bkgrate", text)
+
