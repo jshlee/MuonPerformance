@@ -157,6 +157,7 @@ private:
   TH1D* h_vertex1DBS;
   TH1D* h_vertex4D;
   TH1D* h_vertex4DBS;
+  TH1D* h_gemStation;
   
   int b_nvertex;
 
@@ -307,7 +308,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   h_vertex1DBS = fs->make<TH1D>("vertex reco 1D with BS vs sim", "vertex reco 1D with BS vs sim", 100, -1, 1);
   h_vertex4D   = fs->make<TH1D>("vertex reco 4D vs sim", "vertex reco 4D vs sim", 100, -1, 1);
   h_vertex4DBS = fs->make<TH1D>("vertex reco 4D with BS vs sim", "vertex reco 4D with BS vs sim", 100, -1, 1);
-
+  h_gemStation = fs->make<TH1D>("gemstation", "gemstation", 20, -10, 10);
   genttree_ = fs->make<TTree>("gen", "gen");
   setBranches(genttree_);
   recottree_ = fs->make<TTree>("reco", "reco");
@@ -467,34 +468,34 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   int nNumCandCH = 0;
   
   for( std::vector<pat::PackedCandidate>::const_iterator cand = candidates_->begin();
-    cand != candidates_->end();
-    cand ++ )
-  {
-    if ( isCH(abs(cand -> pdgId())) && cand->puppiWeight() > 0.5 ) {
-      dZLV += cand->vz();
-      nNumCandCH++;
+       cand != candidates_->end();
+       cand ++ )
+    {
+      if ( isCH(abs(cand -> pdgId())) && cand->puppiWeight() > 0.5 ) {
+	dZLV += cand->vz();
+	nNumCandCH++;
+      }
     }
-  }
   
   dZLV /= nNumCandCH;
   
   for( std::vector<pat::PackedCandidate>::const_iterator cand = candidates_->begin();
-    cand != candidates_->end();
-    cand ++ )
-  {
-    long nIDAbs = abs(cand -> pdgId());
+       cand != candidates_->end();
+       cand ++ )
+    {
+      long nIDAbs = abs(cand -> pdgId());
     
-    if ( !( isNH(nIDAbs) || isPH(nIDAbs) ) ) {
-      continue;
+      if ( !( isNH(nIDAbs) || isPH(nIDAbs) ) ) {
+	continue;
+      }
+    
+      int nIsFromPV = ( isNH(nIDAbs) ? 0 : 2 );
+      float dVZ = cand->vz() - dZLV;
+    
+      nIsFromPV += ( -0.5 < dVZ && dVZ < 0.5 ? 1 : 0 );
+    
+      //printf("-PUPPIW%i %i %0.4f %0.7f\n", (int)nIDAbs, nIsFromPV, cand->puppiWeight(), dVZ);
     }
-    
-    int nIsFromPV = ( isNH(nIDAbs) ? 0 : 2 );
-    float dVZ = cand->vz() - dZLV;
-    
-    nIsFromPV += ( -0.5 < dVZ && dVZ < 0.5 ? 1 : 0 );
-    
-    //printf("-PUPPIW%i %i %0.4f %0.7f\n", (int)nIDAbs, nIsFromPV, cand->puppiWeight(), dVZ);
-  }
   // test end
 
 }
@@ -691,8 +692,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
       for (auto segment : chamber.me0Matches){
 	if (chamber.detector() == 5){
 	  auto me0Segment = (*segment.me0SegmentRef);
-      b_muon_ME0segX = segment.x;
-      b_muon_ME0chamX = chamber.x;
+	  b_muon_ME0segX = segment.x;
+	  b_muon_ME0chamX = chamber.x;
 	  me0SegX = abs( chamber.x - segment.x );	  
 	  if (me0SegX < abs(b_muon_ME0deltaX)){
 	    b_muon_ME0deltaX    = ( chamber.x - segment.x );
@@ -717,7 +718,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	if (chamber.detector() == 4){
 	  auto gemSegment = (*segment.gemSegmentRef);
 	  if (gemSegment.gemDetId().station() == 1){
-        b_muon_isGE11Muon = 1;
+	    b_muon_isGE11Muon = 1;
 	    ge11SegX = abs( chamber.x - segment.x );
 	    if (ge11SegX < abs(b_muon_GE11deltaX)){
 	      b_muon_GE11deltaX    = ( chamber.x - segment.x );
@@ -738,7 +739,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    }
 	  }
 	  if (gemSegment.gemDetId().station() == 2){
-        b_muon_isGE21Muon = 1;
+	    b_muon_isGE21Muon = 1;
 	    ge21SegX = abs( chamber.x - segment.x );	  
 	    if (ge21SegX < abs(b_muon_GE21deltaX)){
 	      b_muon_GE21deltaX    = ( chamber.x - segment.x );
@@ -768,6 +769,31 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     if (muonTrack){
       b_muon_numberOfValidMuonGEMHits = muonTrack->hitPattern().numberOfValidMuonGEMHits();
       b_muon_numberOfValidMuonME0Hits = muonTrack->hitPattern().numberOfValidMuonME0Hits();
+
+      if (isSignal){
+	for(auto i=muonTrack->recHitsBegin(); i!=muonTrack->recHitsEnd(); i++) {
+	  DetId hitId = (*i)->geographicalId();
+	  if (!(*i)->isValid() ) continue;
+	  if (hitId.det()!=DetId::Muon) continue;
+	
+	  if (hitId.subdetId() == MuonSubdetId::GEM){
+	  
+	    if ((*i)->recHits().size()){
+	      for (auto rh : (*i)->recHits()){
+		GEMDetId gemRHId(rh->geographicalId());
+		h_gemStation->Fill( gemRHId.region()*(gemRHId.station()*3 + gemRHId.layer()));
+	      }
+	    }
+	    else {
+	      GEMDetId gemRHId(hitId);
+	      h_gemStation->Fill( gemRHId.region()*(gemRHId.station()*3 + gemRHId.layer()));
+	    
+	    }
+	  }
+	}
+	//      cout << "(*i)->size()="<< (*i)->recHits().size()<< " det="<< hitId.det() << " subdet=" << hitId.subdetId() <<endl;
+      }
+      
     }
 
     std::vector<double> tmvaValues = collectTMVAvalues(*mu, pv0);
@@ -845,7 +871,7 @@ bool MuonAnalyser::isTightMuonCustom(const reco::Muon& muon, reco::Vertex vtx) c
     muon.innerTrack()->hitPattern().numberOfValidPixelHits() > 0; 
   
   bool ip = fabs(muon.muonBestTrack()->dxy(vtx.position())) < 0.2;
-          //&& fabs(muon.muonBestTrack()->dz(vtx.position())) < 0.5;
+  //&& fabs(muon.muonBestTrack()->dz(vtx.position())) < 0.5;
   
   return muID && hits && ip;
 }
@@ -958,94 +984,94 @@ MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vec
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   // loop ever all the candidates, and accumulate PT deposit around the lepton.
   for( std::vector<pat::PackedCandidate>::const_iterator cand = pcs -> begin();
-     cand != pcs->end();
-     cand ++ )
-  {
-    // calc DR
-    nNumCands++;
+       cand != pcs->end();
+       cand ++ )
+    {
+      // calc DR
+      nNumCands++;
 
-    double d_eta = abs( cand->eta() - mu->eta() ) ;
-    double d_phi = abs( cand->phi() - mu->phi() ) ; 
-    d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
-    double dR2 = d_eta * d_eta  + d_phi * d_phi ;
+      double d_eta = abs( cand->eta() - mu->eta() ) ;
+      double d_phi = abs( cand->phi() - mu->phi() ) ; 
+      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+      double dR2 = d_eta * d_eta  + d_phi * d_phi ;
   
-    if( dR2 > dR2_threshold05 ) {
-      nNumCandsOutR05++;
-      continue ;
-    }
-  
-    nNumCandsInR05++;
-  
-    long nIDAbs = abs(cand -> pdgId());
-
-    // check particleTyple (CH/NH/PH or other). remove 'other'.
-    const particleType pType =
-      isCH( nIDAbs ) ? CH :
-      isNH( nIDAbs ) ? NH :
-      isPH( nIDAbs ) ? PH : OTHER ;
-  
-    if( pType == OTHER ) {
-      if( cand -> pdgId() != 1 && cand -> pdgId() != 2 // d quark and u quark
-        && nIDAbs != 11  // electron
-        && nIDAbs != 13) // muon
-      {
-        std::cout <<"candidate with PDGID = " << cand -> pdgId() << " is not CH/NH/PH/e/mu or 1/2 "
-        "(and this is removed from isolation calculation)"  << std::endl ; 
+      if( dR2 > dR2_threshold05 ) {
+	nNumCandsOutR05++;
+	continue ;
       }
-        
-      nNumCandsInR05OT++;
-        
-      continue ;
-    }
   
-    if( pType == CH ) {nNumCandsInR05CH++; }
-    if( pType == NH ) nNumCandsInR05NH++;
-    if( pType == PH ) nNumCandsInR05PH++;
+      nNumCandsInR05++;
   
-    // Check particleType dependent DR cut (remove overlapped candiadte)
-    // The threshold values were taken from 'MuonPFIsolationSequence_cff.py'.
-    if( pType == CH && dR2 < 0.0001*0.0001 ) {
-      continue ;
-    } else {
-      nNumCandsInR05CHApp++;
-    }
-  
-    if( pType == NH && dR2 < 0.01  *0.01   ) {
-      continue ;
-    } else {
-      nNumCandsInR05NHApp++;
-    }
-  
-    if( pType == PH && dR2 < 0.01  *0.01   ) {
-      continue ;
-    } else {
-      nNumCandsInR05PHApp++;
-    }
+      long nIDAbs = abs(cand -> pdgId());
 
-    // The candidate passed all the selection.
-    // Now, add its PT to the variable with weight.
-    
-    double dMomentum = cand->pt();
-    
-    if ( nIsUsingP != 0 ) {
-      dMomentum = cand->p();
-    }
+      // check particleTyple (CH/NH/PH or other). remove 'other'.
+      const particleType pType =
+	isCH( nIDAbs ) ? CH :
+	isNH( nIDAbs ) ? NH :
+	isPH( nIDAbs ) ? PH : OTHER ;
+  
+      if( pType == OTHER ) {
+	if( cand -> pdgId() != 1 && cand -> pdgId() != 2 // d quark and u quark
+	    && nIDAbs != 11  // electron
+	    && nIDAbs != 13) // muon
+	  {
+	    std::cout <<"candidate with PDGID = " << cand -> pdgId() << " is not CH/NH/PH/e/mu or 1/2 "
+	      "(and this is removed from isolation calculation)"  << std::endl ; 
+	  }
+        
+	nNumCandsInR05OT++;
+        
+	continue ;
+      }
+  
+      if( pType == CH ) {nNumCandsInR05CH++; }
+      if( pType == NH ) nNumCandsInR05NH++;
+      if( pType == PH ) nNumCandsInR05PH++;
+  
+      // Check particleType dependent DR cut (remove overlapped candiadte)
+      // The threshold values were taken from 'MuonPFIsolationSequence_cff.py'.
+      if( pType == CH && dR2 < 0.0001*0.0001 ) {
+	continue ;
+      } else {
+	nNumCandsInR05CHApp++;
+      }
+  
+      if( pType == NH && dR2 < 0.01  *0.01   ) {
+	continue ;
+      } else {
+	nNumCandsInR05NHApp++;
+      }
+  
+      if( pType == PH && dR2 < 0.01  *0.01   ) {
+	continue ;
+      } else {
+	nNumCandsInR05PHApp++;
+      }
 
-    val_PuppiWithLep05   [ pType ] += dMomentum * cand -> puppiWeight() ;
-    val_PuppiWithoutLep05[ pType ] += dMomentum * cand -> puppiWeightNoLep();
+      // The candidate passed all the selection.
+      // Now, add its PT to the variable with weight.
     
-    if ( dR2 <= dR2_threshold04 ) {
-      val_PuppiWithLep04   [ pType ] += dMomentum * cand -> puppiWeight() ;
-      val_PuppiWithoutLep04[ pType ] += dMomentum * cand -> puppiWeightNoLep();
+      double dMomentum = cand->pt();
+    
+      if ( nIsUsingP != 0 ) {
+	dMomentum = cand->p();
+      }
+
+      val_PuppiWithLep05   [ pType ] += dMomentum * cand -> puppiWeight() ;
+      val_PuppiWithoutLep05[ pType ] += dMomentum * cand -> puppiWeightNoLep();
+    
+      if ( dR2 <= dR2_threshold04 ) {
+	val_PuppiWithLep04   [ pType ] += dMomentum * cand -> puppiWeight() ;
+	val_PuppiWithoutLep04[ pType ] += dMomentum * cand -> puppiWeightNoLep();
       
-      if ( dR2 <= dR2_threshold03 ) {
-        val_PuppiWithLep03   [ pType ] += dMomentum * cand -> puppiWeight() ;
-        val_PuppiWithoutLep03[ pType ] += dMomentum * cand -> puppiWeightNoLep();
+	if ( dR2 <= dR2_threshold03 ) {
+	  val_PuppiWithLep03   [ pType ] += dMomentum * cand -> puppiWeight() ;
+	  val_PuppiWithoutLep03[ pType ] += dMomentum * cand -> puppiWeightNoLep();
+	}
       }
-    }
 
  
-  }// end of candidate LOOP.
+    }// end of candidate LOOP.
   
   double dMomentumMu = mu->pt();
   
