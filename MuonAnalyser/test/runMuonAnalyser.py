@@ -31,7 +31,8 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-    'root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/PU25ns_91X_upgrade2023_realistic_v1_D17PU200-v1/10000/FE09E48B-F03F-E711-BDA2-0025905B8596.root'
+        #'file:/cms/home/jlee/scratch/test/gemSeeding/src/24811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D13_GenSimHLBeamSpotFull+DigiFullTrigger_2023D13+RecoFullGlobal_2023D13+HARVESTFullGlobal_2023D13/step3.root'
+        'file:/cms/home/jlee/scratch/test/baseline/src/26211.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D14_GenSimHLBeamSpotFull+DigiFull_2023D14+RecoFullGlobal_2023D14+HARVESTFullGlobal_2023D14/step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
