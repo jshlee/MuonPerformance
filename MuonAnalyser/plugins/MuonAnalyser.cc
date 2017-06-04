@@ -221,8 +221,7 @@ private:
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
   float b_muon_tmva_bdt, b_muon_tmva_mlp;
-  
-  float b_tmva_bdt; float b_tmva_mlp;
+
   ReadBDT* bdt_;
   ReadMLP* mlp_;
 
@@ -313,7 +312,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_ = fs->make<TTree>("reco", "reco");
   setBranches(recottree_);
 
-  string dummy[] = { "recoMuon_isGlobalMuon", "recoMuon_isPFMuon", "recoMuon_normalizedChi2", "recoMuon_chi2LocalPosition", "recoMuon_trkKink", "recoMuon_segmentCompatibility", "recoMuon_numberOfMatchedStations", "recoMuon_numberOfValidMuonHits", "recoMuon_pv0pos_dxy", "recoMuon_pv0pos_dz", "recoMuon_numberOfValidPixelHits", "recoMuon_trackerLayersWithMeasurement" };
+  string dummy[] = { "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfValidMuonHits", "muon_numberOfMatchedStations", "muon_pv0pos_dxy", "muon_pv0pos_dz", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement" };
   vector< string > dummy_label;
   dummy_label.assign(dummy, dummy+12);
   bdt_ = new ReadBDT(dummy_label);
@@ -555,7 +554,6 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
 
   b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0;
-  b_tmva_bdt = 0;  b_tmva_mlp = 0;
 
   const Muon* mu = muref.get();
   if (mu){
@@ -780,8 +778,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_chi2pos = tmvaValues[3];
     b_muon_trkKink = tmvaValues[4];
     b_muon_segcompati = tmvaValues[5];
-    b_muon_nstations = tmvaValues[6];
     b_muon_nglobalhits = tmvaValues[7];
+    b_muon_nstations = tmvaValues[6];
     b_muon_trackdxy = tmvaValues[8];
     b_muon_trackdz = tmvaValues[9];
     b_muon_ninnerhits = tmvaValues[10];
