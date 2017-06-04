@@ -143,6 +143,7 @@ public:
   bool isCH( long pdgid ) const;
   bool isPH( long pdgid ) const;
 
+  bool isME0MuonSelNew(const ME0Geometry* me0Geo_, const reco::Muon *mu, double dEtaCut, double dPhiCut, double dPhiBendCut);
   void setBranches(TTree *tree);
   void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId);
   
@@ -172,7 +173,8 @@ private:
   int b_muon_no;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
-  bool b_muon_isME0Muon, b_muon_isME0MuonLoose,b_muon_isME0MuonTight, b_muon_isGEMMuon, b_muon_isGE11Muon, b_muon_isGE21Muon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
+  bool b_muon_isME0Muon, b_muon_isME0MuonLoose, b_muon_isME0MuonTight, b_muon_isME0MuonSelNew;
+  bool b_muon_isGEMMuon, b_muon_isGE11Muon, b_muon_isGE21Muon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
   bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon, b_muon_isPFMuon;
   bool b_muon_isLooseMod;
   bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
@@ -332,7 +334,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   edm::ESHandle<ME0Geometry> me0g;
   iSetup.get<MuonGeometryRecord>().get(me0g);
   me0Geo_ = &*me0g;
-  
+
   Handle<VertexCollection> vertices;
   Handle<VertexCollection> vertices1D, vertices1DBS, vertices4D, vertices4DBS, verticesBS;
   
@@ -510,7 +512,8 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
   b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isGEMMuon = 0; b_muon_isGE11Muon = 0; b_muon_isGE21Muon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
+  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isME0MuonSelNew = 0;
+  b_muon_isGEMMuon = 0; b_muon_isGE11Muon = 0; b_muon_isGE21Muon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
   b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
   b_muon_isLooseMod = 0;
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
@@ -654,9 +657,15 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isTight = muon::isTightMuon(*mu, pv0);
     b_muon_isMedium = muon::isMediumMuon(*mu);
     b_muon_isLoose = muon::isLooseMuon(*mu);
+
     b_muon_isME0Muon = mu->isME0Muon();
     b_muon_isME0MuonLoose = isME0MuonLoose(mu);
     b_muon_isME0MuonTight = isME0MuonTight(mu);
+    double dEtaCut_ = 0.06;
+    double dPhiCut_ = std::min(std::max(1.2/mu->p(),1.2/100),0.05);
+    double dPhiBendCut_ = std::min(std::max(0.2/mu->p(),0.2/100),0.0065);
+    b_muon_isME0MuonSelNew = isME0MuonSelNew(me0Geo_, mu, dEtaCut_, dPhiCut_, dPhiBendCut_);
+    
     b_muon_isGEMMuon = mu->isGEMMuon();
     b_muon_isRPCMuon = mu->isRPCMuon();
     b_muon_isCaloMuon = mu->isCaloMuon();
@@ -1147,6 +1156,7 @@ bool MuonAnalyser::isNH( long pdgidAbs ) const{
   if( pdgidAbs == 2112 ) return true ; // Neutron
   return false;
 }
+
 bool MuonAnalyser::isCH( long pdgidAbs ) const{
   //  pdgId = cms.vint32(211,-211,321,-321,999211,2212,-2212),
   if( pdgidAbs == 211    ) return true ; // Pion+
@@ -1155,10 +1165,58 @@ bool MuonAnalyser::isCH( long pdgidAbs ) const{
   if( pdgidAbs == 2212   ) return true ; // Proton
   return false;
 }
+
 bool MuonAnalyser::isPH( long pdgidAbs ) const{
   if( pdgidAbs == 22 ) return true ; // Photon
   return false;
 }
+
+bool MuonAnalyser::isME0MuonSelNew(const ME0Geometry* me0Geo_, const reco::Muon *muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
+{
+  bool result = false;
+  bool isME0 = muon->isME0Muon();
+  
+  if(isME0){
+    double deltaEta = 999;
+    double deltaPhi = 999;
+    double deltaPhiBend = 999;
+
+    const std::vector<reco::MuonChamberMatch>& chambers = muon->matches();
+    for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+        
+      if (chamber->detector() == 5){
+      
+        for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+        
+          LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
+          LocalPoint seg_loc_coord(segment->x, segment->y, 0);
+          LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
+          
+          const ME0Chamber * me0chamber = me0Geo_->chamber(chamber->id);
+          
+          GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
+          GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
+          
+          double segDPhi = segment->me0SegmentRef->deltaPhi();
+          double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
+          
+          deltaEta = fabs(trk_glb_coord.eta() - seg_glb_coord.eta() );
+          deltaPhi = fabs(trk_glb_coord.phi() - seg_glb_coord.phi() );
+          deltaPhiBend = fabs(segDPhi - trackDPhi);
+          
+          if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+            
+        }
+      }
+    }
+      
+  }
+  
+  return result;
+  
+}
+
+
 bool MuonAnalyser::isME0MuonLoose( const reco::Muon *mu ) {
   float me0SegX = 100;
   for (auto chamber : mu->matches()){
@@ -1492,6 +1550,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
   tree->Branch("muon_isME0MuonLoose", &b_muon_isME0MuonLoose, "muon_isME0MuonLoose/O");
   tree->Branch("muon_isME0MuonTight", &b_muon_isME0MuonTight, "muon_isME0MuonTight/O");
+  tree->Branch("muon_isME0MuonSelNew", &b_muon_isME0MuonSelNew, "muon_isME0MuonSelNew/O");
   tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
   tree->Branch("muon_isGE11Muon", &b_muon_isGE11Muon, "muon_isGE11Muon/O");
   tree->Branch("muon_isGE21Muon", &b_muon_isGE21Muon, "muon_isGE21Muon/O");
