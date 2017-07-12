@@ -41,15 +41,15 @@ def drawSampleName(samplename):
 def divByNevents(filedir, hist):
     tfile = ROOT.TFile(filedir)
     nevents = tfile.Get("MuonAnalyser/nevents").Integral()
-    print filedir
     hist.Scale(1/nevents)
 
 def draw(h_init, y_name, hlists, name, text):
     #Plot style
-    setMarkerStyle(hlists[0], 4, 20) #blue, circle
-    setMarkerStyle(hlists[1], 1, 34) #black, cross
-    setMarkerStyle(hlists[2], 2, 21) #red, square
-    #setMarkerStyle(hlists[3], 3, 31) #green, patrol
+    setMarkerStyle(hlists[0], 1, 20) #black, circle
+    setMarkerStyle(hlists[1], 4, 34) #blue, cross
+    setMarkerStyle(hlists[2], 6, 21) #pink, square
+    setMarkerStyle(hlists[3], 3, 31) #green, patrol
+    setMarkerStyle(hlists[4], 2, 26) #red, triangle
 
     #Set canvas
     #canv = makeCanvas(plotvar+name, False)
@@ -61,7 +61,7 @@ def draw(h_init, y_name, hlists, name, text):
     drawSampleName(text)
 
     #Legend and drawing
-    leg = ROOT.TLegend(0.25,0.72,0.45,0.86)
+    leg = ROOT.TLegend(0.2,0.65,0.4,0.85)
     for h in hlists:
         h.Draw("e1same")
         leg.AddEntry(h,h.GetTitle(),"p")
@@ -82,58 +82,49 @@ def draw(h_init, y_name, hlists, name, text):
 
     canv.Modified()
     canv.Update()
-    canv.SaveAs("%s_tmvaLoose_%s.png"%(plotvar,name))
+    canv.SaveAs("%s_%s_%s_comp.png"%(plotvar,muonid,name))
 
 
 datadir = '/xrootd/store/user/tt8888tt/muon/9_1_1/'
-filenames = ["zmm.root", "zmm140.root", "zmm200.root"]
-#filenames = ["zmm.root", "zmm140.root", "zmm200.root", "run2.root"]
+#filenames = ["zmm140.root", "ma140.root", "mame0140.root", "mame0irpc140.root", "mame0ge21irpc140.root"]
+filenames = ["zmm200.root", "ma200.root", "mame0200.root", "mame0irpc200.root", "mame0ge21irpc200.root"]
 #filenames = ["relval_"+x for x in filenames]
 
-idname = sys.argv[1]
-muonid = "is"+idname
-
-#tmva
-if "Tight" in idname: muonid = "tmva_bdt>-0.11"
-if "Loose" in idname: muonid = "tmva_bdt>-0.167"
-else: print "ID name has to be Tight or Loose.'
-
-binning_l = [[20,5,105],[24,0,2.4],[24,-2.4,2.4],[30,-3,3],[40,60,260],[20,0,10],[40,60,260]]
+muonid = sys.argv[1]
+binning_l = [[10,5,105],[12,0,2.4],[12,-2.4,2.4],[15,-3,3],[20,60,260],[10,0,10],[20,60,260]]
 rangecut = "muon.Pt()>5&&abs(muon.Eta())<2.4"
     
 #Set extra text
 samplename = "Z/#gamma^{*}#rightarrow#font[12]{#mu#mu}"
-text = samplename+", p_{T} > 5 GeV, |#eta| < 2.4"
+text = samplename+", p_{T} > 5 GeV, |#eta| < 2.4, PU 200"
 
 for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon.Phi()", "nvertex", "pu_density/2", "pu_numInteractions"]):
     #Efficiency
     hl_eff = []
-    hl_eff.append(getEff(datadir+filenames[0], "MuonAnalyser/gen", "PhaseII PU 0",   binning_l[i], plotvar, rangecut, "%s&&muon_%s"%(rangecut,muonid)))
-    hl_eff.append(getEff(datadir+filenames[1], "MuonAnalyser/gen", "PhaseII PU 140", binning_l[i], plotvar, rangecut, "%s&&muon_%s"%(rangecut,muonid)))
-    hl_eff.append(getEff(datadir+filenames[2], "MuonAnalyser/gen", "PhaseII PU 200", binning_l[i], plotvar, rangecut, "%s&&muon_%s"%(rangecut,muonid)))
-    #hl_eff.append(getEff(datadir+filenames[3], "MuonAnalyser/gen", "Run 2", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[0], "MuonAnalyser/gen", "PhaseII",   binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[1], "MuonAnalyser/gen", "PhaseII Muon system aging", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[2], "MuonAnalyser/gen", "PhaseII Muon system aging + ME0 masked", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[3], "MuonAnalyser/gen", "PhaseII Muon system aging + ME0, iRPC masked", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
+    hl_eff.append(getEff(datadir+filenames[4], "MuonAnalyser/gen", "PhaseII Muon system aging + ME0, iRPC, GE2/1 masked", binning_l[i], plotvar, rangecut, "%s&&muon_is%s"%(rangecut,muonid)))
 
     #Backgorund rate
     hl_bkg = []
     if "()" in plotvar:
-        hl_bkg.append(makeTH1(datadir+filenames[0], "MuonAnalyser/reco", "PhaseII PU 0",   binning_l[i], plotvar, "%s&&!muon_signal&&muon_%s"%(rangecut,muonid)))
-        hl_bkg.append(makeTH1(datadir+filenames[1], "MuonAnalyser/reco", "PhaseII PU 140", binning_l[i], plotvar, "%s&&!muon_signal&&muon_%s"%(rangecut,muonid)))
-        hl_bkg.append(makeTH1(datadir+filenames[2], "MuonAnalyser/reco", "PhaseII PU 200", binning_l[i], plotvar, "%s&&!muon_signal&&muon_%s"%(rangecut,muonid)))
-        #hl_bkg.append(makeTH1(datadir+filenames[3], "MuonAnalyser/reco", "Run 2", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(makeTH1(datadir+filenames[0], "MuonAnalyser/reco", "PhaseII",   binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(makeTH1(datadir+filenames[1], "MuonAnalyser/reco", "PhaseII Muon system aging", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(makeTH1(datadir+filenames[2], "MuonAnalyser/reco", "PhaseII Muon system aging + ME0 masked", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(makeTH1(datadir+filenames[3], "MuonAnalyser/reco", "PhaseII Muon system aging + ME0, iRPC masked", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(makeTH1(datadir+filenames[4], "MuonAnalyser/reco", "PhaseII Muon system aging + ME0, iRPC, GE2/1 masked", binning_l[i], plotvar, "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
         for j in range(len(hl_bkg)):
             divByNevents(datadir+filenames[j], hl_bkg[j])
-            avg = 0
-            for k in range(1,binning_l[i][0]+1):
-                avg += hl_bkg[j].GetBinContent(k)
-            avg = avg/float(binning_l[i][0])
-            print plotvar, avg
 
     else:
         hl_bkg = []
-        hl_bkg.append(getEff(datadir+filenames[0], "MuonAnalyser/reco", "PhaseII PU0",   binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_%s"%(rangecut,muonid)))
-        hl_bkg.append(getEff(datadir+filenames[1], "MuonAnalyser/reco", "PhaseII PU140", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_%s"%(rangecut,muonid)))
-        hl_bkg.append(getEff(datadir+filenames[2], "MuonAnalyser/reco", "PhaseII PU200", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_%s"%(rangecut,muonid)))
-        #hl_bkg.append(getEff(datadir+filenames[3], "MuonAnalyser/reco", "Run2", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(getEff(datadir+filenames[0], "MuonAnalyser/reco", "PhaseII",   binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(getEff(datadir+filenames[1], "MuonAnalyser/reco", "PhaseII Muon system aging", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(getEff(datadir+filenames[2], "MuonAnalyser/reco", "PhaseII Muon system aging + ME0 masked", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(getEff(datadir+filenames[3], "MuonAnalyser/reco", "PhaseII Muon system aging + ME0, iRPC masked", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
+        hl_bkg.append(getEff(datadir+filenames[4], "MuonAnalyser/reco", "PhaseII Muon system aging + ME0, iRPC, GE2/1 masked", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_is%s"%(rangecut,muonid)))
     if "density" in plotvar: plotvar = plotvar.split('/')[0]
 
     #Set X axis name
@@ -161,11 +152,11 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
     h_init2 = h_init.Clone()
 
     #Set Y axis name
-    y_name = idname+" Muon "
-    if "Custom" in idname: y_name = "Tight Muon "
+    y_name = muonid+" Muon "
+    if "Custom" in muonid: y_name = "Tight Muon "
 
-    h_init.SetMaximum(1.1)
-    h_init.SetMinimum(0.8)
+    h_init.SetMaximum(1.2)
+    h_init.SetMinimum(0.7)
     draw(h_init, y_name+"Efficiency", hl_eff, "eff", text)
 
     if "()" in plotvar: h_init2.SetMaximum(max(h.GetMaximum() for h in hl_bkg)*2)
