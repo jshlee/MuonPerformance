@@ -1,0 +1,12 @@
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/00A9B1AB-642E-E711-9759-0025905B85CA.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/02E12A3E-652E-E711-B7D7-0025905B8564.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/46CDFA38-652E-E711-9305-0CC47A4C8E1E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/60853208-692E-E711-9E0A-0025905B857E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/80028519-682E-E711-BE44-0025905B860E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/AC3371A6-642E-E711-88F6-0CC47A78A42E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/B4EF71D7-692E-E711-8164-0025905B860E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/C22FE7AB-682E-E711-A04F-0025905B860E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/D6702A2B-652E-E711-BF42-0025905A60B2.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/E8577AE6-652E-E711-A259-0025905B8606.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/E8A6BC97-692E-E711-A6CA-0CC47A4C8F0C.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_0_pre3/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D13-v1/10000/EA365B60-662E-E711-9448-0025905A607A.root

@@ -1,0 +1,93 @@
+--------------- muon_GE21noRecHit Start ---------------
+    GE21 Efficiency of muon_GE21noRecHit > 1 :  0.882706164932
+    GE21 Efficiency of muon_GE21noRecHit > 2 :  0.0
+    GE21 Efficiency of muon_GE21noRecHit > 3 :  0.0
+    GE21 Efficiency of muon_GE21noRecHit > 4 :  0.0
+    GE21 Efficiency of muon_GE21noRecHit > 5 :  0.0
+    GE21 Efficiency of muon_GE21noRecHit > 6 :  0.0
+    GE21 Efficiency of muon_GE21noRecHit > 7 :  0.0
+--------------- muon_GE21noRecHit Done ---------------
+
+--------------- muon_GE21deltaX Start ---------------
+    GE21 Efficiency of muon_GE21deltaX < 101 :  1.0
+    GE21 Efficiency of muon_GE21deltaX < 5.0 :  0.878969842541
+    GE21 Efficiency of muon_GE21deltaX < 4.5 :  0.878569522284
+    GE21 Efficiency of muon_GE21deltaX < 4.0 :  0.878169202028
+    GE21 Efficiency of muon_GE21deltaX < 3.5 :  0.877635441687
+    GE21 Efficiency of muon_GE21deltaX < 3.0 :  0.875366960235
+    GE21 Efficiency of muon_GE21deltaX < 2.5 :  0.871363757673
+    GE21 Efficiency of muon_GE21deltaX < 2.0 :  0.864558313317
+    GE21 Efficiency of muon_GE21deltaX < 1.5 :  0.846944222044
+    GE21 Efficiency of muon_GE21deltaX < 1.0 :  0.803709634374
+    GE21 Efficiency of muon_GE21deltaX < 0.5 :  0.690552441954
+--------------- muon_GE21deltaX Done ---------------
+
+--------------- muon_GE21deltaY Start ---------------
+    GE21 Efficiency of muon_GE21deltaY < 20 :  0.993728315986
+    GE21 Efficiency of muon_GE21deltaY < 15 :  0.993061115559
+    GE21 Efficiency of muon_GE21deltaY < 10 :  0.989991993595
+    GE21 Efficiency of muon_GE21deltaY < 8 :  0.977048305311
+    GE21 Efficiency of muon_GE21deltaY < 5 :  0.897117694155
+    GE21 Efficiency of muon_GE21deltaY < 4 :  0.846410461703
+    GE21 Efficiency of muon_GE21deltaY < 3 :  0.785428342674
+    GE21 Efficiency of muon_GE21deltaY < 2 :  0.725513744329
+    GE21 Efficiency of muon_GE21deltaY < 1 :  0.662263143848
+--------------- muon_GE21deltaY Done ---------------
+
+--------------- muon_GE21deltaDXDZ Start ---------------
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.200 :  0.993194555645
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.175 :  0.99186015479
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.150 :  0.990392313851
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.125 :  0.988791032826
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.100 :  0.98665599146
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.075 :  0.976381104884
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.050 :  0.93181211636
+    GE21 Efficiency of muon_GE21deltaDXDZ < 0.025 :  0.794635708567
+--------------- muon_GE21deltaDXDZ Done ---------------
+
+--------------- muon_GE21deltaDYDZ Start ---------------
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.8 :  1.0
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.7 :  1.0
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.6 :  1.0
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.5 :  1.0
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.4 :  0.994262076328
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.3 :  0.694288764345
+    GE21 Efficiency of muon_GE21deltaDYDZ < 0.2 :  0.283560181479
+--------------- muon_GE21deltaDYDZ Done ---------------
+
+--------------- muon_GE21pullX Start ---------------
+    GE21 Efficiency of muon_GE21pullX < 5.0 :  0.998398718975
+    GE21 Efficiency of muon_GE21pullX < 4.5 :  0.998131838804
+    GE21 Efficiency of muon_GE21pullX < 4.0 :  0.997731518548
+    GE21 Efficiency of muon_GE21pullX < 3.5 :  0.997064318121
+    GE21 Efficiency of muon_GE21pullX < 3.0 :  0.995596477182
+    GE21 Efficiency of muon_GE21pullX < 2.5 :  0.993594875901
+    GE21 Efficiency of muon_GE21pullX < 2.0 :  0.989591673339
+    GE21 Efficiency of muon_GE21pullX < 1.5 :  0.977181745396
+    GE21 Efficiency of muon_GE21pullX < 1.0 :  0.934747798239
+    GE21 Efficiency of muon_GE21pullX < 0.5 :  0.803576194289
+--------------- muon_GE21pullX Done ---------------
+
+--------------- muon_GE21pullY Start ---------------
+    GE21 Efficiency of muon_GE21pullY < 20 :  0.995196156926
+    GE21 Efficiency of muon_GE21pullY < 15 :  0.994929276755
+    GE21 Efficiency of muon_GE21pullY < 10 :  0.994128636242
+    GE21 Efficiency of muon_GE21pullY < 8 :  0.993728315986
+    GE21 Efficiency of muon_GE21pullY < 5 :  0.992927675474
+    GE21 Efficiency of muon_GE21pullY < 4 :  0.991993594876
+    GE21 Efficiency of muon_GE21pullY < 3 :  0.969842540699
+    GE21 Efficiency of muon_GE21pullY < 2 :  0.866693354684
+    GE21 Efficiency of muon_GE21pullY < 1 :  0.737923672271
+--------------- muon_GE21pullY Done ---------------
+
+--------------- muon_GE21dPhi Start ---------------
+    GE21 Efficiency of muon_GE21dPhi < 0.7 :  1.0
+    GE21 Efficiency of muon_GE21dPhi < 0.6 :  1.0
+    GE21 Efficiency of muon_GE21dPhi < 0.5 :  0.999733119829
+    GE21 Efficiency of muon_GE21dPhi < 0.4 :  0.998532159061
+    GE21 Efficiency of muon_GE21dPhi < 0.3 :  0.996663997865
+    GE21 Efficiency of muon_GE21dPhi < 0.2 :  0.993194555645
+    GE21 Efficiency of muon_GE21dPhi < 0.1 :  0.98665599146
+    GE21 Efficiency of muon_GE21dPhi < 0.05 :  0.93181211636
+--------------- muon_GE21dPhi Done ---------------
+
