@@ -196,10 +196,9 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
   b_muon_puppiIso = 0; b_muon_puppiIso_ChargedHadron = 0; b_muon_puppiIso_NeutralHadron = 0; b_muon_puppiIso_Photon = 0;
   b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
 
-      
-    // b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
-    // b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
   if (muon){
+    b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
+    b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
     
     b_muon_PFIso03ChargedHadronPt = muon->pfIsolationR03().sumChargedHadronPt;
     b_muon_PFIso03NeutralHadronEt = muon->pfIsolationR03().sumNeutralHadronEt;
