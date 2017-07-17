@@ -4,9 +4,6 @@ import os
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process("PatMuonAnalyser",eras.Phase2C2)
 
-process.load('FWCore.MessageService.MessageLogger_cfi')
-process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
-process.load('Configuration.Geometry.GeometryExtended2023D13Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -47,30 +44,16 @@ process.source = cms.Source("PoolSource",
 #process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
-
-#process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
-#if not run2:
-#    process.muonAssociatorByHitsHelper.usePhase2Tracker = cms.bool(True)
-#    process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
-#    process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
-#    process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
     
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.PatMuonAnalyser = cms.EDAnalyzer("PatMuonAnalyser",
-    #primaryVertex     = cms.InputTag('offlinePrimaryVertices'),
-    primaryVertex     = cms.InputTag('offlineSlimmedPrimaryVertices'),
-    primaryVertex1D   = cms.InputTag('offlinePrimaryVertices1D'),
-    primaryVertex1DBS = cms.InputTag('offlinePrimaryVertices1DWithBS'),
-    primaryVertex4D   = cms.InputTag('offlinePrimaryVertices4D'),
-    primaryVertex4DBS = cms.InputTag('offlinePrimaryVertices4DWithBS'),
-    primaryVertexBS   = cms.InputTag('offlinePrimaryVerticesWithBS'),
+    vertices = cms.InputTag('offlineSlimmedPrimaryVertices'),
     
     simLabel = cms.InputTag("mix","MergedTrackTruth"),
-    simVertexCollection = cms.InputTag("g4SimHits"),
     addPileupInfo = cms.InputTag("addPileupInfo"),
     #muonLabel = cms.InputTag("muons"),
-    muonLabel = cms.InputTag("slimmedMuons"),
-    pruned    = cms.InputTag("prunedGenParticles"),
+    muons  = cms.InputTag("slimmedMuons"),
+    pruned = cms.InputTag("prunedGenParticles"),
     #muAssocLabel = cms.InputTag("muonAssociatorByHitsHelper"),
     tpSelector = muonTPSet,
     puppiIsolationChargedHadrons = cms.InputTag("muonIsolationPUPPI","h+-DR040-ThresholdVeto000-ConeVeto000"),
