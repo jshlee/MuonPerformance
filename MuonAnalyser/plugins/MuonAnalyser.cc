@@ -752,6 +752,19 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
         b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	    b_muon_ME0dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	    b_muon_ME0dEta = chmGp.eta()- segGp.eta();
+
+        std::vector<double> me0tmvaValues;
+        me0tmvaValues.push_back(fabs(b_muon_ME0dPhiBend));
+        me0tmvaValues.push_back(fabs(b_muon_ME0dPhi)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0dEta)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaX)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaY)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDXDZ)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); 
+        b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
+
 	  }
 	}
       }
@@ -855,26 +868,6 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
       
     }
     
-    std::vector<double> me0tmvaValues;
-    if (b_muon_ME0dPhiBend != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0dPhiBend)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0dPhi != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0dPhi)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0dEta != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0dEta)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaX != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaX)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaY != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaY)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaDXDZ != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaDXDZ)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaDYDZ != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0pullX != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); }
-    else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0pullY != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); }
-    else { me0tmvaValues.push_back(-999); }
-    b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
 
     std::vector<double> tmvaValues = collectTMVAvalues(*mu, pv0);
     b_muon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
