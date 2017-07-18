@@ -37,7 +37,7 @@
 
 #include "MuonPerformance/MuonAnalyser/src/TMVAClassification_BDT.class.C"
 #include "MuonPerformance/MuonAnalyser/src/TMVAClassification_MLP.class.C"
-#include "MuonPerformance/MuonAnalyser/src/TMVAClassification_ME0_BDT.class.C"
+//#include "MuonPerformance/MuonAnalyser/src/TMVAClassification_ME0_BDT.class.C"
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
@@ -138,6 +138,7 @@ public:
 		  bool useIPxy, bool useIPz, bool debug);
   
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
+  
   int nGEMhit(const reco::Muon * mu) const;
   int nME0hit(const reco::Muon * mu) const;
   
@@ -228,11 +229,11 @@ private:
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
   float b_muon_tmva_bdt, b_muon_tmva_mlp;
-  float b_muon_tmva_me0_bdt;
+  //float b_muon_tmva_me0_bdt;
 
   ReadBDT* bdt_;
   ReadMLP* mlp_;
-  ReadBDT_ME0* me0_bdt_;
+  //ReadBDT_ME0* me0_bdt_;
 
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_charged_hadrons;
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_neutral_hadrons;
@@ -322,17 +323,17 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   setBranches(recottree_);
 
   string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility" }; 
-  string me0_dummy[] = { "fabs(muon_ME0dPhiBend)", "fabs(muon_ME0dPhi)", "fabs(muon_ME0dEta)", "fabs(muon_ME0deltaX)", "fabs(muon_ME0deltaY)", "fabs(muon_ME0deltaDXDZ)", "fabs(muon_ME0deltaDYDZ)", "fabs(muon_ME0pullX)", "fabs(muon_ME0pullY)" };
+  //string me0_dummy[] = { "fabs(muon_ME0dPhiBend)", "fabs(muon_ME0dPhi)", "fabs(muon_ME0dEta)", "fabs(muon_ME0deltaX)", "fabs(muon_ME0deltaY)", "fabs(muon_ME0deltaDXDZ)", "fabs(muon_ME0deltaDYDZ)", "fabs(muon_ME0pullX)", "fabs(muon_ME0pullY)" };
 
   vector< string > dummy_label;
-  vector< string > me0_dummy_label;
+  //vector< string > me0_dummy_label;
 
   dummy_label.assign(dummy, dummy+15);
-  me0_dummy_label.assign(me0_dummy, me0_dummy+9);
+  //me0_dummy_label.assign(me0_dummy, me0_dummy+9);
 
   bdt_ = new ReadBDT(dummy_label);
   mlp_ = new ReadMLP(dummy_label);
-  me0_bdt_ = new ReadBDT_ME0(me0_dummy_label);
+  //me0_bdt_ = new ReadBDT_ME0(me0_dummy_label);
 
 }
 MuonAnalyser::~MuonAnalyser(){}
@@ -573,7 +574,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_isMuon = 0;
   b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
 
-  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0; b_muon_tmva_me0_bdt = 0;
+  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0; //b_muon_tmva_me0_bdt = 0;
 
   const Muon* mu = muref.get();
   if (mu){
@@ -853,29 +854,29 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
       }
       
     }
-
+    /*
     std::vector<double> me0tmvaValues;
-    if (b_muon_ME0dPhiBend != 100) { me0tmvaValues.push_back(b_muon_ME0dPhiBend); }
+    if (b_muon_ME0dPhiBend != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0dPhiBend)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0dPhi != 100) { me0tmvaValues.push_back(b_muon_ME0dPhi); }
+    if (b_muon_ME0dPhi != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0dPhi)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0dEta != 100) { me0tmvaValues.push_back(b_muon_ME0dEta); }
+    if (b_muon_ME0dEta != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0dEta)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaX != 100) { me0tmvaValues.push_back(b_muon_ME0deltaX); }
+    if (b_muon_ME0deltaX != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaX)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaY != 100) { me0tmvaValues.push_back(b_muon_ME0deltaY); }
+    if (b_muon_ME0deltaY != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaY)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaDXDZ != 100) { me0tmvaValues.push_back(b_muon_ME0deltaDXDZ); }
+    if (b_muon_ME0deltaDXDZ != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaDXDZ)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0deltaDYDZ != 100) { me0tmvaValues.push_back(b_muon_ME0deltaDYDZ); }
+    if (b_muon_ME0deltaDYDZ != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0pullX != 100) { me0tmvaValues.push_back(b_muon_ME0pullX); }
+    if (b_muon_ME0pullX != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); }
     else { me0tmvaValues.push_back(-999); }
-    if (b_muon_ME0pullY != 100) { me0tmvaValues.push_back(b_muon_ME0pullY); }
+    if (b_muon_ME0pullY != 100) { me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); }
     else { me0tmvaValues.push_back(-999); }
 
-    b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValue(me0tmvaValues);
-    
+    b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
+    */
 
     std::vector<double> tmvaValues = collectTMVAvalues(*mu, pv0);
     b_muon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
@@ -1669,7 +1670,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
-  tree->Branch("muon_tmva_me0_bdt", &b_muon_tmva_me0_bdt, "muon_tmva_me0_bdt/F");
+  //tree->Branch("muon_tmva_me0_bdt", &b_muon_tmva_me0_bdt, "muon_tmva_me0_bdt/F");
 
   tree->Branch("muon_ME0segX", &b_muon_ME0segX, "muon_ME0segX/F");  
   tree->Branch("muon_ME0chamX", &b_muon_ME0chamX, "muon_ME0chamX/F");  

@@ -116,19 +116,19 @@ public:
    virtual ~BDTNodeME0();
 
    // test event if it decends the tree at this node to the right
-   virtual bool GoesRight( const std::vector<double>& inputValues ) const;
-   BDTNodeME0* GetRight( void )  {return fRight; };
+   virtual bool GoesRightME0( const std::vector<double>& inputValues ) const;
+   BDTNodeME0* GetRightME0( void )  {return fRight; };
 
    // test event if it decends the tree at this node to the left 
-   virtual bool GoesLeft ( const std::vector<double>& inputValues ) const;
-   BDTNodeME0* GetLeft( void ) { return fLeft; };   
+   virtual bool GoesLeftME0 ( const std::vector<double>& inputValues ) const;
+   BDTNodeME0* GetLeftME0( void ) { return fLeft; };   
 
    // return  S/(S+B) (purity) at this node (from  training)
 
-   double GetPurity( void ) const { return fPurity; } 
+   double GetPurityME0( void ) const { return fPurity; } 
    // return the node type
-   int    GetNodeType( void ) const { return fNodeType; }
-   double GetResponse(void) const {return fResponse;}
+   int    GetNodeTypeME0( void ) const { return fNodeType; }
+   double GetResponseME0(void) const {return fResponse;}
 
 private:
 
@@ -150,7 +150,7 @@ private:
 }; 
    
 //_______________________________________________________________________
-bool BDTNodeME0::GoesRight( const std::vector<double>& inputValues ) const
+bool BDTNodeME0::GoesRightME0( const std::vector<double>& inputValues ) const
 {
    // test event if it decends the tree at this node to the right
    bool result;
@@ -160,46 +160,46 @@ bool BDTNodeME0::GoesRight( const std::vector<double>& inputValues ) const
 }
    
 //_______________________________________________________________________
-bool BDTNodeME0::GoesLeft( const std::vector<double>& inputValues ) const
+bool BDTNodeME0::GoesLeftME0( const std::vector<double>& inputValues ) const
 {
    // test event if it decends the tree at this node to the left
-   if (!this->GoesRight(inputValues)) return true;
+   if (!this->GoesRightME0(inputValues)) return true;
    else return false;
 }
    
 #endif
    
-#ifndef IClassifierReader__def
-#define IClassifierReader__def
+#ifndef IClassifierReaderME0__def
+#define IClassifierReaderME0__def
 
-class IClassifierReader {
+class IClassifierReaderME0 {
 
  public:
 
    // constructor
-   IClassifierReader() : fStatusIsClean( true ) {}
-   virtual ~IClassifierReader() {}
+   IClassifierReaderME0() : fStatusIsCleanME0( true ) {}
+   virtual ~IClassifierReaderME0() {}
 
    // return classifier response
-   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;
+   virtual double GetMvaValueME0( const std::vector<double>& inputValues ) const = 0;
 
    // returns classifier status
-   bool IsStatusClean() const { return fStatusIsClean; }
+   bool IsStatusCleanME0() const { return fStatusIsCleanME0; }
 
  protected:
 
-   bool fStatusIsClean;
+   bool fStatusIsCleanME0;
 };
 
 #endif
 
-class ReadBDT_ME0 : public IClassifierReader {
+class ReadBDT_ME0 : public IClassifierReaderME0 {
 
  public:
 
    // constructor
    ReadBDT_ME0( std::vector<std::string>& theInputVars ) 
-      : IClassifierReader(),
+      : IClassifierReaderME0(),
         fClassName( "ReadBDT_ME0" ),
         fNvars( 9 ),
         fIsNormalised( false )
@@ -210,13 +210,13 @@ class ReadBDT_ME0 : public IClassifierReader {
       // sanity checks
       if (theInputVars.size() <= 0) {
          std::cout << "Problem in class \"" << fClassName << "\": empty input vector" << std::endl;
-         fStatusIsClean = false;
+         fStatusIsCleanME0 = false;
       }
 
       if (theInputVars.size() != fNvars) {
          std::cout << "Problem in class \"" << fClassName << "\": mismatch in number of input values: "
                    << theInputVars.size() << " != " << fNvars << std::endl;
-         fStatusIsClean = false;
+         fStatusIsCleanME0 = false;
       }
 
       // validate input variables
@@ -224,7 +224,7 @@ class ReadBDT_ME0 : public IClassifierReader {
          if (theInputVars[ivar] != inputVars[ivar]) {
             std::cout << "Problem in class \"" << fClassName << "\": mismatch in input variable names" << std::endl
                       << " for variable [" << ivar << "]: " << theInputVars[ivar].c_str() << " != " << inputVars[ivar] << std::endl;
-            fStatusIsClean = false;
+            fStatusIsCleanME0 = false;
          }
       }
 
@@ -272,7 +272,7 @@ class ReadBDT_ME0 : public IClassifierReader {
    // the classifier response
    // "inputValues" is a vector of input values in the same order as the 
    // variables given to the constructor
-   double GetMvaValue( const std::vector<double>& inputValues ) const;
+   double GetMvaValueME0( const std::vector<double>& inputValues ) const;
 
  private:
 
@@ -301,24 +301,24 @@ class ReadBDT_ME0 : public IClassifierReader {
 
    // initialize internal variables
    void Initialize();
-   double GetMvaValue__( const std::vector<double>& inputValues ) const;
+   double GetMvaValueME0__( const std::vector<double>& inputValues ) const;
 
    // private members (method specific)
    std::vector<BDTNodeME0*> fForest;       // i.e. root nodes of decision trees
    std::vector<double>                fBoostWeights; // the weights applied in the individual boosts
 };
 
-double ReadBDT_ME0::GetMvaValue__( const std::vector<double>& inputValues ) const
+double ReadBDT_ME0::GetMvaValueME0__( const std::vector<double>& inputValues ) const
 {
    double myMVA = 0;
    double norm  = 0;
    for (unsigned int itree=0; itree<fForest.size(); itree++){
       BDTNodeME0 *current = fForest[itree];
-      while (current->GetNodeType() == 0) { //intermediate node
-         if (current->GoesRight(inputValues)) current=(BDTNodeME0*)current->GetRight();
-         else current=(BDTNodeME0*)current->GetLeft();
+      while (current->GetNodeTypeME0() == 0) { //intermediate node
+         if (current->GoesRightME0(inputValues)) current=(BDTNodeME0*)current->GetRightME0();
+         else current=(BDTNodeME0*)current->GetLeftME0();
       }
-      myMVA += fBoostWeights[itree] *  current->GetNodeType();
+      myMVA += fBoostWeights[itree] *  current->GetNodeTypeME0();
       norm  += fBoostWeights[itree];
    }
    return myMVA /= norm;
@@ -24424,13 +24424,13 @@ inline void ReadBDT_ME0::Clear()
       delete fForest[itree]; 
    }
 }
-   inline double ReadBDT_ME0::GetMvaValue( const std::vector<double>& inputValues ) const
+   inline double ReadBDT_ME0::GetMvaValueME0( const std::vector<double>& inputValues ) const
    {
       // classifier response value
       double retval = 0;
 
       // classifier response, sanity check first
-      if (!IsStatusClean()) {
+      if (!IsStatusCleanME0()) {
          std::cout << "Problem in class \"" << fClassName << "\": cannot return classifier response"
                    << " because status is dirty" << std::endl;
          retval = 0;
@@ -24445,10 +24445,10 @@ inline void ReadBDT_ME0::Clear()
                  varIt != inputValues.end(); varIt++, ivar++) {
                iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));
             }
-            retval = GetMvaValue__( iV );
+            retval = GetMvaValueME0__( iV );
          }
          else {
-            retval = GetMvaValue__( inputValues );
+            retval = GetMvaValueME0__( inputValues );
          }
       }
 
