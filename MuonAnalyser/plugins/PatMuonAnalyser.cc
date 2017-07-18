@@ -59,6 +59,7 @@ private:
   bool b_muon_signal;
   int b_muon_pdgId;
   int b_muon_no;
+  float b_muon_poszPV0, b_muon_poszMuon;
   bool b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
 
   float b_muon_PFIso04; float b_muon_PFIso03;
@@ -184,6 +185,9 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
   b_muon_signal = isSignal;
   b_muon_pdgId = pdgId;
   ++b_muon_no;
+  
+  b_muon_poszPV0  = 0;
+  b_muon_poszMuon = 0;
     
   b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
   
@@ -197,6 +201,9 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
   b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
 
   if (muon){
+    b_muon_poszPV0  = priVertex_.position().z();
+    b_muon_poszMuon = muon->muonBestTrack()->vz();
+    
     b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
     b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
     
@@ -236,6 +243,8 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon", "TLorentzVector", &b_muon);  
   tree->Branch("muon_no", &b_muon_no, "muon_no/I");
   tree->Branch("muon_pdgId", &b_muon_pdgId, "muon_pdgId/I");
+  tree->Branch("muon_poszPV0",&b_muon_poszPV0,"muon_poszPV0/F");
+  tree->Branch("muon_poszMuon",&b_muon_poszMuon,"muon_poszMuon/F");
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
   tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
   tree->Branch("muon_isMedium", &b_muon_isMedium, "muon_isMedium/O");
