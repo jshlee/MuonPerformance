@@ -240,6 +240,7 @@ def getDivide(filename,treename,title,binning,plotvar,dencut,numcut):
     h1 = makeTH1(filename,treename,title+"_den",binning,plotvar,dencut)
     h2 = makeTH1(filename,treename,title+"_num",binning,plotvar,numcut)
     
+    """
     hist = ROOT.TH1D("hist_" + title, title, binning[0], binning[1], binning[2])
     
     for i in range(binning[ 0 ] + 2): 
@@ -249,6 +250,15 @@ def getDivide(filename,treename,title,binning,plotvar,dencut,numcut):
         if fValDen == 0.0: continue
         
         hist.SetBinContent(i, fValNum / fValDen)
+        hist.SetBinError(i, h2.GetBinError(i))
+    """
+    
+    hist = copy.deepcopy(h2)
+    
+    h1.Sumw2()
+    hist.Sumw2()
+    
+    hist.Divide(h1)
     
     return copy.deepcopy(hist)
 
@@ -315,6 +325,7 @@ def drawPlotFromDict(dicMainCmd):
     fMax = -1000000000
 
     strCutNum = ""
+    strCutDen = ""
     strCutByDiv = ""
 
     fLegLeft   = 0.50
@@ -350,18 +361,21 @@ def drawPlotFromDict(dicMainCmd):
 
     if "ylog" in dicMainCmd:
         nIsLogY = 1
-
+    
     if "min" in dicMainCmd: 
         fMin = dicMainCmd[ "min" ]
         nIsUseMin = 1
-
+    
     if "max" in dicMainCmd: 
         fMax = dicMainCmd[ "max" ]
         nIsUseMax = 1
-
+    
     if "effrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "effrate" ]
         strPlotType = "effrate"
+        
+        if "effdenominator" in dicMainCmd:
+            strCutDen = " && " + dicMainCmd[ "effdenominator" ]
 
     if "bkgrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "bkgrate" ]
@@ -376,10 +390,10 @@ def drawPlotFromDict(dicMainCmd):
         strPlotType = "divide"
     
     if "titlepos" in dicMainCmd: 
-        if dicMainCmd[ "titlepos" ] is list: 
+        if type(dicMainCmd[ "titlepos" ]) is list: 
             fTitleX = dicMainCmd[ "titlepos" ][ 0 ]
             fTitleY = dicMainCmd[ "titlepos" ][ 1 ]
-        elif dicMainCmd[ "titlepos" ] is dict: 
+        elif type(dicMainCmd[ "titlepos" ]) is dict: 
             if "x" in dicMainCmd[ "titlepos" ]: fTitleX = dicMainCmd[ "titlepos" ][ "x" ]
             if "y" in dicMainCmd[ "titlepos" ]: fTitleY = dicMainCmd[ "titlepos" ][ "y" ]
             if "size" in dicMainCmd[ "titlepos" ]: fTitleSize = dicMainCmd[ "titlepos" ][ "size" ]
@@ -403,7 +417,7 @@ def drawPlotFromDict(dicMainCmd):
     
     if "normoff" in dicMainCmd: 
         bNormalOff = True
-
+    
     # Now all plots get being drawn
     for varHead in arrVars: 
         if nIsUsedCommonVar == 0: 
@@ -411,6 +425,7 @@ def drawPlotFromDict(dicMainCmd):
         
         #strTree = ""
         strCutNumVar = strCutNum
+        strCutDenVar = strCutDen
         
         #if "genMuon" in strPlotvar or "genMuon" in strCut: 
         #    strTree = "MuonAnalyser/gen"
@@ -429,7 +444,7 @@ def drawPlotFromDict(dicMainCmd):
         if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
         if "effrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "effrate" ]
         if "bkgrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "bkgrate" ]
-        if "divide"  in varHead: strCutByDiv =   varHead[ "divide" ]
+        if "divide"  in varHead: strCutByDiv  = varHead[ "divide" ]
         
         if strPlotType == "normal": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
@@ -438,11 +453,11 @@ def drawPlotFromDict(dicMainCmd):
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         elif strPlotType == "effrate": 
-            print "Num : %s\nDen : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig, ( strCut + strCutExtra )%dicCutConfig)
+            print "Num : %s\nDen : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig, ( strCut + strCutDenVar + strCutExtra )%dicCutConfig)
             # Drawing efficiency / fake rate plot
             varHead[ "hist" ] = getEff(datadir + varHead[ "filename" ], strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
-                ( strCut +                strCutExtra )%dicCutConfig, # cut for denominator
+                ( strCut + strCutDenVar + strCutExtra )%dicCutConfig, # cut for denominator
                 ( strCut + strCutNumVar + strCutExtra )%dicCutConfig) # cut for nominator
         elif strPlotType == "bkgrate": 
             print "Num : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig)
@@ -478,17 +493,17 @@ def drawPlotFromDict(dicMainCmd):
         
     # The remainings are for drawing the total plot
     h_init = ROOT.TH1F("", "", binCurr[ 0 ], binCurr[ 1 ], binCurr[ 2 ])
-
+    
     if nIsUseMax == 0: 
         fMax = fMax * 1.15
-
+    
     h_init.SetMinimum(fMin)
     h_init.SetMaximum(fMax)
-
+    
     h_init.GetXaxis().SetTitle(x_name)
     h_init.GetYaxis().SetTitle(y_name)
     h_init.GetYaxis().SetTitleOffset(1)
-
+    
     #Set canvas
     canv = makeCanvas("canvMain", False)
     setMargins(canv, False)
@@ -505,26 +520,26 @@ def drawPlotFromDict(dicMainCmd):
     drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY, fTitleSize)
     
     dicCutConfig[ "ID" ] = strTmpID
-
+    
     if nIsLogY != 0: ROOT.gPad.SetLogy()
-
+    
     #Legend and drawing
     leg = ROOT.TLegend(fLegLeft, fLegTop, fLegRight, fLegBottom)
 
     for varHead in arrVars: 
-        strExtraOpt = ""
+        strExtraOpt = "e1"
         if "extradrawopt" in varHead: strExtraOpt = varHead[ "extradrawopt" ]
         varHead[ "hist" ].Draw(strExtraOpt + "same")
         
         strLegendOpt = "pl"
         if "legendopt" in varHead: strLegendOpt = varHead[ "legendopt" ]
         leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), strLegendOpt)
-
+    
     leg.SetTextFont(61)
     leg.SetTextSize(fLegTextSize)
     leg.SetBorderSize(0)
     leg.Draw()
-
+    
     #CMS_lumi setting
     iPos = 0
     iPeriod = 0
@@ -532,11 +547,11 @@ def drawPlotFromDict(dicMainCmd):
     CMS_lumi.extraText = "Working Progress"
     CMS_lumi.lumi_sqrtS = "14 TeV"
     CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
-
+    
     canv.Modified()
     canv.Update()
     canv.SaveAs(strFilename%dicCutConfig)
-
+    
     print "%s has been drawn"%(strFilename%dicCutConfig)
 
 
