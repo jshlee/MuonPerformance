@@ -2,19 +2,19 @@ import FWCore.ParameterSet.Config as cms
 import os
 
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process("MuonAnalyser",eras.Phase2C2_timing)
+process = cms.Process("MuonAnalyser",eras.Phase2C2)
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
-process.load('Configuration.Geometry.GeometryExtended2023D4Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2023D13Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2023_realistic_v1', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 process.options = cms.untracked.PSet(allowUnscheduled = cms.untracked.bool(True))
-
+run2 = False
 """
 #process.MessageLogger.categories.append("MuonAnalyser")
 process.MessageLogger.debugModules = cms.untracked.vstring("*")
@@ -31,38 +31,26 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      #'file:/cms/home/jlee/scratch/gemSeeding/src/batch/step3.root'
-      '/store/user/jlee/CMSSW_9_0_0_pre4/rereco/qcdD4/step3_006.root',
-      #'/store/relval/CMSSW_9_1_0_pre1/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v9_D4Timing-v1/00000/0C650B46-2719-E711-9B1C-0025905A60FE.root',  
-      #'/store/relval/CMSSW_9_0_0_pre5/RelValZMM_14/GEN-SIM-RECO/90X_upgrade2023_realistic_v4_D4T-v1/00000/0E75D0DF-0501-E711-8018-0025905B85F6.root',  
-      #'file:/cms/home/jlee/scratch/gemSeeding/src/crab/step3.root'
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_000.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_001.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_002.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_003.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_004.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_005.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_006.root',
-      #'file:/xrootd/store/user/jlee/CMSSW_9_0_0_pre5/me0seed/zmmD4/step3_007.root',
-      #'file:/xrootd/store/user/jlee/RelValZMM_14/crab_zmmD4PU140_me0seed/170319_133447/0000/step3_1.root'
-      #'file:step3.root'
+        #'file:/cms/home/jlee/scratch/test/gemSeeding/src/24811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D13_GenSimHLBeamSpotFull+DigiFullTrigger_2023D13+RecoFullGlobal_2023D13+HARVESTFullGlobal_2023D13/step3.root'
+        'file:/cms/home/jlee/scratch/test/baseline/src/26211.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D14_GenSimHLBeamSpotFull+DigiFull_2023D14+RecoFullGlobal_2023D14+HARVESTFullGlobal_2023D14/step3.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
 
 #to run for entire sample
-dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_0_0_pre2/TenMu_'
-filelst = open(dir+"pu0.txt", "r")
-#filelst = open(dir+"pu200.txt", "r")
+#dir = os.environ["CMSSW_BASE"]+'/src/MuonPerformance/MuonAnalyser/doc/9_1_1/'
+#filelst = open(dir+"zmm.txt", "r")
 #process.source.fileNames = filelst.readlines()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 
 process.load('SimMuon.MCTruth.muonAssociatorByHitsHelper_cfi')
-process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
-process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
-process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
-
+if not run2:
+    process.muonAssociatorByHitsHelper.usePhase2Tracker = cms.bool(True)
+    process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
+    process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
+    process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
+    
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     primaryVertex     = cms.InputTag('offlinePrimaryVertices'),
@@ -85,6 +73,12 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     puppiNoLepIsolationNeutralHadrons = cms.InputTag("muonIsolationPUPPINoLep","h0-DR040-ThresholdVeto000-ConeVeto001"),
     puppiNoLepIsolationPhotons        = cms.InputTag("muonIsolationPUPPINoLep","gamma-DR040-ThresholdVeto000-ConeVeto001"),    
 )
+
+process.MuonAnalyser.primaryVertex1D   = cms.InputTag('offlinePrimaryVertices')
+process.MuonAnalyser.primaryVertex1DBS = cms.InputTag('offlinePrimaryVertices')
+process.MuonAnalyser.primaryVertex4D   = cms.InputTag('offlinePrimaryVertices')
+process.MuonAnalyser.primaryVertex4DBS = cms.InputTag('offlinePrimaryVertices')
+process.MuonAnalyser.primaryVertexBS   = cms.InputTag('offlinePrimaryVertices')
 
 process.MuonAnalyser.tpSelector.maxRapidity = cms.double(3.0)
 process.MuonAnalyser.tpSelector.minRapidity = cms.double(-3.0)

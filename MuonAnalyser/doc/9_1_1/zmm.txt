@@ -1,0 +1,12 @@
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/14A91939-1D3F-E711-A09A-0025905A610A.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/1AF43477-223F-E711-89EA-0025905A610C.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/4C4B7246-1E3F-E711-949B-0025905A60DA.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/722FED43-1E3F-E711-81B6-0CC47A78A3EC.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/7671FDAA-1F3F-E711-B7DE-0025905B860C.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/8AFE90A8-1F3F-E711-869F-0CC47A7C34E6.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/96206C74-223F-E711-9EBC-0CC47A7C3458.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/AC5F5FF7-1A3F-E711-9F95-0CC47A4D75EC.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/ACDADD48-203F-E711-ABC1-0CC47A4D75EC.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/B09C3A31-1F3F-E711-B70F-0CC47A78A3D8.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/DCC47538-1F3F-E711-888A-0CC47A78A33E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/DEAB0FD1-1C3F-E711-83A4-0025905A607A.root

@@ -1,0 +1,12 @@
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/3867BEBA-B34A-E711-BCE9-0CC47A4D767C.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/404E29EC-B44A-E711-822A-0025905B855C.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/4878BEE9-B34A-E711-A809-0CC47A4D7694.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/54C19D1A-B34A-E711-A2ED-0CC47A4D75F8.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/62EDF488-B34A-E711-B5F9-002618FDA265.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/664D2125-B94A-E711-9F76-0CC47A4D7604.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/7C84E12F-B54A-E711-BF4A-0025905A6122.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/8ABF9C6F-B74A-E711-8DD2-0CC47A4D75F6.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/AC3055EB-B34A-E711-97A4-0CC47A4D7654.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/AEE9E224-B94A-E711-9A2B-0CC47A7C3410.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/B668B457-B54A-E711-8602-0CC47A7C35E0.root
+root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/D832B072-B74A-E711-90E8-0CC47A4D7626.root

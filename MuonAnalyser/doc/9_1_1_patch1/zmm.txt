@@ -1,0 +1,13 @@
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/0008B5BF-B34A-E711-820B-0CC47A4D762E.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/24733ABB-B24A-E711-8063-0CC47A4D7600.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/282BF5FE-B14A-E711-95ED-0025905A60DE.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/3E78F52F-B94A-E711-BEE4-0025905B859A.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/407AC7E2-B74A-E711-8E32-0CC47A4D76A0.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/46C6691B-B34A-E711-8ED2-0CC47A4D7614.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/54128E24-B34A-E711-AAEB-0025905B85AE.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/6278CB22-B34A-E711-B663-0025905A6084.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/76A3C5EF-B64A-E711-90F1-0025905A60EE.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/8055EF21-B34A-E711-B4CE-0025905A6122.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/D4047787-B34A-E711-B04D-0CC47A78A2EC.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/D8B866CB-B34A-E711-B9AF-0025905B8580.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/relval/CMSSW_9_1_1_patch1/RelValZMM_14/GEN-SIM-RECO/91X_upgrade2023_realistic_v1_D17-v1/10000/ECD40D26-B94A-E711-BD53-0CC47A7AB7A0.root
