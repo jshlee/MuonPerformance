@@ -1,0 +1,24 @@
+To use the given JSON file (bending.json), the following command gives an example: 
+
+    python bendingJSON.py evalscr/20170723/bending.json '{"outputfile":"jsonconf/20170723/%(effbkg)s_%(ID)s_%(xvar)s.json"}'
+
+Note that the content of "outputfile" contains the name which is used in bending.json. The following is the list of types.
+
+    effbkg : "eff", "bkg"
+    ID     : "Loose", "Tight"
+    xvar   : "Pt", "Eta"
+
+So, the output files of the above command are as followings:
+
+    jsonconf/20170723/eff_Loose_Pt.json
+    jsonconf/20170723/eff_Loose_Eta.json
+    jsonconf/20170723/eff_Tight_Pt.json
+    jsonconf/20170723/eff_Tight_Eta.json
+    jsonconf/20170723/bkg_Loose_Pt.json
+    jsonconf/20170723/bkg_Loose_Eta.json
+    jsonconf/20170723/bkg_Tight_Pt.json
+    jsonconf/20170723/bkg_Tight_Eta.json
+
+Now, you can get plots by running universaldrawer.py with these files.
+
+

@@ -1,0 +1,65 @@
+{
+  "commonsource": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_zmm_200.root", 
+  "cut": "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
+  "vars": [
+    {
+      "color": 4, 
+      "effrate": "muon_puppiIsoNoLep < %(isocutPUPPI)s", 
+      "shape": 20, 
+      "title": "PUPPI, R = 0.4"
+    }, 
+    {
+      "color": 8, 
+      "effrate": "muon_PFIsolation04 < %(isocutPF)s", 
+      "shape": 34, 
+      "title": "PF, R = 0.4"
+    }, 
+    {
+      "color": 2, 
+      "effrate": "muon_TrkIsolation03 < %(isocutTrk)s", 
+      "shape": 21, 
+      "title": "Track, R = 0.3"
+    }, 
+    {
+      "color": 1, 
+      "shape": 20, 
+      "title": "No Iso cut"
+    }
+  ], 
+  "min": 0.55, 
+  "max": 1.2, 
+  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, \n|z_{reco} - z_{sim}| < 0.5 cm", 
+  "extravarcut_isocutPUPPI": "0.228", 
+  "maintree": "PatMuonAnalyser", 
+  "tree": "gen", 
+  "filename": "plots/20170723/effbkgplots/eff_noID_Pt.png", 
+  "plotvar": "muon.Pt()", 
+  "extravarcut_isocutPF": "1.788", 
+  "cutconfig": {
+    "Eta": "2.4", 
+    "ID": "noID", 
+    "pT": "15"
+  }, 
+  "xtitle": "p_{T} (GeV)", 
+  "plottype": "effrate", 
+  "extravarcut_isocutTrk": "0.212", 
+  "binning": [
+    20, 
+    5, 
+    105
+  ], 
+  "ytitle": "Efficiency", 
+  "titlepos": {
+    "x": 0.155
+  }, 
+  "legend": {
+    "top": 0.2, 
+    "right": 0.85, 
+    "bottom": 0.4, 
+    "left": 0.65
+  }, 
+  "bkgdenominator": {
+    "nevents": 2555040, 
+    "type": "simplenevents"
+  }
+}

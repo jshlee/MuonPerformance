@@ -55,6 +55,8 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
   fSigEffChosen = 0.0
   fBkgValChosen = 0.0
   
+  fBkgMax = 0.0
+  
   for i in range(binning[ 0 ] + 2): 
     # DO NOT confuse this : 0th bin has all underflows, while (binning[0] + 1)-th bin has all overflows
     # Well, we have no underflows, but... for habit for safety.
@@ -88,6 +90,9 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
     
     fSigEffPrev = fSigEff
     fBkgValPrev = fBkgVal
+    
+    if fBkgMax < fBkgVal: 
+      fBkgMax = fBkgVal
   
   arrX = array.array("d", arrSigEff)
   arrY = array.array("d", arrBkgVal)
@@ -97,7 +102,7 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
   
   return {"graph": copy.deepcopy(graphROC), 
     "performance": binning[1] + nPerf * ( binning[2] - binning[1] ) / binning[0], 
-    "sigeff": fSigEffChosen, "bkgrej": fBkgValChosen}
+    "sigeff": fSigEffChosen, "bkgrej": fBkgValChosen, "bkgmax": fBkgMax}
 
 
 def drawSampleName(samplename, fX, fY, fSizeTex):
@@ -108,7 +113,33 @@ def drawSampleName(samplename, fX, fY, fSizeTex):
   tex2.SetTextSize(fSizeTex)
   
   for i, strLine in enumerate(samplename.split("\n")): 
-    tex2.DrawLatex(fX, fY - i * 1.1 * fSizeTex, strLine)
+    tex2.DrawLatex(fX, fY - i * 1.2 * fSizeTex, strLine)
+
+
+def myGetVarID(varID):
+  if type(varID) is dict:
+    return varID[ "var" ]
+  else:
+    return varID
+
+
+def myGetLabelID(varID):
+  if type(varID) is dict:
+    return varID[ "label" ]
+  else:
+    return varID
+
+
+def myGetDicForFormatVar(dicCutConfig):
+  dicRes = copy.deepcopy(dicCutConfig)
+  if "ID" in dicRes: dicRes[ "ID" ] = myGetVarID(dicRes[ "ID" ])
+  return dicRes
+
+
+def myGetDicForFormatLabel(dicCutConfig):
+  dicRes = copy.deepcopy(dicCutConfig)
+  if "ID" in dicRes: dicRes[ "ID" ] = myGetLabelID(dicRes[ "ID" ])
+  return dicRes
 
 
 def drawPlotFromDict(dicMainCmd): 
@@ -155,14 +186,23 @@ def drawPlotFromDict(dicMainCmd):
   fYMax = 1.05
   strLabelYAxis = "Background rejection"
   
+  strNameTagCut    = "extracut_"
+  #strNameTagVarCut = "extravarcut_"
+  
+  for strItemForCut in dicMainCmd.keys(): 
+    if strNameTagCut in strItemForCut: 
+      dicCutConfig[ strItemForCut.replace(strNameTagCut, "") ] = dicMainCmd[ strItemForCut ]
+    #elif strNameTagVarCut in strItemForCut: 
+    #  dicCutExtraVarConfig[ strItemForCut.replace(strNameTagVarCut, "") ] = dicMainCmd[ strItemForCut ]
+  
   if "maintree" in dicMainCmd:
     strMainTree = dicMainCmd[ "maintree" ].encode("ascii", "ignore")
   
   if "sigeff" not in dicMainCmd: 
     if "ID" in dicCutConfig: 
-      if "Tight" in dicCutConfig[ "ID" ]: 
+      if "Tight" in myGetVarID(dicCutConfig[ "ID" ]): 
         fSigEff = 0.95
-      elif "Loose" in dicCutConfig[ "ID" ]: 
+      elif "Loose" in myGetVarID(dicCutConfig[ "ID" ]): 
         fSigEff = 0.98
   
   if "legend" in dicMainCmd: 
@@ -179,7 +219,7 @@ def drawPlotFromDict(dicMainCmd):
   
   ## Prepare to draw
   
-  strCutDef = strCut % dicCutConfig
+  strCutDef = strCut % myGetDicForFormatVar(dicCutConfig)
   strCutSig = strCutDef + " && muon_signal"
   strCutBkg = strCutDef
   
@@ -189,6 +229,8 @@ def drawPlotFromDict(dicMainCmd):
     dicRef[ "bkgcustom" ] = dicMainCmd[ "bkgcustom" ]
     if "label" in dicRef[ "bkgcustom" ]: 
       strLabelYAxis = dicRef[ "bkgcustom" ][ "label" ]
+  
+  fBkgMax = 0.0
   
   ## Drawing ROCs
   
@@ -219,9 +261,11 @@ def drawPlotFromDict(dicMainCmd):
     setMarkerStyle(dicPlotvar[ "graph" ], dicPlotvar[ "color" ], dicPlotvar[ "shape" ])
     
     dicPlotvar[ "graph" ].GetXaxis().SetLimits(0.0, 1.1)
-    dicPlotvar[ "graph" ].SetMaximum(fYMax)
     
-    print "%s; %s; %s%s; %0.3f; %0.3f"%(strPrintoutFront, dicPlotvar[ "name" ], dicCutConfigCurr[ "ID" ], dicCutConfigCurr[ "PU" ], dicRes[ "performance" ], dicRes[ "bkgrej" ])
+    if fBkgMax < dicRes[ "bkgmax" ]:
+      fBkgMax = dicRes[ "bkgmax" ]
+    
+    print "%s; %s; %s%s; %0.3f; %0.3f"%(strPrintoutFront, dicPlotvar[ "name" ], myGetVarID(dicCutConfigCurr[ "ID" ]), dicCutConfigCurr[ "PU" ], dicRes[ "performance" ], dicRes[ "bkgrej" ])
   
   #Set canvas
   canv = makeCanvas("canv1", False)
@@ -233,11 +277,15 @@ def drawPlotFromDict(dicMainCmd):
   x_name = "Signal efficiency"
   y_name = strLabelYAxis
   
+  fYMax = fBkgMax * 1.2
+  
   for i, dicPlotvar in enumerate(arrPlotvar): 
     if i == 0: 
       dicPlotvar[ "graph" ].GetXaxis().SetTitle(x_name)
       dicPlotvar[ "graph" ].GetYaxis().SetTitle(y_name)
       dicPlotvar[ "graph" ].GetYaxis().SetTitleOffset(0.95)
+      
+      dicPlotvar[ "graph" ].SetMaximum(fYMax)
       
       dicPlotvar[ "graph" ].Draw("")
     else :
@@ -247,7 +295,7 @@ def drawPlotFromDict(dicMainCmd):
     
     leg.AddEntry(dicPlotvar[ "graph" ], dicPlotvar[ "graph" ].GetTitle(), strOptLeg)
   
-  drawSampleName(strTitleMain % dicCutConfig, fTitleX, fTitleY, fTitleSize)
+  drawSampleName(strTitleMain % myGetDicForFormatLabel(dicCutConfig), fTitleX, fTitleY, fTitleSize)
   
   leg.SetTextFont(dicLegPos[ "fonttype" ])
   leg.SetTextSize(dicLegPos[ "fontsize" ])
