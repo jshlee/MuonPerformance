@@ -116,11 +116,11 @@ private:
   bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
 
   bool b_muon_tracker; bool b_muon_global; bool b_muon_pf;
-  float b_muon_chi2pos; float b_muon_trkKink; float b_muon_segcompati;
+  float b_muon_chi2pos; float b_muon_trkKink; float b_muon_segmentCompatibility;
   float b_muon_chi2; int b_muon_nglobalhits; int b_muon_nstations;
   float b_muon_trackdxy; float b_muon_trackdz;
   int b_muon_ninnerhits; float b_muon_trackerlayers; 
-  float b_muon_innerquality; float b_muon_caloCompatibility; float b_muon_segmentCompatibility; 
+  float b_muon_innerquality; float b_muon_caloCompatibility; float b_muon_segmentCompatibility_Arbitrate; 
   float b_muon_poszPV0, b_muon_poszSimPV, b_muon_poszMuon;
 
   float b_muon_ME0segX, b_muon_ME0chamX;
@@ -235,7 +235,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_ = fs->make<TTree>("reco", "reco");
   setBranches(recottree_);
 
-  string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility" }; 
+  string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility_Arbitrate" }; 
   vector< string > dummy_label;
   dummy_label.assign(dummy, dummy+15);
   bdt_ = new ReadBDT(dummy_label);
@@ -412,11 +412,11 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100, b_muon_GE21pullPhi = 100;
 
   b_muon_tracker = 0;  b_muon_global = 0;  b_muon_pf = 0;
-  b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segcompati = 0;
+  b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segmentCompatibility = 0;
   b_muon_chi2 = 0;  b_muon_nglobalhits = 0;  b_muon_nstations = 0;
   b_muon_trackdxy = 0;  b_muon_trackdz = 0;
   b_muon_ninnerhits = 0;  b_muon_trackerlayers = 0;
-  b_muon_innerquality = 0; b_muon_caloCompatibility = 0; b_muon_segmentCompatibility = 0; 
+  b_muon_innerquality = 0; b_muon_caloCompatibility = 0; b_muon_segmentCompatibility_Arbitrate = 0; 
   b_muon_poszPV0 = 0; b_muon_poszSimPV = 0; b_muon_poszMuon = 0;
   b_muon_PFIso04 = 0;  b_muon_PFIso03 = 0;
   b_muon_PFIso03ChargedHadronPt = 0; b_muon_PFIso03NeutralHadronEt = 0;
@@ -654,7 +654,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_chi2 = tmvaValues[3];
     b_muon_chi2pos = tmvaValues[4];
     b_muon_trkKink = tmvaValues[5];
-    b_muon_segcompati = tmvaValues[6];
+    b_muon_segmentCompatibility = tmvaValues[6];    
     b_muon_nstations = tmvaValues[7];
     b_muon_nglobalhits = tmvaValues[8];
     b_muon_trackdxy = tmvaValues[9];
@@ -663,7 +663,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_trackerlayers = tmvaValues[11];    
     b_muon_innerquality = tmvaValues[12];    
     b_muon_caloCompatibility = tmvaValues[13];    
-    b_muon_segmentCompatibility = tmvaValues[14];    
+    b_muon_segmentCompatibility_Arbitrate = tmvaValues[14];    
   }
   tree->Fill();
 }
@@ -1193,7 +1193,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_normalizedChi2", &b_muon_chi2, "muon_normalizedChi2/F");
   tree->Branch("muon_chi2LocalPosition", &b_muon_chi2pos, "muon_chi2LocalPosition/F");
   tree->Branch("muon_trkKink", &b_muon_trkKink, "muon_trkKink/F");
-  tree->Branch("muon_segmentCompatibility", &b_muon_segcompati, "muon_segmentCompatibility/F");
+  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
   tree->Branch("muon_numberOfValidMuonHits", &b_muon_nglobalhits, "muon_numberOfValidMuonHits/I");
   tree->Branch("muon_numberOfMatchedStations", &b_muon_nstations, "muon_numberOfMatchedStations/I");
   tree->Branch("muon_pv0pos_dxy", &b_muon_trackdxy, "muon_pv0pos_dxy/F");
@@ -1202,7 +1202,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/F");
   tree->Branch("muon_innerquality", &b_muon_innerquality, "muon_innerquality/F");
   tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/F");
-  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
+  tree->Branch("muon_segmentCompatibility_Arbitrate", &b_muon_segmentCompatibility_Arbitrate, "muon_segmentCompatibility_Arbitrate/F");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
 
