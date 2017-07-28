@@ -147,6 +147,9 @@ ROOT.gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
 
+strNameMainTree = "MuonAnalyser"
+
+
 def setMarkerStyle(h,color,style,size):
     if style != "": 
         h.SetMarkerColor(color)
@@ -213,13 +216,20 @@ def getEff(filename,treename,title,binning,plotvar,dencut,numcut):
 
 
 def getBkg(filename,treename,title,binning,plotvar,numcut,denconf):
-    # Scaling by # of events
-    f = ROOT.TFile(filename)
-    hNorm = f.Get("MuonAnalyser/" + denconf[ "name" ].encode("ascii", "ignore"))
+    strType = "fromvtxhisto" if "type" not in denconf else denconf[ "type" ]
     
-    nBinMin = hNorm.GetXaxis().FindBin(denconf[ "min" ])
-    nBinMax = hNorm.GetXaxis().FindBin(denconf[ "max" ])
-    normfactor = hNorm.Integral(nBinMin, nBinMax)
+    normfactor = 0.0
+    
+    if strType == "fromvtxhisto": 
+      # Scaling by # of events
+      f = ROOT.TFile(filename)
+      hNorm = f.Get(strNameMainTree + "/" + denconf[ "name" ].encode("ascii", "ignore"))
+      
+      nBinMin = hNorm.GetXaxis().FindBin(denconf[ "min" ])
+      nBinMax = hNorm.GetXaxis().FindBin(denconf[ "max" ])
+      normfactor = hNorm.Integral(nBinMin, nBinMax)
+    elif strType == "simplenevents": 
+      normfactor = denconf[ "nevents" ]
     
     h1 = makeTH1(filename,treename,title,binning,plotvar,numcut)
     if normfactor > 0.0: h1.Scale(1.0 / normfactor)
@@ -315,7 +325,9 @@ def drawPlotFromDict(dicMainCmd):
     # Variables which can have a defalut value
     strPlotvar = "" # It must be determined either in "general" or "vars"
     strPlotType = "normal"
+    nIsTypeSet = 0
     nIsUsedCommonVar = 0
+    dicCutExtraVarConfig = {}
 
     nIsLogY = 0
 
@@ -342,6 +354,18 @@ def drawPlotFromDict(dicMainCmd):
     bNormalOff = False
     
     dicBkgDen = {"name": "nevents", "min": 0, "max": 1}
+    
+    strNameTagCut    = "extracut_"
+    strNameTagVarCut = "extravarcut_"
+    
+    for strItemForCut in dicMainCmd.keys(): 
+      if strNameTagCut in strItemForCut: 
+        dicCutConfig[ strItemForCut.replace(strNameTagCut, "") ] = dicMainCmd[ strItemForCut ]
+      elif strNameTagVarCut in strItemForCut: 
+        dicCutExtraVarConfig[ strItemForCut.replace(strNameTagVarCut, "") ] = dicMainCmd[ strItemForCut ]
+    
+    if "maintree" in dicMainCmd:
+      strNameMainTree = dicMainCmd[ "maintree" ].encode("ascii", "ignore")
 
     # Now setup the configuration
     if "plotvar" in dicMainCmd:
@@ -350,7 +374,7 @@ def drawPlotFromDict(dicMainCmd):
     
     if "plottype" in dicMainCmd: 
         listPossible = [
-            "normal", "effrate", "bkgrate", "accumulated", "divide"
+            "normal", "effrate", "bkgrate", "bkgdenominator", "accumulated", "divide"
         ]
         
         if dicMainCmd[ "plottype" ] not in listPossible: 
@@ -358,6 +382,7 @@ def drawPlotFromDict(dicMainCmd):
             sys.exit(1)
         
         strPlotType = dicMainCmd[ "plottype" ]
+        nIsTypeSet = 1
 
     if "ylog" in dicMainCmd:
         nIsLogY = 1
@@ -370,22 +395,23 @@ def drawPlotFromDict(dicMainCmd):
         fMax = dicMainCmd[ "max" ]
         nIsUseMax = 1
     
-    if "effrate" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "effrate" ) and "effrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "effrate" ]
         strPlotType = "effrate"
         
         if "effdenominator" in dicMainCmd:
             strCutDen = " && " + dicMainCmd[ "effdenominator" ]
 
-    if "bkgrate" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "bkgrate" ) and "bkgrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "bkgrate" ]
         strPlotType = "bkgrate"
     
-    if "bkgdenominator" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "bkgdenominator" ) and "bkgdenominator" in dicMainCmd: 
         dicBkgDen = dicMainCmd[ "bkgdenominator" ]
+        if "bkgrate" in dicBkgDen: strCutNum = " && " + dicBkgDen[ "bkgrate" ]
         strPlotType = "bkgrate"
     
-    if "divide" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "divide" ) and "divide" in dicMainCmd: 
         strCutByDiv = dicMainCmd[ "divide" ]
         strPlotType = "divide"
     
@@ -423,6 +449,13 @@ def drawPlotFromDict(dicMainCmd):
         if nIsUsedCommonVar == 0: 
             strPlotvar = varHead[ "plotvar" ]
         
+        strDataPath = datadir
+        
+        if "commonsource" in dicMainCmd: 
+            strDataPath += dicMainCmd[ "commonsource" ]
+        elif "filename" in varHead: 
+            strDataPath += varHead[ "filename" ]
+        
         #strTree = ""
         strCutNumVar = strCutNum
         strCutDenVar = strCutDen
@@ -432,50 +465,52 @@ def drawPlotFromDict(dicMainCmd):
         #if "recoMuon" in strPlotvar or "recoMuon" in strCut: 
         #    strTree = "MuonAnalyser/reco"
         if strTreePre == "gen": # because strTreePre may be in unicode
-            strTree = "MuonAnalyser/gen"
+            strTree = strNameMainTree + "/gen"
         if strTreePre == "reco": 
-            strTree = "MuonAnalyser/reco"
+            strTree = strNameMainTree + "/reco"
         
         if "cutconfig" in varHead: 
             for strKey in varHead[ "cutconfig" ].keys(): 
                 dicCutConfig[ strKey ] = varHead[ "cutconfig" ][ strKey ]
         
+        dicCutExtraVarConfig[ "ID" ] = dicCutConfig[ "ID" ]
+        
         strCutExtra = ""
-        if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
-        if "effrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "effrate" ]
-        if "bkgrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "bkgrate" ]
-        if "divide"  in varHead: strCutByDiv  = varHead[ "divide" ]
+        if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]%dicCutExtraVarConfig
+        if "effrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "effrate" ]%dicCutExtraVarConfig
+        if "bkgrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "bkgrate" ]%dicCutExtraVarConfig
+        if "divide"  in varHead: strCutByDiv  = varHead[ "divide" ]%dicCutExtraVarConfig
         
         if strPlotType == "normal": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getH1_Normalized(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         elif strPlotType == "effrate": 
             print "Num : %s\nDen : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig, ( strCut + strCutDenVar + strCutExtra )%dicCutConfig)
             # Drawing efficiency / fake rate plot
-            varHead[ "hist" ] = getEff(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getEff(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutDenVar + strCutExtra )%dicCutConfig, # cut for denominator
                 ( strCut + strCutNumVar + strCutExtra )%dicCutConfig) # cut for nominator
         elif strPlotType == "bkgrate": 
             print "Num : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getBkg(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getBkg(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutNumVar + strCutExtra )%dicCutConfig, # cut for nominator
                 dicBkgDen)
         elif strPlotType == "accumulated": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getH1_Accumulated(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getH1_Accumulated(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         elif strPlotType == "divide": 
             print "Num : %s\nDen : %s"%(strCutByDiv%dicCutConfig, strCut%dicCutConfig)
             # Drawing efficiency / fake rate plot
-            varHead[ "hist" ] = getDivide(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getDivide(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 strCut%dicCutConfig,       # cut for denominator
                 strCutByDiv%dicCutConfig)  # cut for nominator

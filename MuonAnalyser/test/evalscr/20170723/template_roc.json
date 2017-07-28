@@ -1,0 +1,65 @@
+{
+  "maintree": "PatMuonAnalyser", 
+  "cut": "muon.Pt() > %(pT)s && %(EtaL)s < abs(muon.Eta()) && abs(muon.Eta()) < %(EtaH)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
+  "binning": [1500,0,6.0], 
+  
+  "cutconfig": {
+    "pT":  "15", 
+    "Eta": "2.4", 
+    "PU":  "PU200"
+  }, 
+  
+  "extracut_ID": {"###bend": "ID", "Loose": "Loose", "Tight": "Tight"}, 
+  "extracut_EtaL": {"###bend": "EtaRange", "00_09": "0.0", "09_16": "0.9", "16_24": "1.6", "24_28": "2.4"}, 
+  "extracut_EtaH": {"###bend": "EtaRange", "00_09": "0.9", "09_16": "1.6", "16_24": "2.4", "24_28": "2.8"}, 
+  
+  "inputfilename_sig": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170718_2_zmm_200.root", 
+  "inputfilename_bkg": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170718_2_qcd_200.root", 
+  
+  "title": "ZZ#rightarrow#font[12]{4#mu} and QCD events (%(PU)s), \np_{T} > %(pT)s GeV, %(EtaL)s < |#eta| < %(EtaH)s, |z_{reco} - z_{sim}| < 0.5 cm", 
+  
+  "titlepos": {
+    "x": 0.17, 
+    "y": 0.80, 
+    "size": 0.04
+  }, 
+  
+  "legend": {
+    "top":    0.66, 
+    "bottom": 0.46
+  }, 
+  
+  "printout_front": "withvtxcut; rereco", 
+
+  "bkgcustom": {
+     "name": "bkgyield",
+     "label": "Background yield",
+     "numEvents": 2555040
+  },
+  
+  "vars": [
+      {
+        "name": "PUPPINL", 
+        "plotvar": "muon_puppiIsoNoLep", 
+        "title": "PUPPI isolation, R = 0.4", 
+        "color": 4, 
+        "shape": 34
+      }, 
+      {
+        "name": "PF", 
+        "plotvar": "muon_PFIsolation04", 
+        "title": "PF isolation, R = 0.4", 
+        "color": 8, 
+        "shape": 25
+      }, 
+      {
+        "name": "Trk", 
+        "plotvar": "muon_TrkIsolation03", 
+        "title": "Track isolation, R = 0.3", 
+        "color": 2, 
+        "shape": 25
+      }
+  ], 
+  
+  "filename": {"###savedic": "ROCCurve_TDR_withvtxcut_PU200_%(ID)s_%(EtaRange)s_20170718.pdf"}
+}
