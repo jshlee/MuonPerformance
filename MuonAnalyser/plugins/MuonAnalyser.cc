@@ -49,21 +49,12 @@ using namespace std;
 using namespace reco;
 using namespace edm;
 
-enum particleType{
-  CH = 0, 
-  NH = 1,
-  PH = 2,
-  OTHER = 100000
-};
-
 class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 public:
   explicit MuonAnalyser(const edm::ParameterSet&);
   ~MuonAnalyser();
   
   bool isGlobalTightMuon( const Muon* muonRef );
-  bool isME0MuonLoose( const Muon* muonRef );
-  bool isME0MuonTight( const Muon* muonRef );
   bool isTrackerTightMuon( const reco::Muon *muonRef );
   bool isIsolatedMuon( const reco::Muon *muonRef );
 
@@ -79,7 +70,7 @@ public:
   int nGEMhit(const reco::Muon * mu) const;
   int nME0hit(const reco::Muon * mu) const;
   
-  bool isME0MuonSelNew(const ME0Geometry* me0Geo_, const reco::Muon *mu, double dEtaCut, double dPhiCut, double dPhiBendCut);
+  bool isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut);
   void setBranches(TTree *tree);
   void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId);
   
@@ -109,7 +100,7 @@ private:
   int b_muon_no;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
-  bool b_muon_isME0Muon, b_muon_isME0MuonLoose, b_muon_isME0MuonTight, b_muon_isME0MuonSelNew;
+  bool b_muon_isME0Muon, b_muon_isME0MuonLoose, b_muon_isME0MuonMedium, b_muon_isME0MuonTight;
   bool b_muon_isGEMMuon, b_muon_isGE11Muon, b_muon_isGE21Muon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
   bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon, b_muon_isPFMuon;
   bool b_muon_isLooseMod;
@@ -400,7 +391,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
   b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isME0MuonSelNew = 0;
+  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonTight = 0;
   b_muon_isGEMMuon = 0; b_muon_isGE11Muon = 0; b_muon_isGE21Muon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
   b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
   b_muon_isLooseMod = 0;
@@ -470,12 +461,26 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isLoose = muon::isLooseMuon(*mu);
 
     b_muon_isME0Muon = mu->isME0Muon();
-    b_muon_isME0MuonLoose = isME0MuonLoose(mu);
-    b_muon_isME0MuonTight = isME0MuonTight(mu);
-    double dEtaCut_ = 0.06;
-    double dPhiCut_ = std::min(std::max(1.2/mu->p(),1.2/100),0.05);
-    double dPhiBendCut_ = std::min(std::max(0.2/mu->p(),0.2/100),0.0065);
-    b_muon_isME0MuonSelNew = isME0MuonSelNew(me0Geo_, mu, dEtaCut_, dPhiCut_, dPhiBendCut_);
+
+    double mom = mu->p();
+    double dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.056);
+    double dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0096);
+    b_muon_isME0MuonLoose = isME0MuonSelNew(*mu, 0.077, dPhiCut_, dPhiBendCut_);
+    
+    bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
+    if (mu->innerTrack().isNonnull()){
+      ipxy = std::abs(mu->muonBestTrack()->dxy(pv0.position())) < 0.2;
+      ipz = std::abs(mu->muonBestTrack()->dz((pv0.position()))) < 0.5;
+      validPxlHit = mu->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+      highPurity = mu->innerTrack()->quality(reco::Track::highPurity);
+    }
+    // isMediumME0 - just loose with track requirements for now, this needs to be updated
+    b_muon_isME0MuonMedium = isME0MuonSelNew(*mu, 0.077, dPhiCut_, dPhiBendCut_) && ipxy && validPxlHit && highPurity;
+
+    // tighter cuts for tight ME0
+    dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.032);
+    dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0041);
+    b_muon_isME0MuonTight = isME0MuonSelNew(*mu, 0.048, dPhiCut_, dPhiBendCut_) && ipxy && ipz && validPxlHit && highPurity;
     
     b_muon_isGEMMuon = mu->isGEMMuon();
     b_muon_isRPCMuon = mu->isRPCMuon();
@@ -533,12 +538,12 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    GlobalPoint segGp = me0Det->toGlobal(segLp);
 	    GlobalPoint chmGp = me0Det->toGlobal(chmLp);
 
-        LocalError segLe(segment.xErr, segment.yErr, 0);
-        LocalError chmLe(chamber.xErr, chamber.yErr, 0);
-        GlobalError segGe = tran.transform(segLe, me0Det->surface());
-        GlobalError chmGe = tran.transform(chmLe, me0Det->surface());
+	    LocalError segLe(segment.xErr, segment.yErr, 0);
+	    LocalError chmLe(chamber.xErr, chamber.yErr, 0);
+	    GlobalError segGe = tran.transform(segLe, me0Det->surface());
+	    GlobalError chmGe = tran.transform(chmLe, me0Det->surface());
 
-        b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
+	    b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	    b_muon_ME0dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	    b_muon_ME0dEta = chmGp.eta()- segGp.eta();
 	  }
@@ -567,12 +572,12 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	      GlobalPoint segGp = ge11Det->toGlobal(segLp);
 	      GlobalPoint chmGp = ge11Det->toGlobal(chmLp);
 
-          LocalError segLe(segment.xErr, segment.yErr, 0);
-          LocalError chmLe(chamber.xErr, chamber.yErr, 0);
-          GlobalError segGe = tran.transform(segLe, ge11Det->surface());
-          GlobalError chmGe = tran.transform(chmLe, ge11Det->surface());
+	      LocalError segLe(segment.xErr, segment.yErr, 0);
+	      LocalError chmLe(chamber.xErr, chamber.yErr, 0);
+	      GlobalError segGe = tran.transform(segLe, ge11Det->surface());
+	      GlobalError chmGe = tran.transform(chmLe, ge11Det->surface());
 
-          b_muon_GE11pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
+	      b_muon_GE11pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	      b_muon_GE11dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	      b_muon_GE11dEta = chmGp.eta()- segGp.eta();	      
 	    }
@@ -590,19 +595,19 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	      b_muon_GE21deltaDYDZ = ( chamber.dYdZ - segment.dYdZ );
 	      b_muon_GE21noRecHit  = gemSegment.nRecHits();
 	     
-          const GEMSuperChamber * ge21Det = gemGeo_->superChamber(gemSegment.gemDetId());
+	      const GEMSuperChamber * ge21Det = gemGeo_->superChamber(gemSegment.gemDetId());
 
 	      LocalPoint segLp(segment.x, segment.y, 0);
 	      LocalPoint chmLp(chamber.x, chamber.y, 0);
 	      GlobalPoint segGp = ge21Det->toGlobal(segLp);
 	      GlobalPoint chmGp = ge21Det->toGlobal(chmLp);
 
-          LocalError segLe(segment.xErr, segment.yErr, 0);
-          LocalError chmLe(chamber.xErr, chamber.yErr, 0);
-          GlobalError segGe = tran.transform(segLe, ge21Det->surface());
-          GlobalError chmGe = tran.transform(chmLe, ge21Det->surface());
+	      LocalError segLe(segment.xErr, segment.yErr, 0);
+	      LocalError chmLe(chamber.xErr, chamber.yErr, 0);
+	      GlobalError segGe = tran.transform(segLe, ge21Det->surface());
+	      GlobalError chmGe = tran.transform(chmLe, ge21Det->surface());
 
-          b_muon_GE21pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
+	      b_muon_GE21pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	      b_muon_GE21dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	      b_muon_GE21dEta = chmGp.eta()- segGp.eta();	      
 	    }
@@ -793,98 +798,56 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
   return noRecHitGEM;
 }
 
-bool MuonAnalyser::isME0MuonSelNew(const ME0Geometry* me0Geo_, const reco::Muon *muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
+bool MuonAnalyser::isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
 {
   bool result = false;
-  bool isME0 = muon->isME0Muon();
-  
+  bool isME0 = muon.isME0Muon();
+    
   if(isME0){
+      
     double deltaEta = 999;
     double deltaPhi = 999;
     double deltaPhiBend = 999;
 
-    const std::vector<reco::MuonChamberMatch>& chambers = muon->matches();
+    const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
     for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
         
       if (chamber->detector() == 5){
-      
-        for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
-        
-          LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
-          LocalPoint seg_loc_coord(segment->x, segment->y, 0);
-          LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
           
-          const ME0Chamber * me0chamber = me0Geo_->chamber(chamber->id);
-          
-          GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
-          GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
-          
-          double segDPhi = segment->me0SegmentRef->deltaPhi();
-          double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
-          
-          deltaEta = fabs(trk_glb_coord.eta() - seg_glb_coord.eta() );
-          deltaPhi = fabs(trk_glb_coord.phi() - seg_glb_coord.phi() );
-          deltaPhiBend = fabs(segDPhi - trackDPhi);
-          
-          if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+	for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+
+	  LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
+	  LocalPoint seg_loc_coord(segment->x, segment->y, 0);
+	  LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
+	  LocalVector seg_loc_vec(segment->dXdZ, segment->dYdZ, 1);
             
-        }
+	  const ME0Chamber * me0chamber = me0Geo_->chamber(chamber->id);
+            
+	  GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
+	  GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
+            
+	  //double segDPhi = segment->me0SegmentRef->deltaPhi();
+	  // need to check if this works
+	  double segDPhi = me0chamber->computeDeltaPhi(seg_loc_coord, seg_loc_vec);
+	  double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
+            
+	  deltaEta = std::abs(trk_glb_coord.eta() - seg_glb_coord.eta() );
+	  deltaPhi = std::abs(trk_glb_coord.phi() - seg_glb_coord.phi() );
+	  deltaPhiBend = std::abs(segDPhi - trackDPhi);
+            
+	  if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+            
+	}
       }
     }
       
   }
-  
+    
   return result;
-  
+    
 }
 
 
-bool MuonAnalyser::isME0MuonLoose( const reco::Muon *mu ) {
-  float me0SegX = 100;
-  for (auto chamber : mu->matches()){
-    for (auto segment : chamber.me0Matches){
-      if (chamber.detector() == 5){
-	auto me0Segment = (*segment.me0SegmentRef);
-	me0SegX = abs( chamber.x - segment.x );	  
-	if (me0SegX < abs(b_muon_ME0deltaX)){
-	  float ME0deltaX    = ( chamber.x - segment.x );
-	  float ME0deltaY    = ( chamber.y - segment.y );
-	  float ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
-	  float ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
-	  float ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);
-	  if (ME0deltaX < 3 || ME0pullX < 3)
-	    if (ME0deltaY < 3 || ME0pullY < 3)
-	      if (ME0dPhi < 0.5)
-		return true;
-	}
-      }
-    }
-  }
-  return false;
-}
-bool MuonAnalyser::isME0MuonTight( const reco::Muon *mu ) {
-  float me0SegX = 100;
-  for (auto chamber : mu->matches()){
-    for (auto segment : chamber.me0Matches){
-      if (chamber.detector() == 5){
-	auto me0Segment = (*segment.me0SegmentRef);
-	me0SegX = abs( chamber.x - segment.x );	  
-	if (me0SegX < abs(b_muon_ME0deltaX)){
-	  float ME0deltaX    = ( chamber.x - segment.x );
-	  float ME0deltaY    = ( chamber.y - segment.y );
-	  float ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
-	  float ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
-	  float ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);
-	  if (ME0deltaX < 3 || ME0pullX < 3)
-	    if (ME0deltaY < 3 || ME0pullY < 3)
-	      if (ME0dPhi < 0.1)
-		return true;
-	}
-      }
-    }
-  }
-  return false;
-}
 bool MuonAnalyser::isGlobalTightMuon( const reco::Muon *muonRef ) {
 
   //if ( !muonRef.isNonnull() ) return false;
@@ -1171,8 +1134,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isPFMuon", &b_muon_isPFMuon, "muon_isPFMuon/O");
   tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
   tree->Branch("muon_isME0MuonLoose", &b_muon_isME0MuonLoose, "muon_isME0MuonLoose/O");
+  tree->Branch("muon_isME0MuonMedium", &b_muon_isME0MuonMedium, "muon_isME0MuonMedium/O");
   tree->Branch("muon_isME0MuonTight", &b_muon_isME0MuonTight, "muon_isME0MuonTight/O");
-  tree->Branch("muon_isME0MuonSelNew", &b_muon_isME0MuonSelNew, "muon_isME0MuonSelNew/O");
   tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
   tree->Branch("muon_isGE11Muon", &b_muon_isGE11Muon, "muon_isGE11Muon/O");
   tree->Branch("muon_isGE21Muon", &b_muon_isGE21Muon, "muon_isGE21Muon/O");

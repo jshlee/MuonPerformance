@@ -252,10 +252,10 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
     
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
     if (muon->innerTrack().isNonnull()){
-        ipxy = std::abs(muon->muonBestTrack()->dxy(priVertex_.position())) < 0.2;
-        ipz = std::abs(muon->muonBestTrack()->dz((priVertex_.position()))) < 0.5;
-        validPxlHit = muon->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
-        highPurity = muon->innerTrack()->quality(reco::Track::highPurity);
+      ipxy = std::abs(muon->muonBestTrack()->dxy(priVertex_.position())) < 0.2;
+      ipz = std::abs(muon->muonBestTrack()->dz((priVertex_.position()))) < 0.5;
+      validPxlHit = muon->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+      highPurity = muon->innerTrack()->quality(reco::Track::highPurity);
     }
     // isMediumME0 - just loose with track requirements for now, this needs to be updated
     b_muon_isME0MuonMedium = isME0MuonSelNew(*muon, 0.077, dPhiCut_, dPhiBendCut_) && ipxy && validPxlHit && highPurity;
@@ -270,51 +270,50 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
 
 bool PatMuonAnalyser::isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
 {
+  bool result = false;
+  bool isME0 = muon.isME0Muon();
     
-    bool result = false;
-    bool isME0 = muon.isME0Muon();
-    
-    if(isME0){
+  if(isME0){
       
-      double deltaEta = 999;
-      double deltaPhi = 999;
-      double deltaPhiBend = 999;
+    double deltaEta = 999;
+    double deltaPhi = 999;
+    double deltaPhiBend = 999;
 
-      const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
-      for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+    const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
+    for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
         
-        if (chamber->detector() == 5){
+      if (chamber->detector() == 5){
           
-          for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+	for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
 
-            LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
-            LocalPoint seg_loc_coord(segment->x, segment->y, 0);
-            LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
-            LocalVector seg_loc_vec(segment->dXdZ, segment->dYdZ, 1);
+	  LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
+	  LocalPoint seg_loc_coord(segment->x, segment->y, 0);
+	  LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
+	  LocalVector seg_loc_vec(segment->dXdZ, segment->dYdZ, 1);
             
-            const ME0Chamber * me0chamber = ME0Geometry_->chamber(chamber->id);
+	  const ME0Chamber * me0chamber = ME0Geometry_->chamber(chamber->id);
             
-            GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
-            GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
+	  GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
+	  GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
             
-            //double segDPhi = segment->me0SegmentRef->deltaPhi();
-// need to check if this works
-double segDPhi = me0chamber->computeDeltaPhi(seg_loc_coord, seg_loc_vec);
-            double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
+	  //double segDPhi = segment->me0SegmentRef->deltaPhi();
+	  // need to check if this works
+	  double segDPhi = me0chamber->computeDeltaPhi(seg_loc_coord, seg_loc_vec);
+	  double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
             
-            deltaEta = std::abs(trk_glb_coord.eta() - seg_glb_coord.eta() );
-            deltaPhi = std::abs(trk_glb_coord.phi() - seg_glb_coord.phi() );
-            deltaPhiBend = std::abs(segDPhi - trackDPhi);
+	  deltaEta = std::abs(trk_glb_coord.eta() - seg_glb_coord.eta() );
+	  deltaPhi = std::abs(trk_glb_coord.phi() - seg_glb_coord.phi() );
+	  deltaPhiBend = std::abs(segDPhi - trackDPhi);
             
-            if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+	  if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
             
-          }
-        }
+	}
       }
-      
     }
+      
+  }
     
-    return result;
+  return result;
     
 }
 
