@@ -85,11 +85,14 @@ def draw(h_init, y_name, hlists, name, text, binning):
     canv.SaveAs("%s_%s_%s.png"%(plotvar,muonid,name))
 
 
-datadir = '/xrootd/store/user/tt8888tt/muon/9_1_1/'
-filenames = "zmmtotal.root"
+datadir = './'
+#datadir = '/xrootd/store/user/tt8888tt/muon/9_1_1/'
+filename = "ttbartotal.root"
+#filename = "zmmtotal.root"
 
 muonid = sys.argv[1]
 binning_l = [[10,5,105],[12,0,2.4],[12,-2.4,2.4],[15,-3,3],[20,60,260],[10,0,10],[20,60,260]]
+#rangecut = "abs(muon.Eta())<2.4"
 rangecut = "muon.Pt()>5&&abs(muon.Eta())<2.4"
     
 #Set extra text
@@ -99,10 +102,10 @@ text = samplename+", p_{T} > 5 GeV, |#eta| < 2.4"
 if "Tight" in muonid:
     #origid = "isTight"
     origid = "isTightCustom"
-    tmvaid = "tmva_bdt>-0.11" #0.11
+    tmvaid = "tmva_bdt>-0.165" #0.11
 elif muonid == "Loose":
     origid = "isLoose"
-    tmvaid = "tmva_bdt>-0.167" #0.167
+    tmvaid = "tmva_bdt>-0.195" #0.167
 
 for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon.Phi()", "nvertex", "pu_density/2", "pu_numInteractions"]):
     #Efficiency
@@ -116,9 +119,10 @@ for i, plotvar in enumerate(["muon.Pt()", "abs(muon.Eta())", "muon.Eta()", "muon
         hl_bkg.append(makeTH1(datadir+filename, "MuonAnalyser/reco", "PhaseII ", binning_l[i], plotvar, "%s&&!muon_signal&&muon_%s"%(rangecut,origid)))
         hl_bkg.append(makeTH1(datadir+filename, "MuonAnalyser/reco", "PhaseII  (TMVA ID)", binning_l[i], plotvar, "%s&&!muon_signal&&muon_%s"%(rangecut,tmvaid)))
         for j in range(len(hl_bkg)):
-            divByNevents(datadir+filenames[j], hl_bkg[j])
+            divByNevents(datadir+filename, hl_bkg[j])
 
     else:
+        break
         hl_bkg = []
         hl_bkg.append(getEff(datadir+filename, "MuonAnalyser/reco", "PhaseII ", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_%s"%(rangecut,origid)))
         hl_bkg.append(getEff(datadir+filename, "MuonAnalyser/reco", "PhaseII  (TMVA ID)", binning_l[i], plotvar, "muon_no==1", "%s&&!muon_signal&&muon_%s"%(rangecut,tmvaid)))

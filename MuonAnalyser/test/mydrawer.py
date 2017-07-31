@@ -85,7 +85,8 @@ def draw(h_init, y_name, hlists, name, text):
     canv.SaveAs("%s_tmvaLoose_%s.png"%(plotvar,name))
 
 
-datadir = '/xrootd/store/user/tt8888tt/muon/9_1_1/'
+datadir = './'
+#datadir = '/xrootd/store/user/tt8888tt/muon/9_1_1/'
 filenames = ["zmm.root", "zmm140.root", "zmm200.root"]
 #filenames = ["zmm.root", "zmm140.root", "zmm200.root", "run2.root"]
 #filenames = ["relval_"+x for x in filenames]
@@ -94,9 +95,9 @@ idname = sys.argv[1]
 muonid = "is"+idname
 
 #tmva
-if "Tight" in idname: muonid = "tmva_bdt>-0.11"
-if "Loose" in idname: muonid = "tmva_bdt>-0.167"
-else: print "ID name has to be Tight or Loose.'
+if "Tight" in idname: muonid = "tmva_bdt>-0.1472"
+elif "Loose" in idname: muonid = "tmva_bdt>-0.167"
+else: print idname, "Tight" in idname, "ID name has to be Tight or Loose."
 
 binning_l = [[20,5,105],[24,0,2.4],[24,-2.4,2.4],[30,-3,3],[40,60,260],[20,0,10],[40,60,260]]
 rangecut = "muon.Pt()>5&&abs(muon.Eta())<2.4"

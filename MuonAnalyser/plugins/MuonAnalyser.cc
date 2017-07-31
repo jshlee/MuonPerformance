@@ -50,82 +50,12 @@ using namespace std;
 using namespace reco;
 using namespace edm;
 
-enum particleType{
-  CH = 0, 
-  NH = 1,
-  PH = 2,
-  OTHER = 100000
-};
-
 class MuonAnalyser : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
-  struct PUPPIIsolation {
-    float charged_hadrons;
-    float neutral_hadrons;
-    float photons;
-    float NoLep_charged_hadrons;
-    float NoLep_neutral_hadrons;
-    float NoLep_photons;
-  };
-  
-  struct puppiIso {
-    int nNumCands;
-    int nNumCandsInR05;
-    int nNumCandsOutR05;
-    
-    int nNumCandsInR05OT;
-    
-    int nNumCandsInR05CH;
-    int nNumCandsInR05NH;
-    int nNumCandsInR05PH;
-    
-    int nNumCandsInR05CHApp;
-    int nNumCandsInR05NHApp;
-    int nNumCandsInR05PHApp;
-    
-    double combined;
-    double withLep;
-    double withoutlep;
-    
-    double combined03;
-    double withLep03;
-    double withoutlep03;
-    
-    double combined05;
-    double withLep05;
-    double withoutlep05;
-    
-    double withLep03CH;
-    double withLep03NH;
-    double withLep03PH;
-    
-    double withLep04CH;
-    double withLep04NH;
-    double withLep04PH;
-    
-    double withLep05CH;
-    double withLep05NH;
-    double withLep05PH;
-    
-    double withoutlep03CH;
-    double withoutlep03NH;
-    double withoutlep03PH;
-    
-    double withoutlep04CH;
-    double withoutlep04NH;
-    double withoutlep04PH;
-    
-    double withoutlep05CH;
-    double withoutlep05NH;
-    double withoutlep05PH;
-  };
-
 public:
   explicit MuonAnalyser(const edm::ParameterSet&);
   ~MuonAnalyser();
   
   bool isGlobalTightMuon( const Muon* muonRef );
-  bool isME0MuonLoose( const Muon* muonRef );
-  bool isME0MuonTight( const Muon* muonRef );
   bool isTrackerTightMuon( const reco::Muon *muonRef );
   bool isIsolatedMuon( const reco::Muon *muonRef );
 
@@ -142,12 +72,7 @@ public:
   int nGEMhit(const reco::Muon * mu) const;
   int nME0hit(const reco::Muon * mu) const;
   
-  puppiIso getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs, int nIsReco, int nIsUsingP = 0) const;
-  bool isNH( long pdgid ) const;
-  bool isCH( long pdgid ) const;
-  bool isPH( long pdgid ) const;
-
-  bool isME0MuonSelNew(const ME0Geometry* me0Geo_, const reco::Muon *mu, double dEtaCut, double dPhiCut, double dPhiBendCut);
+  bool isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut);
   void setBranches(TTree *tree);
   void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId);
   
@@ -177,18 +102,18 @@ private:
   int b_muon_no;
   float b_muon_pTresolution, b_muon_pTinvresolution;
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
-  bool b_muon_isME0Muon, b_muon_isME0MuonLoose, b_muon_isME0MuonTight, b_muon_isME0MuonSelNew;
+  bool b_muon_isME0Muon, b_muon_isME0MuonLoose, b_muon_isME0MuonMedium, b_muon_isME0MuonTight;
   bool b_muon_isGEMMuon, b_muon_isGE11Muon, b_muon_isGE21Muon, b_muon_isRPCMuon, b_muon_isCaloMuon, b_muon_isTrackerMuon;
   bool b_muon_isGlobalMuon, b_muon_isStandAloneMuon, b_muon_isPFMuon;
   bool b_muon_isLooseMod;
   bool b_muon_isTightModNoIP, b_muon_isTightModIPxy, b_muon_isTightModIPz, b_muon_isTightModIPxyz;
 
   bool b_muon_tracker; bool b_muon_global; bool b_muon_pf;
-  float b_muon_chi2pos; float b_muon_trkKink; float b_muon_segcompati;
+  float b_muon_chi2pos; float b_muon_trkKink; float b_muon_segmentCompatibility;
   float b_muon_chi2; int b_muon_nglobalhits; int b_muon_nstations;
   float b_muon_trackdxy; float b_muon_trackdz;
   int b_muon_ninnerhits; float b_muon_trackerlayers; 
-  float b_muon_innerquality; float b_muon_caloCompatibility; float b_muon_segmentCompatibility; 
+  float b_muon_innerquality; float b_muon_caloCompatibility; float b_muon_segmentCompatibility_Arbitrate; 
   float b_muon_poszPV0, b_muon_poszSimPV, b_muon_poszMuon;
 
   float b_muon_ME0segX, b_muon_ME0chamX;
@@ -208,23 +133,6 @@ private:
   float b_muon_puppiIso, b_muon_puppiIsoNoLep;
   float b_muon_puppiIso_ChargedHadron, b_muon_puppiIso_NeutralHadron, b_muon_puppiIso_Photon;  
   float b_muon_puppiIsoNoLep_ChargedHadron, b_muon_puppiIsoNoLep_NeutralHadron, b_muon_puppiIsoNoLep_Photon;  
-  float b_muon_puppiIsoWithLep, b_muon_puppiIsoWithoutLep, b_muon_puppiIsoCombined;
-  float b_muon_puppiIsoWithLepByP, b_muon_puppiIsoWithoutLepByP, b_muon_puppiIsoCombinedByP;
-  float b_muon_puppiIsoWithLep03, b_muon_puppiIsoWithoutLep03, b_muon_puppiIsoCombined03;
-  float b_muon_puppiIsoWithLep05, b_muon_puppiIsoWithoutLep05, b_muon_puppiIsoCombined05;
-  float b_muon_puppiIsoWithLep03ChargedHadron, b_muon_puppiIsoWithLep03NeutralHadron, b_muon_puppiIsoWithLep03Photon;
-  float b_muon_puppiIsoWithLep04ChargedHadron, b_muon_puppiIsoWithLep04NeutralHadron, b_muon_puppiIsoWithLep04Photon;
-  float b_muon_puppiIsoWithLep05ChargedHadron, b_muon_puppiIsoWithLep05NeutralHadron, b_muon_puppiIsoWithLep05Photon;
-  float b_muon_puppiIsoWithoutLep03ChargedHadron, b_muon_puppiIsoWithoutLep03NeutralHadron, b_muon_puppiIsoWithoutLep03Photon;
-  float b_muon_puppiIsoWithoutLep04ChargedHadron, b_muon_puppiIsoWithoutLep04NeutralHadron, b_muon_puppiIsoWithoutLep04Photon;
-  float b_muon_puppiIsoWithoutLep05ChargedHadron, b_muon_puppiIsoWithoutLep05NeutralHadron, b_muon_puppiIsoWithoutLep05Photon;
-  int b_muon_puppiIsoNumOfCands;
-  int b_muon_puppiIsoNumOfCandsInR05;
-  int b_muon_puppiIsoNumOfCandsOutR05;
-  int b_muon_puppiIsoNumOfCandsInR05OT;
-  int b_muon_puppiIsoNumOfCandsInR05CH, b_muon_puppiIsoNumOfCandsInR05CHApp;
-  int b_muon_puppiIsoNumOfCandsInR05NH, b_muon_puppiIsoNumOfCandsInR05NHApp;
-  int b_muon_puppiIsoNumOfCandsInR05PH, b_muon_puppiIsoNumOfCandsInR05PHApp;
   bool b_muon_isMuon;
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
@@ -322,9 +230,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   recottree_ = fs->make<TTree>("reco", "reco");
   setBranches(recottree_);
 
-  string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility" }; 
+  string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility_Arbitrate" }; 
   string me0_dummy[] = { "fabs(muon_ME0dPhiBend)", "fabs(muon_ME0dPhi)", "fabs(muon_ME0dEta)", "fabs(muon_ME0deltaX)", "fabs(muon_ME0deltaY)", "fabs(muon_ME0deltaDXDZ)", "fabs(muon_ME0deltaDYDZ)", "fabs(muon_ME0pullX)", "fabs(muon_ME0pullY)" };
-
   vector< string > dummy_label;
   vector< string > me0_dummy_label;
 
@@ -480,40 +387,6 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       isSignalMuon = abs(simTP->pdgId())==13 && !simTP->genParticles().empty() && (simTP->eventId().event() == 0) && (simTP->eventId().bunchCrossing() == 0);
     fillBranches(recottree_, recotlv, muRef, isSignalMuon, pdgId);
   }
-  // test start
-  float dZLV = 0.0;
-  int nNumCandCH = 0;
-  
-  for( std::vector<pat::PackedCandidate>::const_iterator cand = candidates_->begin();
-       cand != candidates_->end();
-       cand ++ )
-    {
-      if ( isCH(abs(cand -> pdgId())) && cand->puppiWeight() > 0.5 ) {
-	dZLV += cand->vz();
-	nNumCandCH++;
-      }
-    }
-  
-  dZLV /= nNumCandCH;
-  
-  for( std::vector<pat::PackedCandidate>::const_iterator cand = candidates_->begin();
-       cand != candidates_->end();
-       cand ++ )
-    {
-      long nIDAbs = abs(cand -> pdgId());
-    
-      if ( !( isNH(nIDAbs) || isPH(nIDAbs) ) ) {
-	continue;
-      }
-    
-      int nIsFromPV = ( isNH(nIDAbs) ? 0 : 2 );
-      float dVZ = cand->vz() - dZLV;
-    
-      nIsFromPV += ( -0.5 < dVZ && dVZ < 0.5 ? 1 : 0 );
-    
-      //printf("-PUPPIW%i %i %0.4f %0.7f\n", (int)nIDAbs, nIsFromPV, cand->puppiWeight(), dVZ);
-    }
-  // test end
 
 }
 
@@ -528,7 +401,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
   
   b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonTight = 0; b_muon_isME0MuonSelNew = 0;
+  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonTight = 0;
   b_muon_isGEMMuon = 0; b_muon_isGE11Muon = 0; b_muon_isGE21Muon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
   b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
   b_muon_isLooseMod = 0;
@@ -540,11 +413,11 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100; b_muon_GE21pullPhi = 100;
 
   b_muon_tracker = 0;  b_muon_global = 0;  b_muon_pf = 0;
-  b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segcompati = 0;
+  b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segmentCompatibility = 0;
   b_muon_chi2 = 0;  b_muon_nglobalhits = 0;  b_muon_nstations = 0;
   b_muon_trackdxy = 0;  b_muon_trackdz = 0;
   b_muon_ninnerhits = 0;  b_muon_trackerlayers = 0;
-  b_muon_innerquality = 0; b_muon_caloCompatibility = 0; b_muon_segmentCompatibility = 0; 
+  b_muon_innerquality = 0; b_muon_caloCompatibility = 0; b_muon_segmentCompatibility_Arbitrate = 0; 
   b_muon_poszPV0 = 0; b_muon_poszSimPV = 0; b_muon_poszMuon = 0;
   b_muon_PFIso04 = 0;  b_muon_PFIso03 = 0;
   b_muon_PFIso03ChargedHadronPt = 0; b_muon_PFIso03NeutralHadronEt = 0;
@@ -554,23 +427,6 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_TrkIso05 = 0;  b_muon_TrkIso03 = 0;
   b_muon_puppiIso = 0; b_muon_puppiIso_ChargedHadron = 0; b_muon_puppiIso_NeutralHadron = 0; b_muon_puppiIso_Photon = 0;
   b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
-  b_muon_puppiIsoWithLep = 0; b_muon_puppiIsoWithoutLep = 0; b_muon_puppiIsoCombined = 0;
-  b_muon_puppiIsoWithLepByP = 0; b_muon_puppiIsoWithoutLepByP = 0; b_muon_puppiIsoCombinedByP = 0;
-  b_muon_puppiIsoWithLep03 = 0; b_muon_puppiIsoWithoutLep03 = 0; b_muon_puppiIsoCombined03 = 0;
-  b_muon_puppiIsoWithLep05 = 0; b_muon_puppiIsoWithoutLep05 = 0; b_muon_puppiIsoCombined05 = 0;
-  b_muon_puppiIsoWithLep03ChargedHadron = 0; b_muon_puppiIsoWithLep03NeutralHadron = 0; b_muon_puppiIsoWithLep03Photon = 0;
-  b_muon_puppiIsoWithLep04ChargedHadron = 0; b_muon_puppiIsoWithLep04NeutralHadron = 0; b_muon_puppiIsoWithLep04Photon = 0;
-  b_muon_puppiIsoWithLep05ChargedHadron = 0; b_muon_puppiIsoWithLep05NeutralHadron = 0; b_muon_puppiIsoWithLep05Photon = 0;
-  b_muon_puppiIsoWithoutLep03ChargedHadron = 0; b_muon_puppiIsoWithoutLep03NeutralHadron = 0; b_muon_puppiIsoWithoutLep03Photon = 0;
-  b_muon_puppiIsoWithoutLep04ChargedHadron = 0; b_muon_puppiIsoWithoutLep04NeutralHadron = 0; b_muon_puppiIsoWithoutLep04Photon = 0;
-  b_muon_puppiIsoWithoutLep05ChargedHadron = 0; b_muon_puppiIsoWithoutLep05NeutralHadron = 0; b_muon_puppiIsoWithoutLep05Photon = 0;
-  b_muon_puppiIsoNumOfCands = 0;
-  b_muon_puppiIsoNumOfCandsInR05 = 0;
-  b_muon_puppiIsoNumOfCandsOutR05 = 0;
-  b_muon_puppiIsoNumOfCandsInR05OT = 0;
-  b_muon_puppiIsoNumOfCandsInR05CH = 0; b_muon_puppiIsoNumOfCandsInR05CHApp = 0;
-  b_muon_puppiIsoNumOfCandsInR05NH = 0; b_muon_puppiIsoNumOfCandsInR05NHApp = 0;
-  b_muon_puppiIsoNumOfCandsInR05PH = 0; b_muon_puppiIsoNumOfCandsInR05PHApp = 0;
   b_muon_isMuon = 0;
   b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
 
@@ -607,68 +463,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
     b_muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
     b_muon_puppiIsoNoLep = (b_muon_puppiIsoNoLep_ChargedHadron+b_muon_puppiIsoNoLep_NeutralHadron+b_muon_puppiIsoNoLep_Photon)/mu->pt();
-    
-    puppiIso puppiIsoValues = getPuppiIso( mu, candidates_, 0);
-    //cout << "pIso.combined "<< pIso.combined  <<endl;
-
-    b_muon_puppiIsoWithLep    = puppiIsoValues.withLep;
-    b_muon_puppiIsoWithoutLep = puppiIsoValues.withoutlep;
-    b_muon_puppiIsoCombined   = puppiIsoValues.combined;
-
-    b_muon_puppiIsoWithLep03    = puppiIsoValues.withLep03;
-    b_muon_puppiIsoWithoutLep03 = puppiIsoValues.withoutlep03;
-    b_muon_puppiIsoCombined03   = puppiIsoValues.combined03;
-
-    b_muon_puppiIsoWithLep05    = puppiIsoValues.withLep05;
-    b_muon_puppiIsoWithoutLep05 = puppiIsoValues.withoutlep05;
-    b_muon_puppiIsoCombined05   = puppiIsoValues.combined05;
-    
-    b_muon_puppiIsoWithLep03ChargedHadron = puppiIsoValues.withLep03CH;
-    b_muon_puppiIsoWithLep03NeutralHadron = puppiIsoValues.withLep03NH;
-    b_muon_puppiIsoWithLep03Photon        = puppiIsoValues.withLep03PH;
-    
-    b_muon_puppiIsoWithLep04ChargedHadron = puppiIsoValues.withLep04CH;
-    b_muon_puppiIsoWithLep04NeutralHadron = puppiIsoValues.withLep04NH;
-    b_muon_puppiIsoWithLep04Photon        = puppiIsoValues.withLep04PH;
-    
-    b_muon_puppiIsoWithLep05ChargedHadron = puppiIsoValues.withLep05CH;
-    b_muon_puppiIsoWithLep05NeutralHadron = puppiIsoValues.withLep05NH;
-    b_muon_puppiIsoWithLep05Photon        = puppiIsoValues.withLep05PH;
-    
-    b_muon_puppiIsoWithoutLep03ChargedHadron = puppiIsoValues.withoutlep03CH;
-    b_muon_puppiIsoWithoutLep03NeutralHadron = puppiIsoValues.withoutlep03NH;
-    b_muon_puppiIsoWithoutLep03Photon        = puppiIsoValues.withoutlep03PH;
-    
-    b_muon_puppiIsoWithoutLep04ChargedHadron = puppiIsoValues.withoutlep04CH;
-    b_muon_puppiIsoWithoutLep04NeutralHadron = puppiIsoValues.withoutlep04NH;
-    b_muon_puppiIsoWithoutLep04Photon        = puppiIsoValues.withoutlep04PH;
-    
-    b_muon_puppiIsoWithoutLep05ChargedHadron = puppiIsoValues.withoutlep05CH;
-    b_muon_puppiIsoWithoutLep05NeutralHadron = puppiIsoValues.withoutlep05NH;
-    b_muon_puppiIsoWithoutLep05Photon        = puppiIsoValues.withoutlep05PH;
-    
-    b_muon_puppiIsoNumOfCands       = puppiIsoValues.nNumCands;
-    b_muon_puppiIsoNumOfCandsInR05  = puppiIsoValues.nNumCandsInR05;
-    b_muon_puppiIsoNumOfCandsOutR05 = puppiIsoValues.nNumCandsOutR05;
-    
-    b_muon_puppiIsoNumOfCandsInR05OT = puppiIsoValues.nNumCandsInR05OT;
-    
-    b_muon_puppiIsoNumOfCandsInR05CH = puppiIsoValues.nNumCandsInR05CH;
-    b_muon_puppiIsoNumOfCandsInR05NH = puppiIsoValues.nNumCandsInR05NH;
-    b_muon_puppiIsoNumOfCandsInR05PH = puppiIsoValues.nNumCandsInR05PH;
-    
-    b_muon_puppiIsoNumOfCandsInR05CHApp = puppiIsoValues.nNumCandsInR05CHApp;
-    b_muon_puppiIsoNumOfCandsInR05NHApp = puppiIsoValues.nNumCandsInR05NHApp;
-    b_muon_puppiIsoNumOfCandsInR05PHApp = puppiIsoValues.nNumCandsInR05PHApp;
-    
-    // PUPPI isolation with whole p, not pT; for high-eta region
-    puppiIso puppiIsoValuesWithP = getPuppiIso( mu, candidates_, 0, 1);
-    //cout << "pIso.combined "<< pIso.combined  <<endl;
-
-    b_muon_puppiIsoWithLepByP    = puppiIsoValuesWithP.withLep;
-    b_muon_puppiIsoWithoutLepByP = puppiIsoValuesWithP.withoutlep;
-    b_muon_puppiIsoCombinedByP   = puppiIsoValuesWithP.combined;
-    
+        
     b_muon_isTightOptimized = isTightMuonCustomOptimized(*mu, pv0);
     b_muon_isTightCustom = isTightMuonCustom(*mu, pv0);
     b_muon_isTight = muon::isTightMuon(*mu, pv0);
@@ -676,12 +471,26 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_isLoose = muon::isLooseMuon(*mu);
 
     b_muon_isME0Muon = mu->isME0Muon();
-    b_muon_isME0MuonLoose = isME0MuonLoose(mu);
-    b_muon_isME0MuonTight = isME0MuonTight(mu);
-    double dEtaCut_ = 0.06;
-    double dPhiCut_ = std::min(std::max(1.2/mu->p(),1.2/100),0.05);
-    double dPhiBendCut_ = std::min(std::max(0.2/mu->p(),0.2/100),0.0065);
-    b_muon_isME0MuonSelNew = isME0MuonSelNew(me0Geo_, mu, dEtaCut_, dPhiCut_, dPhiBendCut_);
+
+    double mom = mu->p();
+    double dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.056);
+    double dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0096);
+    b_muon_isME0MuonLoose = isME0MuonSelNew(*mu, 0.077, dPhiCut_, dPhiBendCut_);
+    
+    bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
+    if (mu->innerTrack().isNonnull()){
+      ipxy = std::abs(mu->muonBestTrack()->dxy(pv0.position())) < 0.2;
+      ipz = std::abs(mu->muonBestTrack()->dz((pv0.position()))) < 0.5;
+      validPxlHit = mu->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+      highPurity = mu->innerTrack()->quality(reco::Track::highPurity);
+    }
+    // isMediumME0 - just loose with track requirements for now, this needs to be updated
+    b_muon_isME0MuonMedium = isME0MuonSelNew(*mu, 0.077, dPhiCut_, dPhiBendCut_) && ipxy && validPxlHit && highPurity;
+
+    // tighter cuts for tight ME0
+    dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.032);
+    dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0041);
+    b_muon_isME0MuonTight = isME0MuonSelNew(*mu, 0.048, dPhiCut_, dPhiBendCut_) && ipxy && ipz && validPxlHit && highPurity;
     
     b_muon_isGEMMuon = mu->isGEMMuon();
     b_muon_isRPCMuon = mu->isRPCMuon();
@@ -740,16 +549,16 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    GlobalPoint segGp = me0Det->toGlobal(segLp);
 	    GlobalPoint chmGp = me0Det->toGlobal(chmLp);
 
-        LocalError segLe(segment.xErr, segment.yErr, 0);
-        LocalError chmLe(chamber.xErr, chamber.yErr, 0);
-        GlobalError segGe = tran.transform(segLe, me0Det->surface());
-        GlobalError chmGe = tran.transform(chmLe, me0Det->surface());
+	    LocalError segLe(segment.xErr, segment.yErr, 0);
+	    LocalError chmLe(chamber.xErr, chamber.yErr, 0);
+	    GlobalError segGe = tran.transform(segLe, me0Det->surface());
+	    GlobalError chmGe = tran.transform(chmLe, me0Det->surface());
 
         double segdPhi = me0Segment.deltaPhi();
         double chmdPhi = me0Det->computeDeltaPhi(chmLp, chmLv); 
 
         b_muon_ME0dPhiBend = segdPhi - chmdPhi;
-        b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
+	    b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	    b_muon_ME0dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	    b_muon_ME0dEta = chmGp.eta()- segGp.eta();
 
@@ -791,12 +600,12 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	      GlobalPoint segGp = ge11Det->toGlobal(segLp);
 	      GlobalPoint chmGp = ge11Det->toGlobal(chmLp);
 
-          LocalError segLe(segment.xErr, segment.yErr, 0);
-          LocalError chmLe(chamber.xErr, chamber.yErr, 0);
-          GlobalError segGe = tran.transform(segLe, ge11Det->surface());
-          GlobalError chmGe = tran.transform(chmLe, ge11Det->surface());
+	      LocalError segLe(segment.xErr, segment.yErr, 0);
+	      LocalError chmLe(chamber.xErr, chamber.yErr, 0);
+	      GlobalError segGe = tran.transform(segLe, ge11Det->surface());
+	      GlobalError chmGe = tran.transform(chmLe, ge11Det->surface());
 
-          b_muon_GE11pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
+	      b_muon_GE11pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	      b_muon_GE11dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	      b_muon_GE11dEta = chmGp.eta()- segGp.eta();	      
 	    }
@@ -814,19 +623,19 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	      b_muon_GE21deltaDYDZ = ( chamber.dYdZ - segment.dYdZ );
 	      b_muon_GE21noRecHit  = gemSegment.nRecHits();
 	     
-          const GEMSuperChamber * ge21Det = gemGeo_->superChamber(gemSegment.gemDetId());
+	      const GEMSuperChamber * ge21Det = gemGeo_->superChamber(gemSegment.gemDetId());
 
 	      LocalPoint segLp(segment.x, segment.y, 0);
 	      LocalPoint chmLp(chamber.x, chamber.y, 0);
 	      GlobalPoint segGp = ge21Det->toGlobal(segLp);
 	      GlobalPoint chmGp = ge21Det->toGlobal(chmLp);
 
-          LocalError segLe(segment.xErr, segment.yErr, 0);
-          LocalError chmLe(chamber.xErr, chamber.yErr, 0);
-          GlobalError segGe = tran.transform(segLe, ge21Det->surface());
-          GlobalError chmGe = tran.transform(chmLe, ge21Det->surface());
+	      LocalError segLe(segment.xErr, segment.yErr, 0);
+	      LocalError chmLe(chamber.xErr, chamber.yErr, 0);
+	      GlobalError segGe = tran.transform(segLe, ge21Det->surface());
+	      GlobalError chmGe = tran.transform(chmLe, ge21Det->surface());
 
-          b_muon_GE21pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
+	      b_muon_GE21pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	      b_muon_GE21dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	      b_muon_GE21dEta = chmGp.eta()- segGp.eta();	      
 	    }
@@ -879,7 +688,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_chi2 = tmvaValues[3];
     b_muon_chi2pos = tmvaValues[4];
     b_muon_trkKink = tmvaValues[5];
-    b_muon_segcompati = tmvaValues[6];
+    b_muon_segmentCompatibility = tmvaValues[6];    
     b_muon_nstations = tmvaValues[7];
     b_muon_nglobalhits = tmvaValues[8];
     b_muon_trackdxy = tmvaValues[9];
@@ -888,7 +697,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_trackerlayers = tmvaValues[11];    
     b_muon_innerquality = tmvaValues[12];    
     b_muon_caloCompatibility = tmvaValues[13];    
-    b_muon_segmentCompatibility = tmvaValues[14];    
+    b_muon_segmentCompatibility_Arbitrate = tmvaValues[14];    
   }
   tree->Fill();
 }
@@ -1018,329 +827,56 @@ int MuonAnalyser::nGEMhit(const reco::Muon* muon) const
   return noRecHitGEM;
 }
 
-MuonAnalyser::puppiIso MuonAnalyser::getPuppiIso(const reco::Muon *mu, const vector< pat::PackedCandidate> *pcs, int nIsReco, int nIsUsingP) const
-{
-  puppiIso puppivalues;
-  
-  ///////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////
-  // 
-  // 
-  // ATENTION : in the source, this value is taken via configuration; 
-  //     "mixFraction" and "dR".
-  //     They should be get via configuration.
-  //     (But perhaps dR_threshold will be not changed since the def. value is from 
-  //     original usage of PUPPI, Jet algorithm.)
-  // 
-  // 
-  ///////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////
-  const double _mix_fraction_ = 0.5;
-  //const double dR_threshold = 0.4;
-  
-  //double dR2_threshold = dR_threshold * dR_threshold;
-  double dR2_threshold03 = 0.3 * 0.3;
-  double dR2_threshold04 = 0.4 * 0.4;
-  double dR2_threshold05 = 0.5 * 0.5;
-
-  double val_PuppiWithLep03    [3]= {0,0,0} ;
-  double val_PuppiWithoutLep03 [3]= {0,0,0} ;
-  double val_PuppiWithLep04    [3]= {0,0,0} ;
-  double val_PuppiWithoutLep04 [3]= {0,0,0} ;
-  double val_PuppiWithLep05    [3]= {0,0,0} ;
-  double val_PuppiWithoutLep05 [3]= {0,0,0} ;
-  
-  int nNumCands       = 0;
-  int nNumCandsInR05  = 0;
-  int nNumCandsOutR05 = 0;
-  
-  int nNumCandsInR05OT = 0;
-  
-  int nNumCandsInR05CH = 0;
-  int nNumCandsInR05NH = 0;
-  int nNumCandsInR05PH = 0;
-  
-  int nNumCandsInR05CHApp = 0;
-  int nNumCandsInR05NHApp = 0;
-  int nNumCandsInR05PHApp = 0;
-  
-  double dTrkSumPT();
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  // loop ever all the candidates, and accumulate PT deposit around the lepton.
-  for( std::vector<pat::PackedCandidate>::const_iterator cand = pcs -> begin();
-       cand != pcs->end();
-       cand ++ )
-    {
-      // calc DR
-      nNumCands++;
-
-      double d_eta = abs( cand->eta() - mu->eta() ) ;
-      double d_phi = abs( cand->phi() - mu->phi() ) ; 
-      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
-      double dR2 = d_eta * d_eta  + d_phi * d_phi ;
-  
-      if( dR2 > dR2_threshold05 ) {
-	nNumCandsOutR05++;
-	continue ;
-      }
-  
-      nNumCandsInR05++;
-  
-      long nIDAbs = abs(cand -> pdgId());
-
-      // check particleTyple (CH/NH/PH or other). remove 'other'.
-      const particleType pType =
-	isCH( nIDAbs ) ? CH :
-	isNH( nIDAbs ) ? NH :
-	isPH( nIDAbs ) ? PH : OTHER ;
-  
-      if( pType == OTHER ) {
-	if( cand -> pdgId() != 1 && cand -> pdgId() != 2 // d quark and u quark
-	    && nIDAbs != 11  // electron
-	    && nIDAbs != 13) // muon
-	  {
-	    std::cout <<"candidate with PDGID = " << cand -> pdgId() << " is not CH/NH/PH/e/mu or 1/2 "
-	      "(and this is removed from isolation calculation)"  << std::endl ; 
-	  }
-        
-	nNumCandsInR05OT++;
-        
-	continue ;
-      }
-  
-      if( pType == CH ) {nNumCandsInR05CH++; }
-      if( pType == NH ) nNumCandsInR05NH++;
-      if( pType == PH ) nNumCandsInR05PH++;
-  
-      // Check particleType dependent DR cut (remove overlapped candiadte)
-      // The threshold values were taken from 'MuonPFIsolationSequence_cff.py'.
-      if( pType == CH && dR2 < 0.0001*0.0001 ) {
-	continue ;
-      } else {
-	nNumCandsInR05CHApp++;
-      }
-  
-      if( pType == NH && dR2 < 0.01  *0.01   ) {
-	continue ;
-      } else {
-	nNumCandsInR05NHApp++;
-      }
-  
-      if( pType == PH && dR2 < 0.01  *0.01   ) {
-	continue ;
-      } else {
-	nNumCandsInR05PHApp++;
-      }
-
-      // The candidate passed all the selection.
-      // Now, add its PT to the variable with weight.
-    
-      double dMomentum = cand->pt();
-    
-      if ( nIsUsingP != 0 ) {
-	dMomentum = cand->p();
-      }
-
-      val_PuppiWithLep05   [ pType ] += dMomentum * cand -> puppiWeight() ;
-      val_PuppiWithoutLep05[ pType ] += dMomentum * cand -> puppiWeightNoLep();
-    
-      if ( dR2 <= dR2_threshold04 ) {
-	val_PuppiWithLep04   [ pType ] += dMomentum * cand -> puppiWeight() ;
-	val_PuppiWithoutLep04[ pType ] += dMomentum * cand -> puppiWeightNoLep();
-      
-	if ( dR2 <= dR2_threshold03 ) {
-	  val_PuppiWithLep03   [ pType ] += dMomentum * cand -> puppiWeight() ;
-	  val_PuppiWithoutLep03[ pType ] += dMomentum * cand -> puppiWeightNoLep();
-	}
-      }
-
- 
-    }// end of candidate LOOP.
-  
-  double dMomentumMu = mu->pt();
-  
-  if ( nIsUsingP != 0 ) {
-    dMomentumMu = mu->p();
-  }
-
-  const double reliso_Puppi_withLep03    = ( val_PuppiWithLep03   [CH] + val_PuppiWithLep03   [NH] + val_PuppiWithLep03   [PH] ) / dMomentumMu ;
-  const double reliso_Puppi_withoutlep03 = ( val_PuppiWithoutLep03[CH] + val_PuppiWithoutLep03[NH] + val_PuppiWithoutLep03[PH] ) / dMomentumMu ;
-
-  const double reliso_Puppi_withLep04    = ( val_PuppiWithLep04   [CH] + val_PuppiWithLep04   [NH] + val_PuppiWithLep04   [PH] ) / dMomentumMu ;
-  const double reliso_Puppi_withoutlep04 = ( val_PuppiWithoutLep04[CH] + val_PuppiWithoutLep04[NH] + val_PuppiWithoutLep04[PH] ) / dMomentumMu ;
-
-  const double reliso_Puppi_withLep05    = ( val_PuppiWithLep05   [CH] + val_PuppiWithLep05   [NH] + val_PuppiWithLep05   [PH] ) / dMomentumMu ;
-  const double reliso_Puppi_withoutlep05 = ( val_PuppiWithoutLep05[CH] + val_PuppiWithoutLep05[NH] + val_PuppiWithoutLep05[PH] ) / dMomentumMu ;
-
-  puppivalues.withLep03    = reliso_Puppi_withLep03;
-  puppivalues.withoutlep03 = reliso_Puppi_withoutlep03;
-  puppivalues.combined03   = _mix_fraction_ * reliso_Puppi_withLep03 + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep03;
-
-  puppivalues.withLep      = reliso_Puppi_withLep04;
-  puppivalues.withoutlep   = reliso_Puppi_withoutlep04;
-  puppivalues.combined     = _mix_fraction_ * reliso_Puppi_withLep04 + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep04;
-
-  puppivalues.withLep05    = reliso_Puppi_withLep05;
-  puppivalues.withoutlep05 = reliso_Puppi_withoutlep05;
-  puppivalues.combined05   = _mix_fraction_ * reliso_Puppi_withLep05 + ( 1.0 - _mix_fraction_) * reliso_Puppi_withoutlep05;
-  
-  puppivalues.withLep03CH = val_PuppiWithLep03[CH];
-  puppivalues.withLep03NH = val_PuppiWithLep03[NH];
-  puppivalues.withLep03PH = val_PuppiWithLep03[PH];
-  
-  puppivalues.withLep04CH = val_PuppiWithLep04[CH];
-  puppivalues.withLep04NH = val_PuppiWithLep04[NH];
-  puppivalues.withLep04PH = val_PuppiWithLep04[PH];
-  
-  puppivalues.withLep05CH = val_PuppiWithLep05[CH];
-  puppivalues.withLep05NH = val_PuppiWithLep05[NH];
-  puppivalues.withLep05PH = val_PuppiWithLep05[PH];
-  
-  puppivalues.withoutlep03CH = val_PuppiWithoutLep03[CH];
-  puppivalues.withoutlep03NH = val_PuppiWithoutLep03[NH];
-  puppivalues.withoutlep03PH = val_PuppiWithoutLep03[PH];
-  
-  puppivalues.withoutlep04CH = val_PuppiWithoutLep04[CH];
-  puppivalues.withoutlep04NH = val_PuppiWithoutLep04[NH];
-  puppivalues.withoutlep04PH = val_PuppiWithoutLep04[PH];
-  
-  puppivalues.withoutlep05CH = val_PuppiWithoutLep05[CH];
-  puppivalues.withoutlep05NH = val_PuppiWithoutLep05[NH];
-  puppivalues.withoutlep05PH = val_PuppiWithoutLep05[PH];
-  
-  puppivalues.nNumCands       = nNumCands;
-  puppivalues.nNumCandsInR05  = nNumCandsInR05;
-  puppivalues.nNumCandsOutR05 = nNumCandsOutR05;
-  
-  puppivalues.nNumCandsInR05OT = nNumCandsInR05OT;
-  
-  puppivalues.nNumCandsInR05CH = nNumCandsInR05CH;
-  puppivalues.nNumCandsInR05NH = nNumCandsInR05NH;
-  puppivalues.nNumCandsInR05PH = nNumCandsInR05PH;
-  
-  puppivalues.nNumCandsInR05CHApp = nNumCandsInR05CHApp;
-  puppivalues.nNumCandsInR05NHApp = nNumCandsInR05NHApp;
-  puppivalues.nNumCandsInR05PHApp = nNumCandsInR05PHApp;
-  
-  return puppivalues;
-}
-
-bool MuonAnalyser::isNH( long pdgidAbs ) const{
-  //     pdgId = cms.vint32(111,130,310,2112),
-  if( pdgidAbs == 111 )  return true ; // pion0
-  if( pdgidAbs == 130 )  return true ; // Kaon0L
-  if( pdgidAbs == 310 )  return true ; // Kaon0S
-  if( pdgidAbs == 2112 ) return true ; // Neutron
-  return false;
-}
-
-bool MuonAnalyser::isCH( long pdgidAbs ) const{
-  //  pdgId = cms.vint32(211,-211,321,-321,999211,2212,-2212),
-  if( pdgidAbs == 211    ) return true ; // Pion+
-  if( pdgidAbs == 321    ) return true ; // Kaon+
-  if( pdgidAbs == 999211 ) return true ; // ???
-  if( pdgidAbs == 2212   ) return true ; // Proton
-  return false;
-}
-
-bool MuonAnalyser::isPH( long pdgidAbs ) const{
-  if( pdgidAbs == 22 ) return true ; // Photon
-  return false;
-}
-
-bool MuonAnalyser::isME0MuonSelNew(const ME0Geometry* me0Geo_, const reco::Muon *muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
+bool MuonAnalyser::isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
 {
   bool result = false;
-  bool isME0 = muon->isME0Muon();
-  
+  bool isME0 = muon.isME0Muon();
+    
   if(isME0){
+      
     double deltaEta = 999;
     double deltaPhi = 999;
     double deltaPhiBend = 999;
 
-    const std::vector<reco::MuonChamberMatch>& chambers = muon->matches();
+    const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
     for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
         
       if (chamber->detector() == 5){
-      
-        for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
-        
-          LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
-          LocalPoint seg_loc_coord(segment->x, segment->y, 0);
-          LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
           
-          const ME0Chamber * me0chamber = me0Geo_->chamber(chamber->id);
-          
-          GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
-          GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
-          
-          double segDPhi = segment->me0SegmentRef->deltaPhi();
-          double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
-          
-          deltaEta = fabs(trk_glb_coord.eta() - seg_glb_coord.eta() );
-          deltaPhi = fabs(trk_glb_coord.phi() - seg_glb_coord.phi() );
-          deltaPhiBend = fabs(segDPhi - trackDPhi);
-          
-          if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+	for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+
+	  LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
+	  LocalPoint seg_loc_coord(segment->x, segment->y, 0);
+	  LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
+	  LocalVector seg_loc_vec(segment->dXdZ, segment->dYdZ, 1);
             
-        }
+	  const ME0Chamber * me0chamber = me0Geo_->chamber(chamber->id);
+            
+	  GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
+	  GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
+            
+	  //double segDPhi = segment->me0SegmentRef->deltaPhi();
+	  // need to check if this works
+	  double segDPhi = me0chamber->computeDeltaPhi(seg_loc_coord, seg_loc_vec);
+	  double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
+            
+	  deltaEta = std::abs(trk_glb_coord.eta() - seg_glb_coord.eta() );
+	  deltaPhi = std::abs(trk_glb_coord.phi() - seg_glb_coord.phi() );
+	  deltaPhiBend = std::abs(segDPhi - trackDPhi);
+            
+	  if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+            
+	}
       }
     }
       
   }
-  
+    
   return result;
-  
+    
 }
 
 
-bool MuonAnalyser::isME0MuonLoose( const reco::Muon *mu ) {
-  float me0SegX = 100;
-  for (auto chamber : mu->matches()){
-    for (auto segment : chamber.me0Matches){
-      if (chamber.detector() == 5){
-	auto me0Segment = (*segment.me0SegmentRef);
-	me0SegX = abs( chamber.x - segment.x );	  
-	if (me0SegX < abs(b_muon_ME0deltaX)){
-	  float ME0deltaX    = ( chamber.x - segment.x );
-	  float ME0deltaY    = ( chamber.y - segment.y );
-	  float ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
-	  float ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
-	  float ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);
-	  if (ME0deltaX < 3 || ME0pullX < 3)
-	    if (ME0deltaY < 3 || ME0pullY < 3)
-	      if (ME0dPhi < 0.5)
-		return true;
-	}
-      }
-    }
-  }
-  return false;
-}
-bool MuonAnalyser::isME0MuonTight( const reco::Muon *mu ) {
-  float me0SegX = 100;
-  for (auto chamber : mu->matches()){
-    for (auto segment : chamber.me0Matches){
-      if (chamber.detector() == 5){
-	auto me0Segment = (*segment.me0SegmentRef);
-	me0SegX = abs( chamber.x - segment.x );	  
-	if (me0SegX < abs(b_muon_ME0deltaX)){
-	  float ME0deltaX    = ( chamber.x - segment.x );
-	  float ME0deltaY    = ( chamber.y - segment.y );
-	  float ME0pullX  = (chamber.x - segment.x) / std::sqrt(chamber.xErr + segment.xErr);
-	  float ME0pullY  = (chamber.y - segment.y) / std::sqrt(chamber.yErr + segment.yErr);
-	  float ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);
-	  if (ME0deltaX < 3 || ME0pullX < 3)
-	    if (ME0deltaY < 3 || ME0pullY < 3)
-	      if (ME0dPhi < 0.1)
-		return true;
-	}
-      }
-    }
-  }
-  return false;
-}
 bool MuonAnalyser::isGlobalTightMuon( const reco::Muon *muonRef ) {
 
   //if ( !muonRef.isNonnull() ) return false;
@@ -1627,8 +1163,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isPFMuon", &b_muon_isPFMuon, "muon_isPFMuon/O");
   tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
   tree->Branch("muon_isME0MuonLoose", &b_muon_isME0MuonLoose, "muon_isME0MuonLoose/O");
+  tree->Branch("muon_isME0MuonMedium", &b_muon_isME0MuonMedium, "muon_isME0MuonMedium/O");
   tree->Branch("muon_isME0MuonTight", &b_muon_isME0MuonTight, "muon_isME0MuonTight/O");
-  tree->Branch("muon_isME0MuonSelNew", &b_muon_isME0MuonSelNew, "muon_isME0MuonSelNew/O");
   tree->Branch("muon_isGEMMuon", &b_muon_isGEMMuon, "muon_isGEMMuon/O");
   tree->Branch("muon_isGE11Muon", &b_muon_isGE11Muon, "muon_isGE11Muon/O");
   tree->Branch("muon_isGE21Muon", &b_muon_isGE21Muon, "muon_isGE21Muon/O");
@@ -1649,7 +1185,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_normalizedChi2", &b_muon_chi2, "muon_normalizedChi2/F");
   tree->Branch("muon_chi2LocalPosition", &b_muon_chi2pos, "muon_chi2LocalPosition/F");
   tree->Branch("muon_trkKink", &b_muon_trkKink, "muon_trkKink/F");
-  tree->Branch("muon_segmentCompatibility", &b_muon_segcompati, "muon_segmentCompatibility/F");
+  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
   tree->Branch("muon_numberOfValidMuonHits", &b_muon_nglobalhits, "muon_numberOfValidMuonHits/I");
   tree->Branch("muon_numberOfMatchedStations", &b_muon_nstations, "muon_numberOfMatchedStations/I");
   tree->Branch("muon_pv0pos_dxy", &b_muon_trackdxy, "muon_pv0pos_dxy/F");
@@ -1658,7 +1194,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/F");
   tree->Branch("muon_innerquality", &b_muon_innerquality, "muon_innerquality/F");
   tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/F");
-  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
+  tree->Branch("muon_segmentCompatibility_Arbitrate", &b_muon_segmentCompatibility_Arbitrate, "muon_segmentCompatibility_Arbitrate/F");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
   tree->Branch("muon_tmva_me0_bdt", &b_muon_tmva_me0_bdt, "muon_tmva_me0_bdt/F");
@@ -1724,45 +1260,5 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_puppiIsoNoLep_ChargedHadron",&b_muon_puppiIsoNoLep_ChargedHadron,"muon_puppiIsoNoLep_ChargedHadron/F");
   tree->Branch("muon_puppiIsoNoLep_NeutralHadron",&b_muon_puppiIsoNoLep_NeutralHadron,"muon_puppiIsoNoLep_NeutralHadron/F");
   tree->Branch("muon_puppiIsoNoLep_Photon",&b_muon_puppiIsoNoLep_Photon,"muon_puppiIsoNoLep_Photon/F");
-  tree->Branch("muon_puppiIsoWithLep",&b_muon_puppiIsoWithLep,"muon_puppiIsoWithLep/F");
-  tree->Branch("muon_puppiIsoWithoutLep",&b_muon_puppiIsoWithoutLep,"muon_puppiIsoWithoutLep/F");
-  tree->Branch("muon_puppiIsoCombined",&b_muon_puppiIsoCombined,"muon_puppiIsoCombined/F");
-  tree->Branch("muon_puppiIsoWithLepByP",&b_muon_puppiIsoWithLepByP,"muon_puppiIsoWithLepByP/F");
-  tree->Branch("muon_puppiIsoWithoutLepByP",&b_muon_puppiIsoWithoutLepByP,"muon_puppiIsoWithoutLepByP/F");
-  tree->Branch("muon_puppiIsoCombinedByP",&b_muon_puppiIsoCombinedByP,"muon_puppiIsoCombinedByP/F");
-  tree->Branch("muon_puppiIsoWithLep03",&b_muon_puppiIsoWithLep03,"muon_puppiIsoWithLep03/F");
-  tree->Branch("muon_puppiIsoWithoutLep03",&b_muon_puppiIsoWithoutLep03,"muon_puppiIsoWithoutLep03/F");
-  tree->Branch("muon_puppiIsoCombined03",&b_muon_puppiIsoCombined03,"muon_puppiIsoCombined03/F");
-  tree->Branch("muon_puppiIsoWithLep05",&b_muon_puppiIsoWithLep05,"muon_puppiIsoWithLep05/F");
-  tree->Branch("muon_puppiIsoWithoutLep05",&b_muon_puppiIsoWithoutLep05,"muon_puppiIsoWithoutLep05/F");
-  tree->Branch("muon_puppiIsoCombined05",&b_muon_puppiIsoCombined05,"muon_puppiIsoCombined05/F");
-  tree->Branch("muon_puppiIsoWithLep03ChargedHadron",&b_muon_puppiIsoWithLep03ChargedHadron,"muon_puppiIsoWithLep03ChargedHadron/F");
-  tree->Branch("muon_puppiIsoWithLep03NeutralHadron",&b_muon_puppiIsoWithLep03NeutralHadron,"muon_puppiIsoWithLep03NeutralHadron/F");
-  tree->Branch("muon_puppiIsoWithLep03Photon",&b_muon_puppiIsoWithLep03Photon,"muon_puppiIsoWithLep03Photon/F");
-  tree->Branch("muon_puppiIsoWithLep04ChargedHadron",&b_muon_puppiIsoWithLep04ChargedHadron,"muon_puppiIsoWithLep04ChargedHadron/F");
-  tree->Branch("muon_puppiIsoWithLep04NeutralHadron",&b_muon_puppiIsoWithLep04NeutralHadron,"muon_puppiIsoWithLep04NeutralHadron/F");
-  tree->Branch("muon_puppiIsoWithLep04Photon",&b_muon_puppiIsoWithLep04Photon,"muon_puppiIsoWithLep04Photon/F");
-  tree->Branch("muon_puppiIsoWithLep05ChargedHadron",&b_muon_puppiIsoWithLep05ChargedHadron,"muon_puppiIsoWithLep05ChargedHadron/F");
-  tree->Branch("muon_puppiIsoWithLep05NeutralHadron",&b_muon_puppiIsoWithLep05NeutralHadron,"muon_puppiIsoWithLep05NeutralHadron/F");
-  tree->Branch("muon_puppiIsoWithLep05Photon",&b_muon_puppiIsoWithLep05Photon,"muon_puppiIsoWithLep05Photon/F");
-  tree->Branch("muon_puppiIsoWithoutLep03ChargedHadron",&b_muon_puppiIsoWithoutLep03ChargedHadron,"muon_puppiIsoWithoutLep03ChargedHadron/F");
-  tree->Branch("muon_puppiIsoWithoutLep03NeutralHadron",&b_muon_puppiIsoWithoutLep03NeutralHadron,"muon_puppiIsoWithoutLep03NeutralHadron/F");
-  tree->Branch("muon_puppiIsoWithoutLep03Photon",&b_muon_puppiIsoWithoutLep03Photon,"muon_puppiIsoWithoutLep03Photon/F");
-  tree->Branch("muon_puppiIsoWithoutLep04ChargedHadron",&b_muon_puppiIsoWithoutLep04ChargedHadron,"muon_puppiIsoWithoutLep04ChargedHadron/F");
-  tree->Branch("muon_puppiIsoWithoutLep04NeutralHadron",&b_muon_puppiIsoWithoutLep04NeutralHadron,"muon_puppiIsoWithoutLep04NeutralHadron/F");
-  tree->Branch("muon_puppiIsoWithoutLep04Photon",&b_muon_puppiIsoWithoutLep04Photon,"muon_puppiIsoWithoutLep04Photon/F");
-  tree->Branch("muon_puppiIsoWithoutLep05ChargedHadron",&b_muon_puppiIsoWithoutLep05ChargedHadron,"muon_puppiIsoWithoutLep05ChargedHadron/F");
-  tree->Branch("muon_puppiIsoWithoutLep05NeutralHadron",&b_muon_puppiIsoWithoutLep05NeutralHadron,"muon_puppiIsoWithoutLep05NeutralHadron/F");
-  tree->Branch("muon_puppiIsoWithoutLep05Photon",&b_muon_puppiIsoWithoutLep05Photon,"muon_puppiIsoWithoutLep05Photon/F");
-  tree->Branch("muon_puppiIsoNumOfCands",&b_muon_puppiIsoNumOfCands,"muon_puppiIsoNumOfCands/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05",&b_muon_puppiIsoNumOfCandsInR05,"muon_puppiIsoNumOfCandsInR05/I");
-  tree->Branch("muon_puppiIsoNumOfCandsOutR05",&b_muon_puppiIsoNumOfCandsOutR05,"muon_puppiIsoNumOfCandsOutR05/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05OT",&b_muon_puppiIsoNumOfCandsInR05OT,"muon_puppiIsoNumOfCandsInR05OT/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05CH",&b_muon_puppiIsoNumOfCandsInR05CH,"muon_puppiIsoNumOfCandsInR05CH/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05NH",&b_muon_puppiIsoNumOfCandsInR05NH,"muon_puppiIsoNumOfCandsInR05NH/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05PH",&b_muon_puppiIsoNumOfCandsInR05PH,"muon_puppiIsoNumOfCandsInR05PH/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05CHApp",&b_muon_puppiIsoNumOfCandsInR05CHApp,"muon_puppiIsoNumOfCandsInR05CHApp/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05NHApp",&b_muon_puppiIsoNumOfCandsInR05NHApp,"muon_puppiIsoNumOfCandsInR05NHApp/I");
-  tree->Branch("muon_puppiIsoNumOfCandsInR05PHApp",&b_muon_puppiIsoNumOfCandsInR05PHApp,"muon_puppiIsoNumOfCandsInR05PHApp/I");
 }
 DEFINE_FWK_MODULE(MuonAnalyser);

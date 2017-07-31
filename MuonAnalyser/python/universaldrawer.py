@@ -147,6 +147,9 @@ ROOT.gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
 
+strNameMainTree = "MuonAnalyser"
+
+
 def setMarkerStyle(h,color,style,size):
     if style != "": 
         h.SetMarkerColor(color)
@@ -213,13 +216,20 @@ def getEff(filename,treename,title,binning,plotvar,dencut,numcut):
 
 
 def getBkg(filename,treename,title,binning,plotvar,numcut,denconf):
-    # Scaling by # of events
-    f = ROOT.TFile(filename)
-    hNorm = f.Get("MuonAnalyser/" + denconf[ "name" ].encode("ascii", "ignore"))
+    strType = "fromvtxhisto" if "type" not in denconf else denconf[ "type" ]
     
-    nBinMin = hNorm.GetXaxis().FindBin(denconf[ "min" ])
-    nBinMax = hNorm.GetXaxis().FindBin(denconf[ "max" ])
-    normfactor = hNorm.Integral(nBinMin, nBinMax)
+    normfactor = 0.0
+    
+    if strType == "fromvtxhisto": 
+      # Scaling by # of events
+      f = ROOT.TFile(filename)
+      hNorm = f.Get(strNameMainTree + "/" + denconf[ "name" ].encode("ascii", "ignore"))
+      
+      nBinMin = hNorm.GetXaxis().FindBin(denconf[ "min" ])
+      nBinMax = hNorm.GetXaxis().FindBin(denconf[ "max" ])
+      normfactor = hNorm.Integral(nBinMin, nBinMax)
+    elif strType == "simplenevents": 
+      normfactor = denconf[ "nevents" ]
     
     h1 = makeTH1(filename,treename,title,binning,plotvar,numcut)
     if normfactor > 0.0: h1.Scale(1.0 / normfactor)
@@ -240,6 +250,7 @@ def getDivide(filename,treename,title,binning,plotvar,dencut,numcut):
     h1 = makeTH1(filename,treename,title+"_den",binning,plotvar,dencut)
     h2 = makeTH1(filename,treename,title+"_num",binning,plotvar,numcut)
     
+    """
     hist = ROOT.TH1D("hist_" + title, title, binning[0], binning[1], binning[2])
     
     for i in range(binning[ 0 ] + 2): 
@@ -249,6 +260,15 @@ def getDivide(filename,treename,title,binning,plotvar,dencut,numcut):
         if fValDen == 0.0: continue
         
         hist.SetBinContent(i, fValNum / fValDen)
+        hist.SetBinError(i, h2.GetBinError(i))
+    """
+    
+    hist = copy.deepcopy(h2)
+    
+    h1.Sumw2()
+    hist.Sumw2()
+    
+    hist.Divide(h1)
     
     return copy.deepcopy(hist)
 
@@ -305,7 +325,9 @@ def drawPlotFromDict(dicMainCmd):
     # Variables which can have a defalut value
     strPlotvar = "" # It must be determined either in "general" or "vars"
     strPlotType = "normal"
+    nIsTypeSet = 0
     nIsUsedCommonVar = 0
+    dicCutExtraVarConfig = {}
 
     nIsLogY = 0
 
@@ -315,6 +337,7 @@ def drawPlotFromDict(dicMainCmd):
     fMax = -1000000000
 
     strCutNum = ""
+    strCutDen = ""
     strCutByDiv = ""
 
     fLegLeft   = 0.50
@@ -331,6 +354,18 @@ def drawPlotFromDict(dicMainCmd):
     bNormalOff = False
     
     dicBkgDen = {"name": "nevents", "min": 0, "max": 1}
+    
+    strNameTagCut    = "extracut_"
+    strNameTagVarCut = "extravarcut_"
+    
+    for strItemForCut in dicMainCmd.keys(): 
+      if strNameTagCut in strItemForCut: 
+        dicCutConfig[ strItemForCut.replace(strNameTagCut, "") ] = dicMainCmd[ strItemForCut ]
+      elif strNameTagVarCut in strItemForCut: 
+        dicCutExtraVarConfig[ strItemForCut.replace(strNameTagVarCut, "") ] = dicMainCmd[ strItemForCut ]
+    
+    if "maintree" in dicMainCmd:
+      strNameMainTree = dicMainCmd[ "maintree" ].encode("ascii", "ignore")
 
     # Now setup the configuration
     if "plotvar" in dicMainCmd:
@@ -339,7 +374,7 @@ def drawPlotFromDict(dicMainCmd):
     
     if "plottype" in dicMainCmd: 
         listPossible = [
-            "normal", "effrate", "bkgrate", "accumulated", "divide"
+            "normal", "effrate", "bkgrate", "bkgdenominator", "accumulated", "divide"
         ]
         
         if dicMainCmd[ "plottype" ] not in listPossible: 
@@ -347,39 +382,44 @@ def drawPlotFromDict(dicMainCmd):
             sys.exit(1)
         
         strPlotType = dicMainCmd[ "plottype" ]
+        nIsTypeSet = 1
 
     if "ylog" in dicMainCmd:
         nIsLogY = 1
-
+    
     if "min" in dicMainCmd: 
         fMin = dicMainCmd[ "min" ]
         nIsUseMin = 1
-
+    
     if "max" in dicMainCmd: 
         fMax = dicMainCmd[ "max" ]
         nIsUseMax = 1
-
-    if "effrate" in dicMainCmd: 
+    
+    if not ( nIsTypeSet == 1 and strPlotType != "effrate" ) and "effrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "effrate" ]
         strPlotType = "effrate"
+        
+        if "effdenominator" in dicMainCmd:
+            strCutDen = " && " + dicMainCmd[ "effdenominator" ]
 
-    if "bkgrate" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "bkgrate" ) and "bkgrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "bkgrate" ]
         strPlotType = "bkgrate"
     
-    if "bkgdenominator" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "bkgdenominator" ) and "bkgdenominator" in dicMainCmd: 
         dicBkgDen = dicMainCmd[ "bkgdenominator" ]
+        if "bkgrate" in dicBkgDen: strCutNum = " && " + dicBkgDen[ "bkgrate" ]
         strPlotType = "bkgrate"
     
-    if "divide" in dicMainCmd: 
+    if not ( nIsTypeSet == 1 and strPlotType != "divide" ) and "divide" in dicMainCmd: 
         strCutByDiv = dicMainCmd[ "divide" ]
         strPlotType = "divide"
     
     if "titlepos" in dicMainCmd: 
-        if dicMainCmd[ "titlepos" ] is list: 
+        if type(dicMainCmd[ "titlepos" ]) is list: 
             fTitleX = dicMainCmd[ "titlepos" ][ 0 ]
             fTitleY = dicMainCmd[ "titlepos" ][ 1 ]
-        elif dicMainCmd[ "titlepos" ] is dict: 
+        elif type(dicMainCmd[ "titlepos" ]) is dict: 
             if "x" in dicMainCmd[ "titlepos" ]: fTitleX = dicMainCmd[ "titlepos" ][ "x" ]
             if "y" in dicMainCmd[ "titlepos" ]: fTitleY = dicMainCmd[ "titlepos" ][ "y" ]
             if "size" in dicMainCmd[ "titlepos" ]: fTitleSize = dicMainCmd[ "titlepos" ][ "size" ]
@@ -403,64 +443,74 @@ def drawPlotFromDict(dicMainCmd):
     
     if "normoff" in dicMainCmd: 
         bNormalOff = True
-
+    
     # Now all plots get being drawn
     for varHead in arrVars: 
         if nIsUsedCommonVar == 0: 
             strPlotvar = varHead[ "plotvar" ]
         
+        strDataPath = datadir
+        
+        if "commonsource" in dicMainCmd: 
+            strDataPath += dicMainCmd[ "commonsource" ]
+        elif "filename" in varHead: 
+            strDataPath += varHead[ "filename" ]
+        
         #strTree = ""
         strCutNumVar = strCutNum
+        strCutDenVar = strCutDen
         
         #if "genMuon" in strPlotvar or "genMuon" in strCut: 
         #    strTree = "MuonAnalyser/gen"
         #if "recoMuon" in strPlotvar or "recoMuon" in strCut: 
         #    strTree = "MuonAnalyser/reco"
         if strTreePre == "gen": # because strTreePre may be in unicode
-            strTree = "MuonAnalyser/gen"
+            strTree = strNameMainTree + "/gen"
         if strTreePre == "reco": 
-            strTree = "MuonAnalyser/reco"
+            strTree = strNameMainTree + "/reco"
         
         if "cutconfig" in varHead: 
             for strKey in varHead[ "cutconfig" ].keys(): 
                 dicCutConfig[ strKey ] = varHead[ "cutconfig" ][ strKey ]
         
+        dicCutExtraVarConfig[ "ID" ] = dicCutConfig[ "ID" ]
+        
         strCutExtra = ""
-        if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]
-        if "effrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "effrate" ]
-        if "bkgrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "bkgrate" ]
-        if "divide"  in varHead: strCutByDiv =   varHead[ "divide" ]
+        if "cut" in varHead: strCutExtra = " && " + varHead[ "cut" ]%dicCutExtraVarConfig
+        if "effrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "effrate" ]%dicCutExtraVarConfig
+        if "bkgrate" in varHead: strCutNumVar = strCutNumVar + " && " + varHead[ "bkgrate" ]%dicCutExtraVarConfig
+        if "divide"  in varHead: strCutByDiv  = varHead[ "divide" ]%dicCutExtraVarConfig
         
         if strPlotType == "normal": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getH1_Normalized(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getH1_Normalized(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         elif strPlotType == "effrate": 
-            print "Num : %s\nDen : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig, ( strCut + strCutExtra )%dicCutConfig)
+            print "Num : %s\nDen : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig, ( strCut + strCutDenVar + strCutExtra )%dicCutConfig)
             # Drawing efficiency / fake rate plot
-            varHead[ "hist" ] = getEff(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getEff(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
-                ( strCut +                strCutExtra )%dicCutConfig, # cut for denominator
+                ( strCut + strCutDenVar + strCutExtra )%dicCutConfig, # cut for denominator
                 ( strCut + strCutNumVar + strCutExtra )%dicCutConfig) # cut for nominator
         elif strPlotType == "bkgrate": 
             print "Num : %s"%(( strCut + strCutNumVar + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getBkg(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getBkg(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutNumVar + strCutExtra )%dicCutConfig, # cut for nominator
                 dicBkgDen)
         elif strPlotType == "accumulated": 
             print "Cut : %s"%(( strCut + strCutExtra )%dicCutConfig)
             # Drawing normal plot (for isolation values)
-            varHead[ "hist" ] = getH1_Accumulated(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getH1_Accumulated(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 ( strCut + strCutExtra )%dicCutConfig, bNormalOff)
         elif strPlotType == "divide": 
             print "Num : %s\nDen : %s"%(strCutByDiv%dicCutConfig, strCut%dicCutConfig)
             # Drawing efficiency / fake rate plot
-            varHead[ "hist" ] = getDivide(datadir + varHead[ "filename" ], strTree, 
+            varHead[ "hist" ] = getDivide(strDataPath, strTree, 
                 varHead[ "title" ], binCurr, strPlotvar, 
                 strCut%dicCutConfig,       # cut for denominator
                 strCutByDiv%dicCutConfig)  # cut for nominator
@@ -478,17 +528,17 @@ def drawPlotFromDict(dicMainCmd):
         
     # The remainings are for drawing the total plot
     h_init = ROOT.TH1F("", "", binCurr[ 0 ], binCurr[ 1 ], binCurr[ 2 ])
-
+    
     if nIsUseMax == 0: 
         fMax = fMax * 1.15
-
+    
     h_init.SetMinimum(fMin)
     h_init.SetMaximum(fMax)
-
+    
     h_init.GetXaxis().SetTitle(x_name)
     h_init.GetYaxis().SetTitle(y_name)
     h_init.GetYaxis().SetTitleOffset(1)
-
+    
     #Set canvas
     canv = makeCanvas("canvMain", False)
     setMargins(canv, False)
@@ -505,26 +555,26 @@ def drawPlotFromDict(dicMainCmd):
     drawSampleName(strHistTitle%dicCutConfig, fTitleX, fTitleY, fTitleSize)
     
     dicCutConfig[ "ID" ] = strTmpID
-
+    
     if nIsLogY != 0: ROOT.gPad.SetLogy()
-
+    
     #Legend and drawing
     leg = ROOT.TLegend(fLegLeft, fLegTop, fLegRight, fLegBottom)
 
     for varHead in arrVars: 
-        strExtraOpt = ""
+        strExtraOpt = "e1"
         if "extradrawopt" in varHead: strExtraOpt = varHead[ "extradrawopt" ]
         varHead[ "hist" ].Draw(strExtraOpt + "same")
         
         strLegendOpt = "pl"
         if "legendopt" in varHead: strLegendOpt = varHead[ "legendopt" ]
         leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), strLegendOpt)
-
+    
     leg.SetTextFont(61)
     leg.SetTextSize(fLegTextSize)
     leg.SetBorderSize(0)
     leg.Draw()
-
+    
     #CMS_lumi setting
     iPos = 0
     iPeriod = 0
@@ -532,11 +582,11 @@ def drawPlotFromDict(dicMainCmd):
     CMS_lumi.extraText = "Working Progress"
     CMS_lumi.lumi_sqrtS = "14 TeV"
     CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
-
+    
     canv.Modified()
     canv.Update()
     canv.SaveAs(strFilename%dicCutConfig)
-
+    
     print "%s has been drawn"%(strFilename%dicCutConfig)
 
 

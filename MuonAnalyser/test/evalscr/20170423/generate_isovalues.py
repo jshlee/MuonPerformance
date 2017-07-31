@@ -170,12 +170,22 @@ dicVtxCut = {
 
 dicAbsRel = {
   "abs": {
-    "plotvar": "", 
-    "xtitle": " (abs)", 
+    "add": {
+      "plotvar": "", 
+      "xtitle": " (abs)"
+    }, 
+    "set": {
+      "binning": [20, 0, 100.0]
+    }
   }, 
   "rel": {
-    "plotvar": " / muon.Pt()", 
-    "xtitle": " (rel)", 
+    "add": {
+      "plotvar": " / muon.Pt()", 
+      "xtitle": " (rel)", 
+    }, 
+    "set": {
+      "binning": [20, 0, 1.0]
+    }
   }, 
 }
 
@@ -208,8 +218,11 @@ for strVar in dicVars.keys():
             dicCurr[ strKey ] += strVal
           
           if "ALL" not in strPlotvar: 
-            for strKey, strVal in dicAbsRel[ strAbsRel ].items():
+            for strKey, strVal in dicAbsRel[ strAbsRel ][ "add" ].items():
               dicCurr[ strKey ] += strVal
+            
+            for strKey, Val in dicAbsRel[ strAbsRel ][ "set" ].items():
+              dicCurr[ strKey ] = Val
           
           dicCurr[ "vars" ] = dicVars[ strVar ]
           dicCurr[ "cutconfig" ][ "ID" ] = strID

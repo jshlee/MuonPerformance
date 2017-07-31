@@ -1,0 +1,95 @@
+{
+  "maintree": "PatMuonAnalyser", 
+  
+  "cut": {"###bend": "xvar", 
+    "Pt":  "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
+    "Eta": "muon.Pt() > %(pT)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5"
+  }, 
+  
+  "cutconfig": {
+    "Eta": "2.4", 
+    "pT": "15", 
+    "ID": "noID"
+  }, 
+  
+  "plottype": {"###bend": "effbkg", "eff": "effrate", "bkg": "bkgdenominator"}, 
+  "bkgdenominator": {"type": "simplenevents", "nevents": 2555040}, 
+  
+  "tree": {"###bend": "effbkg", "eff": "gen", "bkg": "reco"}, 
+  "plotvar": {"###bend": "xvar", "Pt": "muon.Pt()", "Eta": "muon.Eta()"}, 
+  "binning": {"###bend": "xvar", "Pt": [20, 5, 105], "Eta": [28, 0, 2.8]}, 
+  
+  "title": {"###bend": "xvar", 
+    "Pt":  "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, \n|z_{reco} - z_{sim}| < 0.5 cm", 
+    "Eta": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, p_{T} > %(pT)s GeV, \n|z_{reco} - z_{sim}| < 0.5 cm"
+  }, 
+  
+  "xtitle": {"###bend": "xvar", "Pt": "p_{T} (GeV)", "Eta": "muon.Eta()"}, 
+  "ytitle": {"###bend": "effbkg", "eff": "Efficiency", "bkg": "Background rate"}, 
+  
+  "min": {"###bend": "effbkg", "eff": 0.55, "bkg": 0.0}, 
+  
+  "max": {"###multibend": ["effbkg", "xvar"], 
+    "###mullist": [
+      {"effbkg": "eff", "xvar": "Pt",  "###mulval": 1.2}, 
+      {"effbkg": "eff", "xvar": "Eta", "###mulval": 1.2}, 
+      {"effbkg": "bkg", "xvar": "Pt",  "###mulval": 0.3}, 
+      {"effbkg": "bkg", "xvar": "Eta", "###mulval": 0.025}
+    ]
+  }, 
+  
+  "titlepos": {
+    "x": 0.155
+  }, 
+  "legend": {"###bend": "effbkg", 
+    "eff": {
+      "left": 0.65, 
+      "right": 0.85, 
+      "top": 0.2, 
+      "bottom": 0.4
+    }, 
+    "bkg": {
+      "left": 0.65, 
+      "right": 0.85, 
+      "top": 0.8, 
+      "bottom": 0.6
+    }
+  },
+  
+  "commonsource": {"###bend": "effbkg", 
+    "eff": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_zmm_200.root", 
+    "bkg": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_qcd_200.root"
+  }, 
+  
+  "extravarcut_isocutPUPPI": "0.228", 
+  "extravarcut_isocutPF":    "1.788", 
+  "extravarcut_isocutTrk":   "0.212", 
+  
+  "vars": [
+    {
+      "color": 4, 
+      "effrate": "muon_puppiIsoNoLep < %(isocutPUPPI)s", 
+      "shape": 20, 
+      "title": "PUPPI, R = 0.4"
+    }, 
+    {
+      "color": 8, 
+      "effrate": "muon_PFIsolation04 < %(isocutPF)s", 
+      "shape": 34, 
+      "title": "PF, R = 0.4"
+    }, 
+    {
+      "color": 2, 
+      "effrate": "muon_TrkIsolation03 < %(isocutTrk)s", 
+      "shape": 21, 
+      "title": "Track, R = 0.3"
+    }, 
+    {
+      "color": 1, 
+      "shape": 20, 
+      "title": "No Iso cut"
+    }
+  ], 
+  
+  "filename": {"###savedic": "plots/20170723/effbkgplots/%(effbkg)s_noID_%(xvar)s.png"}
+}
