@@ -9,10 +9,13 @@ process.load('Configuration.Geometry.GeometryExtended2023D13Reco_cff')
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'file:0C9F61F7-5058-E711-9EDD-0CC47A0AD6AA.root'
-        'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRSpring17MiniAOD/ZZTo4L_14TeV_powheg_pythia8/MINIAODSIM/noPU_91X_upgrade2023_realistic_v3-v1/00000/FE139FC6-BF57-E711-8144-68B59972BFD8.root'
+        'file:FE139FC6-BF57-E711-8144-68B59972BFD8.root'
+        #'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRSpring17MiniAOD/ZZTo4L_14TeV_powheg_pythia8/MINIAODSIM/noPU_91X_upgrade2023_realistic_v3-v1/00000/FE139FC6-BF57-E711-8144-68B59972BFD8.root'
     ),
 )
+
+process.load('RecoMuon.MuonIsolation.muonIsolationPUPPI_cff')
+process.muonIsolationMiniAOD = process.muonIsolationMiniAODPUPPI.clone(usePUPPI = cms.bool(False))
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("out.root"))
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
@@ -22,7 +25,13 @@ process.PatMuonAnalyser = cms.EDAnalyzer("PatMuonAnalyser",
     addPileupInfo = cms.InputTag("slimmedAddPileupInfo"),
     muons = cms.InputTag("slimmedMuons"),
     pruned = cms.InputTag("prunedGenParticles"),
+    puppiNoLepIsolationChargedHadrons = cms.InputTag("muonIsolationPUPPINoLep","h+-DR030-ThresholdVeto000-ConeVeto000"),
+    puppiNoLepIsolationNeutralHadrons = cms.InputTag("muonIsolationPUPPINoLep","h0-DR030-ThresholdVeto000-ConeVeto001"),
+    puppiNoLepIsolationPhotons        = cms.InputTag("muonIsolationPUPPINoLep","gamma-DR030-ThresholdVeto000-ConeVeto001"),    
+    pfIsolationChargedHadrons = cms.InputTag("muonIsolationMiniAOD","h+-DR030-ThresholdVeto000-ConeVeto000"),
+    pfIsolationNeutralHadrons = cms.InputTag("muonIsolationMiniAOD","h0-DR030-ThresholdVeto000-ConeVeto001"),
+    pfIsolationPhotons        = cms.InputTag("muonIsolationMiniAOD","gamma-DR030-ThresholdVeto000-ConeVeto001"),    
+
 )
 
-
-process.p = cms.Path(process.PatMuonAnalyser)
+process.p = cms.Path(process.muonIsolationMiniAOD+process.muonIsolationMiniAODPUPPINoLeptons+process.PatMuonAnalyser)

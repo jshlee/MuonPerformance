@@ -40,16 +40,31 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   void setBranches(TTree *tree);
-  void fillBranches(TTree *tree, TLorentzVector &tlv, const pat::Muon *muon, bool isSignal, int pdgId);
+  void fillBranches(TTree *tree, TLorentzVector &tlv, const pat::Muon *muon, edm::RefToBase<pat::Muon> muref,bool isSignal, int pdgId);
 
   bool isSignalMuon(const reco::GenParticle &gen);
   
   bool isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut);
   
   edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
-  edm::EDGetTokenT<std::vector<pat::Muon>> muonsToken_;
+  edm::EDGetTokenT<edm::View<pat::Muon>> muonsToken_;
+
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> putoken_;
+
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons;
+  
+  edm::EDGetTokenT<edm::ValueMap<float> > pfIsolation_charged_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfIsolation_neutral_hadrons_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfIsolation_photons_;
+  edm::Handle<edm::ValueMap<float>> pfIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> pfIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> pfIsolation_photons;
 
   reco::Vertex priVertex_;
   
@@ -83,10 +98,17 @@ private:
 };
 PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
-  muonsToken_(consumes<std::vector<pat::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
+  muonsToken_(consumes<edm::View<pat::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
   prunedGenToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("pruned")))
 {
   putoken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
+  PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
+  PUPPINoLeptonsIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationNeutralHadrons"));
+  PUPPINoLeptonsIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationPhotons"));
+
+  pfIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfIsolationChargedHadrons"));
+  pfIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfIsolationNeutralHadrons"));
+  pfIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfIsolationPhotons"));
   
   usesResource("TFileService");
   edm::Service<TFileService> fs;
@@ -120,12 +142,20 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   priVertex_ = vertices->at(prVtx);
   b_nvertex = vertices->size();
 
-  Handle<std::vector<pat::Muon>> muons;
+  Handle<View<pat::Muon> > muons;
   iEvent.getByToken(muonsToken_, muons);
 
   Handle<edm::View<reco::GenParticle> > pruned;
   iEvent.getByToken(prunedGenToken_,pruned);
 
+  iEvent.getByToken(PUPPINoLeptonsIsolation_charged_hadrons_, PUPPINoLeptonsIsolation_charged_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
+
+  iEvent.getByToken(pfIsolation_charged_hadrons_, pfIsolation_charged_hadrons);
+  iEvent.getByToken(pfIsolation_neutral_hadrons_, pfIsolation_neutral_hadrons);
+  iEvent.getByToken(pfIsolation_photons_, pfIsolation_photons);  
+  
   // edm::Handle<std::vector <PileupSummaryInfo> > PupInfo;
   // iEvent.getByToken(putoken, PupInfo);
   // b_pu_density = 0; b_pu_numInteractions = 0;
@@ -145,20 +175,26 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     TLorentzVector gentlv(gen.momentum().x(), gen.momentum().y(), gen.momentum().z(), gen.energy() );
 
     const pat::Muon *recoMu = NULL;
-    for (const pat::Muon &muon : *muons) {
+    edm::RefToBase<pat::Muon> muref;    
+    for (size_t i = 0; i < muons->size(); i++) {
+      muref = muons->refAt(i);
+      auto muon = muons->at(i);
+
       TLorentzVector recotlv(muon.momentum().x(), muon.momentum().y(), muon.momentum().z(), muon.energy() );
       if (gentlv.DeltaR(recotlv) < 0.1)
 	recoMu = &muon;
     }
     //if ( recoMu == NULL ) continue;
-    fillBranches(genttree_, gentlv, recoMu, true, gen.pdgId());
+    fillBranches(genttree_, gentlv, recoMu, muref, true, gen.pdgId());
   }
 
   
   b_muon_no = 0;
+
+  for (size_t i = 0; i < muons->size(); i++) {
+    edm::RefToBase<pat::Muon> muref = muons->refAt(i);
+    auto muon = muons->at(i);
   
-  for (const pat::Muon &muon : *muons) {
-    if (muon.pt() < 2.) continue;
     if (abs(muon.eta()) > 2.8) continue;
 
     bool isSignal = false;
@@ -170,7 +206,7 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     }
   
     TLorentzVector recotlv(muon.momentum().x(), muon.momentum().y(), muon.momentum().z(), muon.energy() );
-    fillBranches(recottree_, recotlv, &muon, isSignal, pdgId);
+    fillBranches(recottree_, recotlv, &muon, muref, isSignal, pdgId);
   }
   
   return;
@@ -190,7 +226,7 @@ bool PatMuonAnalyser::isSignalMuon(const reco::GenParticle &gen)
   
 }
 
-void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::Muon *muon, bool isSignal, int pdgId)
+void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::Muon *muon, edm::RefToBase<pat::Muon> muref, bool isSignal, int pdgId)
 {
   b_muon = tlv;
   b_muon_signal = isSignal;
@@ -249,7 +285,23 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
     double dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.056);
     double dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0096);
     b_muon_isME0MuonLoose = isME0MuonSelNew(*muon, 0.077, dPhiCut_, dPhiBendCut_);
-    
+
+    double muon_puppiIsoNoLep_ChargedHadron = (*PUPPINoLeptonsIsolation_charged_hadrons)[muref];
+    double muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
+    double muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
+    double relIso = (muon_puppiIsoNoLep_ChargedHadron+muon_puppiIsoNoLep_NeutralHadron+muon_puppiIsoNoLep_Photon)/muon->pt();
+
+    double muon_ChargedHadron = (*pfIsolation_charged_hadrons)[muref];
+    double muon_NeutralHadron = (*pfIsolation_neutral_hadrons)[muref];
+    double muon_Photon = (*pfIsolation_photons)[muref];
+    double relpfIso = (muon_ChargedHadron+muon_NeutralHadron+muon_Photon)/muon->pt();
+
+    cout <<"muon->pt() "<< muon->pt()
+	 <<" puppiIsoNoLep "<< b_muon_puppiIsoNoLep
+	 <<" relIso "<< relIso
+	 <<" relpfIso "<< relpfIso
+	 << endl;
+      
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
     if (muon->innerTrack().isNonnull()){
       ipxy = std::abs(muon->muonBestTrack()->dxy(priVertex_.position())) < 0.2;
