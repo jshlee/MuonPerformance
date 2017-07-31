@@ -95,6 +95,12 @@ private:
   float b_muon_puppiIso_ChargedHadron, b_muon_puppiIso_NeutralHadron, b_muon_puppiIso_Photon;  
   float b_muon_puppiIsoNoLep_ChargedHadron, b_muon_puppiIsoNoLep_NeutralHadron, b_muon_puppiIsoNoLep_Photon;  
 
+  float b_muon_PFNewIso;
+  float b_muon_PFNewIsoChargedHadronPt, b_muon_PFNewIsoNeutralHadronEt;
+  float b_muon_PFNewIsoPhotonEt, b_muon_PFNewIsoPUPt;
+  float b_muon_puppiNewIso;
+  float b_muon_puppiNewIso_ChargedHadron, b_muon_puppiNewIso_NeutralHadron, b_muon_puppiNewIso_Photon;  
+
 };
 PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
@@ -138,6 +144,7 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     if (vertices->at(i).ndof() <= 4) continue;
     if (prVtx < 0) prVtx = i;
   }
+  cout << prVtx << endl;
   if (prVtx < 0) return;
   priVertex_ = vertices->at(prVtx);
   b_nvertex = vertices->size();
@@ -246,15 +253,24 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
   b_muon_TrkIso05 = 0;  b_muon_TrkIso03 = 0;
   b_muon_puppiIso = 0; b_muon_puppiIso_ChargedHadron = 0; b_muon_puppiIso_NeutralHadron = 0; b_muon_puppiIso_Photon = 0;
   b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
+  
+  b_muon_PFNewIso = 0;
+  b_muon_PFNewIsoChargedHadronPt = 0; b_muon_PFNewIsoNeutralHadronEt = 0;
+  b_muon_PFNewIsoPhotonEt = 0; b_muon_PFNewIsoPUPt = 0;
+  b_muon_puppiNewIso = 0; b_muon_puppiNewIso_ChargedHadron = 0; b_muon_puppiNewIso_NeutralHadron = 0; b_muon_puppiNewIso_Photon = 0;
+  b_muon_puppiNewIso = 0; b_muon_puppiNewIso_ChargedHadron = 0; b_muon_puppiNewIso_NeutralHadron = 0; b_muon_puppiNewIso_Photon = 0;  
 
   b_muon_isME0MuonTight = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonLoose = 0;
 
   if (muon){
-    b_muon_poszPV0  = priVertex_.position().z();
+    cout << "test0" << endl;
+    //b_muon_poszPV0  = priVertex_.position().z();
     b_muon_poszMuon = muon->muonBestTrack()->vz();
+    cout << "test001" << endl;
     
     b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
     b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
+    cout << "test01" << endl;
     
     b_muon_PFIso03ChargedHadronPt = muon->pfIsolationR03().sumChargedHadronPt;
     b_muon_PFIso03NeutralHadronEt = muon->pfIsolationR03().sumNeutralHadronEt;
@@ -265,9 +281,11 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
     b_muon_PFIso04NeutralHadronEt = muon->pfIsolationR04().sumNeutralHadronEt;
     b_muon_PFIso04PhotonEt        = muon->pfIsolationR04().sumPhotonEt;
     b_muon_PFIso04PUPt            = muon->pfIsolationR04().sumPUPt;   
+    cout << "test02" << endl;
     
     b_muon_PFIso04 = (muon->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,muon->pfIsolationR04().sumNeutralHadronEt + muon->pfIsolationR04().sumPhotonEt - 0.5*muon->pfIsolationR04().sumPUPt))/muon->pt();
     b_muon_PFIso03 = (muon->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,muon->pfIsolationR03().sumNeutralHadronEt + muon->pfIsolationR03().sumPhotonEt - 0.5*muon->pfIsolationR03().sumPUPt))/muon->pt();
+    cout << "test03" << endl;
     
     b_muon_puppiIso_ChargedHadron = muon->puppiChargedHadronIso();
     b_muon_puppiIso_NeutralHadron = muon->puppiNeutralHadronIso();
@@ -277,9 +295,11 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
     b_muon_puppiIsoNoLep_NeutralHadron = muon->puppiNoLeptonsNeutralHadronIso();
     b_muon_puppiIsoNoLep_Photon = muon->puppiNoLeptonsPhotonIso();
     b_muon_puppiIsoNoLep = (b_muon_puppiIsoNoLep_ChargedHadron+b_muon_puppiIsoNoLep_NeutralHadron+b_muon_puppiIsoNoLep_Photon)/muon->pt(); 
+    cout << "test04" << endl;
     b_muon_isTight = muon::isTightMuon(*muon, priVertex_);
     b_muon_isMedium = muon::isMediumMuon(*muon);
     b_muon_isLoose = muon::isLooseMuon(*muon);
+    cout << "test1" << endl;
     
     double mom = muon->p();
     double dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.056);
@@ -295,12 +315,24 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
     double muon_NeutralHadron = (*pfIsolation_neutral_hadrons)[muref];
     double muon_Photon = (*pfIsolation_photons)[muref];
     double relpfIso = (muon_ChargedHadron+muon_NeutralHadron+muon_Photon)/muon->pt();
+    cout << "test2" << endl;
+    
+    b_muon_puppiNewIso_ChargedHadron = muon_puppiIsoNoLep_ChargedHadron;
+    b_muon_puppiNewIso_NeutralHadron = muon_puppiIsoNoLep_NeutralHadron;
+    b_muon_puppiNewIso_Photon        = muon_puppiIsoNoLep_Photon;
+    b_muon_puppiNewIso               = relIso;
+    
+    b_muon_PFNewIsoChargedHadronPt = muon_ChargedHadron;
+    b_muon_PFNewIsoNeutralHadronEt = muon_NeutralHadron;
+    b_muon_PFNewIsoPhotonEt        = muon_Photon;
+    b_muon_PFNewIsoPUPt            = muon->pfIsolationR03().sumPUPt;
 
     cout <<"muon->pt() "<< muon->pt()
 	 <<" puppiIsoNoLep "<< b_muon_puppiIsoNoLep
 	 <<" relIso "<< relIso
 	 <<" relpfIso "<< relpfIso
 	 << endl;
+    cout << "test3" << endl;
       
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
     if (muon->innerTrack().isNonnull()){
@@ -311,11 +343,13 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, const pat::
     }
     // isMediumME0 - just loose with track requirements for now, this needs to be updated
     b_muon_isME0MuonMedium = isME0MuonSelNew(*muon, 0.077, dPhiCut_, dPhiBendCut_) && ipxy && validPxlHit && highPurity;
+    cout << "test4" << endl;
 
     // tighter cuts for tight ME0
     dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.032);
     dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0041);
     b_muon_isME0MuonTight = isME0MuonSelNew(*muon, 0.048, dPhiCut_, dPhiBendCut_) && ipxy && ipz && validPxlHit && highPurity;
+    cout << "test5" << endl;
   }
   tree->Fill();
 }
@@ -399,14 +433,15 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_PFIso04NeutralHadronEt",&b_muon_PFIso04NeutralHadronEt,"muon_PFIso04NeutralHadronEt/F");
   tree->Branch("muon_PFIso04PhotonEt",&b_muon_PFIso04PhotonEt,"muon_PFIso04PhotonEt/F");
   tree->Branch("muon_PFIso04PUPt",&b_muon_PFIso04PUPt,"muon_PFIso04PUPt/F");
-  tree->Branch("muon_puppiIso",&b_muon_puppiIso,"muon_puppiIso/F");
-  tree->Branch("muon_puppiIso_ChargedHadron",&b_muon_puppiIso_ChargedHadron,"muon_puppiIso_ChargedHadron/F");
-  tree->Branch("muon_puppiIso_NeutralHadron",&b_muon_puppiIso_NeutralHadron,"muon_puppiIso_NeutralHadron/F");
-  tree->Branch("muon_puppiIso_Photon",&b_muon_puppiIso_Photon,"muon_puppiIso_Photon/F");
-  tree->Branch("muon_puppiIsoNoLep",&b_muon_puppiIsoNoLep,"muon_puppiIsoNoLep/F");
-  tree->Branch("muon_puppiIsoNoLep_ChargedHadron",&b_muon_puppiIsoNoLep_ChargedHadron,"muon_puppiIsoNoLep_ChargedHadron/F");
-  tree->Branch("muon_puppiIsoNoLep_NeutralHadron",&b_muon_puppiIsoNoLep_NeutralHadron,"muon_puppiIsoNoLep_NeutralHadron/F");
-  tree->Branch("muon_puppiIsoNoLep_Photon",&b_muon_puppiIsoNoLep_Photon,"muon_puppiIsoNoLep_Photon/F");
+  tree->Branch("muon_PFIsoNew",&b_muon_PFNewIso,"muon_PFIsoNew/F");
+  tree->Branch("muon_PFIsoNewChargedHadronPt",&b_muon_PFNewIsoChargedHadronPt,"muon_PFIsoNewChargedHadronPt/F");
+  tree->Branch("muon_PFIsoNewNeutralHadronEt",&b_muon_PFNewIsoNeutralHadronEt,"muon_PFIsoNewNeutralHadronEt/F");
+  tree->Branch("muon_PFIsoNewPhotonEt",&b_muon_PFNewIsoPhotonEt,"muon_PFIsoNewPhotonEt/F");
+  tree->Branch("muon_PFIsoNewPUPt",&b_muon_PFNewIsoPUPt,"muon_PFIsoNewPUPt/F");
+  tree->Branch("muon_puppiIsoNew",&b_muon_puppiNewIso,"muon_puppiIsoNew/F");
+  tree->Branch("muon_puppiIsoNew_ChargedHadron",&b_muon_puppiNewIso_ChargedHadron,"muon_puppiIsoNew_ChargedHadron/F");
+  tree->Branch("muon_puppiIsoNew_NeutralHadron",&b_muon_puppiNewIso_NeutralHadron,"muon_puppiIsoNew_NeutralHadron/F");
+  tree->Branch("muon_puppiIsoNew_Photon",&b_muon_puppiNewIso_Photon,"muon_puppiIsoNew_Photon/F");
 }
 
 void
