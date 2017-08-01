@@ -33,12 +33,13 @@ def usage():
     print "   --firstRun N                     For MC: run number"
     print "  Optional, condor-specific :"
     print "   --blacklist HOST1,HOST2,...      Remove specific hosts"
+    print "   -c                               Add certifications (from voms)"
     sys.exit()
 
 # Parse arguments
 if len(sys.argv) < 2: usage()
 try:
-    opts, args = getopt(sys.argv[1:], 'ng', ['jobName=', 'fileList=', 'maxFiles=', 'nJobs=', 'cfg=',
+    opts, args = getopt(sys.argv[1:], 'ngc', ['jobName=', 'fileList=', 'maxFiles=', 'nJobs=', 'cfg=',
                                              'maxEvent=', 'queue=', 'transferDest=', 'transferFiles=',
                                              'args=', 'secondFileList=', 'customise=', 'firstRun=',
                                              'blacklist=',])
@@ -558,14 +559,17 @@ done""" % (' '.join(self.outFileNames), self.transferCmd, self.dest)
 universe   = vanilla
 arguments  = $(Process)
 
-log = condor.log
+log = condor.log""" % self.jobName.replace('/','_')
 
+        if '-c' in opts: print>>jdlOut, "x509userproxy = /tmp/x509up_u%d"%os.getuid()
+
+        print>>jdlOut, """
 getenv     = True
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 output = job_$(Process).log
 error = job_$(Process).err
-transfer_input_files = job.tar.gz""" % self.jobName.replace('/','_')
+transfer_input_files = job.tar.gz"""
         if self.transferCmd == '':
             print>>jdlOut, "transfer_output_files = ", (",".join([os.path.join(self.jobBase, x) for x in self.outFileNames]))
             remapStrs = ["{0}.{1}={0}_$(Process).{1}".format('.'.join(x.split('.')[:-1]), x.split('.')[-1]) for x in self.outFileNames]
