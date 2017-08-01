@@ -299,6 +299,7 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
     double muon_Photon = (*pfIsolation_photons)[muref];
     double relpfIso = (muon_ChargedHadron+muon_NeutralHadron+muon_Photon)/muon->pt();
 
+    if (muon_ChargedHadron > 1.1*muon->isolationR03().sumPt){
     cout <<"muon->pt() "<< muon->pt()
 	 <<" isSignal "<< isSignal
 	 <<" puppiIsoNoLep "<< muon_puppiIsoNoLep_ChargedHadron
@@ -306,6 +307,7 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
 	 <<" pfCharge "<< muon_ChargedHadron
 	 <<" trk "<< muon->isolationR03().sumPt
 	 << endl;
+    }
       
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
     if (muon->innerTrack().isNonnull()){
