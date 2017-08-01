@@ -300,9 +300,11 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
     double relpfIso = (muon_ChargedHadron+muon_NeutralHadron+muon_Photon)/muon->pt();
 
     cout <<"muon->pt() "<< muon->pt()
-	 <<" puppiIsoNoLep "<< b_muon_puppiIsoNoLep
-	 <<" relIso "<< relIso
-	 <<" relpfIso "<< relpfIso
+	 <<" isSignal "<< isSignal
+	 <<" puppiIsoNoLep "<< muon_puppiIsoNoLep_ChargedHadron
+	 <<" pfCharge "<< muon->pfIsolationR03().sumChargedHadronPt
+	 <<" pfCharge "<< muon_ChargedHadron
+	 <<" trk "<< muon->isolationR03().sumPt
 	 << endl;
       
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
