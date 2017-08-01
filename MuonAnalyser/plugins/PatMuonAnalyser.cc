@@ -382,16 +382,15 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
     b_muon_PFIsoRepTrk = ( b_muon_TrkIso03 + TMath::Max(0.,muon->pfIsolationR03().sumNeutralHadronEt + muon->pfIsolationR03().sumPhotonEt - 0.5*muon->pfIsolationR03().sumPUPt))/muon->pt();
     b_muon_puppiIsoRepTrk = (b_muon_TrkIso03 + muon_puppiIsoNoLep_NeutralHadron+muon_puppiIsoNoLep_Photon)/muon->pt();
 
-    /*cout <<"muon->pt() "<< muon->pt()
-	 <<" puppiIsoNoLep "<< b_muon_puppiIsoNoLep
-	 <<" relIso "<< relIso
-	 <<" PFIso "<< b_muon_PFIso03
-	 <<" relpfIso "<< relpfIso
-	 << endl;*/
-    cout << "diff - PFCH : " << b_muon_PFIso03ChargedHadronPt - b_muon_PFNewIsoChargedHadronPt 
-        << ", PFNH : " << b_muon_PFIso03NeutralHadronEt - muon_NeutralHadron_nocone
-        << ", PFPH : " << b_muon_PFIso03PhotonEt - muon_Photon_nocone
-        << endl;
+    if (muon_ChargedHadron > 1.1*muon->isolationR03().sumPt){
+    cout <<"muon->pt() "<< muon->pt()
+	 <<" isSignal "<< isSignal
+	 <<" puppiIsoNoLep "<< muon_puppiIsoNoLep_ChargedHadron
+	 <<" pfCharge "<< muon->pfIsolationR03().sumChargedHadronPt
+	 <<" pfCharge "<< muon_ChargedHadron
+	 <<" trk "<< muon->isolationR03().sumPt
+	 << endl;
+    }
       
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
     if (muon->innerTrack().isNonnull()){
