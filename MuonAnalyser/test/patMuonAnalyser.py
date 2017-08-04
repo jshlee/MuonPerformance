@@ -31,6 +31,11 @@ process.PatMuonAnalyser = cms.EDAnalyzer("PatMuonAnalyser",
     pfIsolationChargedHadrons = cms.InputTag("muonIsolationMiniAOD","h+-DR030-ThresholdVeto000-ConeVeto000"),
     pfIsolationNeutralHadrons = cms.InputTag("muonIsolationMiniAOD","h0-DR030-ThresholdVeto000-ConeVeto001"),
     pfIsolationPhotons        = cms.InputTag("muonIsolationMiniAOD","gamma-DR030-ThresholdVeto000-ConeVeto001"),    
+    pfIsolationNeutralHadronsNoCone = cms.InputTag("muonIsolationMiniAOD","h0-DR030-ThresholdVeto000-ConeVeto001"),
+    pfIsolationPhotonsNoCone        = cms.InputTag("muonIsolationMiniAOD","gamma-DR030-ThresholdVeto000-ConeVeto001"),    
+    puppiNoLepIsolation04ChargedHadrons = cms.InputTag("muonIsolationMiniAODPUPPINoLeptons","h+-DR030-ThresholdVeto000-ConeVeto000"),
+    puppiNoLepIsolation04NeutralHadrons = cms.InputTag("muonIsolationMiniAODPUPPINoLeptons","h0-DR030-ThresholdVeto000-ConeVeto001"),
+    puppiNoLepIsolation04Photons        = cms.InputTag("muonIsolationMiniAODPUPPINoLeptons","gamma-DR030-ThresholdVeto000-ConeVeto001"),    
 
 )
 
