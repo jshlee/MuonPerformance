@@ -26,11 +26,11 @@
   ], 
   "plotvar": "muon.Pt()", 
   "bkgdenominator": {
-    "bkgrate": "( ( muon.Eta() < 2.4 && muon_is%(ID)s ) || ( muon.Eta() > 2.4 && muon_isME0Muon%(ID)s ) )", 
+    "bkgrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
     "nevents": 2555040, 
     "type": "simplenevents"
   }, 
-  "effrate": "( ( muon.Eta() < 2.4 && muon_is%(ID)s ) || ( muon.Eta() > 2.4 && muon_isME0Muon%(ID)s ) )", 
+  "effrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
   "ytitle": "Efficiency", 
   "commonsource": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_zmm_200.root", 
   "cut": "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 

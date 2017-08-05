@@ -5,7 +5,7 @@
     "label": "Background yield"
   }, 
   "extracut_ID": "Loose", 
-  "cut": "muon.Pt() > %(pT)s && %(EtaL)s < abs(muon.Eta()) && abs(muon.Eta()) < %(EtaH)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
+  "cut": "muon.Pt() > %(pT)s && %(EtaL)s < abs(muon.Eta()) && abs(muon.Eta()) < %(EtaH)s && ( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) ) && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
   "vars": [
     {
       "color": 4, 
@@ -29,7 +29,7 @@
       "title": "Track isolation, R = 0.3"
     }
   ], 
-  "title": "ZZ#rightarrow#font[12]{4#mu} and QCD events (%(PU)s), \np_{T} > %(pT)s GeV, %(EtaL)s < |#eta| < %(EtaH)s, |z_{reco} - z_{sim}| < 0.5 cm", 
+  "title": "ZZ#rightarrow#font[12]{4#mu} and QCD events (%(PU)s), %(ID)s Muon, \np_{T} > %(pT)s GeV, %(EtaL)s < |#eta| < %(EtaH)s, |z_{reco} - z_{sim}| < 0.5 cm", 
   "extracut_EtaL": "1.6", 
   "printout_front": "withvtxcut; rereco", 
   "maintree": "PatMuonAnalyser", 
@@ -45,8 +45,8 @@
     "pT": "15", 
     "PU": "PU200"
   }, 
-  "inputfilename_bkg": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170718_2_qcd_200.root", 
-  "inputfilename_sig": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170718_2_zmm_200.root", 
+  "inputfilename_bkg": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_qcd_200.root", 
+  "inputfilename_sig": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_zmm_200.root", 
   "titlepos": {
     "y": 0.8, 
     "x": 0.17, 

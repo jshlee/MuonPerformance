@@ -27,7 +27,7 @@
     }
   ], 
   "min": 0.0, 
-  "max": 0.3, 
+  "max": 0.6, 
   "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, \n|z_{reco} - z_{sim}| < 0.5 cm", 
   "extravarcut_isocutPUPPI": "0.228", 
   "maintree": "PatMuonAnalyser", 

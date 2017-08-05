@@ -24,24 +24,24 @@
       "title": "No Iso cut"
     }
   ], 
-  "plotvar": "muon.Eta()", 
+  "plotvar": "abs(muon.Eta())", 
   "bkgdenominator": {
-    "bkgrate": "( ( muon.Eta() < 2.4 && muon_is%(ID)s ) || ( muon.Eta() > 2.4 && muon_isME0Muon%(ID)s ) )", 
+    "bkgrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
     "nevents": 2555040, 
     "type": "simplenevents"
   }, 
-  "effrate": "( ( muon.Eta() < 2.4 && muon_is%(ID)s ) || ( muon.Eta() > 2.4 && muon_isME0Muon%(ID)s ) )", 
+  "effrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
   "ytitle": "Background rate", 
   "commonsource": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_qcd_200.root", 
-  "cut": "muon.Pt() > %(pT)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
-  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, p_{T} > %(pT)s GeV, \n|z_{reco} - z_{sim}| < 0.5 cm, %(ID)s Muon", 
+  "cut": "1 == 1", 
+  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, \n%(ID)s Muon", 
   "filename": "plots/20170723/effbkgplots/bkg_Tight_Eta.png", 
   "extravarcut_isocutPF": "1.776", 
   "titlepos": {
     "x": 0.155
   }, 
   "extracut_ID": "Tight", 
-  "max": 0.025, 
+  "max": 0.6, 
   "extravarcut_isocutPUPPI": "0.220", 
   "binning": [
     28, 
@@ -52,7 +52,7 @@
     "Eta": "2.4", 
     "pT": "15"
   }, 
-  "xtitle": "muon.Eta()", 
+  "xtitle": "#eta", 
   "legend": {
     "top": 0.8, 
     "right": 0.85, 
