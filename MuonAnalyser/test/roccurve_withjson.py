@@ -1,5 +1,5 @@
 import ROOT, copy, array, json, os, sys
-import MuonPerformance.MuonAnalyser.CMS_lumi as CMS_lumi
+import MuonPerformance.MuonAnalyser.CMS_lumi_forTDR as CMS_lumi
 import MuonPerformance.MuonAnalyser.tdrstyle as tdrstyle
 from MuonPerformance.MuonAnalyser.histoHelper import *
 
@@ -73,6 +73,8 @@ def getROC(fileSig,fileBkg,treename,title,binning,plotvar,cutSig,cutBkg,dicRef):
       
       if dicBkgCfg[ "name" ] == "bkgyield":
         fBkgVal = fBkgIntegral / dicBkgCfg[ "numEvents" ]
+      elif dicBkgCfg[ "name" ] == "bkgeff":
+        fBkgVal = fBkgIntegral / fMBkg
     
     if "sigeff" in dicRef: 
       if fSigEffPrev <= dicRef[ "sigeff" ] and dicRef[ "sigeff" ] <= fSigEff: 
@@ -109,7 +111,7 @@ def drawSampleName(samplename, fX, fY, fSizeTex):
   tex2 = ROOT.TLatex()
   
   tex2.SetNDC()
-  tex2.SetTextFont(42)
+  tex2.SetTextFont(62)
   tex2.SetTextSize(fSizeTex)
   
   for i, strLine in enumerate(samplename.split("\n")): 
@@ -183,11 +185,18 @@ def drawPlotFromDict(dicMainCmd):
   fTitleY = 0.85
   fTitleSize = 0.03
   
+  fXMin = 0.0
+  fXMax = 0.0
+  
+  fYMin = 0.0
   fYMax = 1.05
+  
   strLabelYAxis = "Background rejection"
   
   strNameTagCut    = "extracut_"
   #strNameTagVarCut = "extravarcut_"
+  
+  strExtraText = "Working Progress"
   
   for strItemForCut in dicMainCmd.keys(): 
     if strNameTagCut in strItemForCut: 
@@ -216,6 +225,12 @@ def drawPlotFromDict(dicMainCmd):
   
   if "ymax" in dicMainCmd: 
     fYMax = dicMainCmd[ "ymax" ]
+  
+  if "xmin" in dicMainCmd: 
+    fXMin = dicMainCmd[ "xmin" ]
+  
+  if "extraText" in dicMainCmd: 
+    strExtraText = dicMainCmd[ "extraText" ]
   
   ## Prepare to draw
   
@@ -260,7 +275,7 @@ def drawPlotFromDict(dicMainCmd):
     
     setMarkerStyle(dicPlotvar[ "graph" ], dicPlotvar[ "color" ], dicPlotvar[ "shape" ])
     
-    dicPlotvar[ "graph" ].GetXaxis().SetLimits(0.0, 1.1)
+    dicPlotvar[ "graph" ].GetXaxis().SetLimits(fXMin, 1.1)
     
     if fBkgMax < dicRes[ "bkgmax" ]:
       fBkgMax = dicRes[ "bkgmax" ]
@@ -283,7 +298,12 @@ def drawPlotFromDict(dicMainCmd):
     if i == 0: 
       dicPlotvar[ "graph" ].GetXaxis().SetTitle(x_name)
       dicPlotvar[ "graph" ].GetYaxis().SetTitle(y_name)
-      dicPlotvar[ "graph" ].GetYaxis().SetTitleOffset(0.95)
+      dicPlotvar[ "graph" ].GetXaxis().SetTitleSize(0.05)
+      dicPlotvar[ "graph" ].GetYaxis().SetTitleOffset(1.20)
+      dicPlotvar[ "graph" ].GetYaxis().SetTitleSize(0.05)
+      
+      dicPlotvar[ "graph" ].GetXaxis().SetLabelSize(0.037)
+      dicPlotvar[ "graph" ].GetYaxis().SetLabelSize(0.037)
       
       dicPlotvar[ "graph" ].SetMaximum(fYMax)
       
@@ -306,8 +326,8 @@ def drawPlotFromDict(dicMainCmd):
   iPos = 0
   iPeriod = 0
   if( iPos==0 ): CMS_lumi.relPosX = 0.12
-  CMS_lumi.extraText = "phase-2 simulation"
-  CMS_lumi.lumi_sqrtS = "14 TeV"
+  CMS_lumi.extraText = strExtraText
+  CMS_lumi.lumi_sqrtS = ""
   CMS_lumi.CMS_lumi(canv, iPeriod, iPos)
   
   canv.Modified()
