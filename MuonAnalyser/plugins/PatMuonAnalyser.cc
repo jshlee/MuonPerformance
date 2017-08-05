@@ -52,19 +52,70 @@ private:
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> putoken_;
 
-  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
-  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
-  edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
-  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_charged_hadrons;
-  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_neutral_hadrons;
-  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIso_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIso_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIso_ph_;
+  edm::Handle<edm::ValueMap<float>> puppiNewIso_ch;
+  edm::Handle<edm::ValueMap<float>> puppiNewIso_nh;
+  edm::Handle<edm::ValueMap<float>> puppiNewIso_ph;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_ph_;
+  edm::Handle<edm::ValueMap<float>> pfNewIso_ch;
+  edm::Handle<edm::ValueMap<float>> pfNewIso_nh;
+  edm::Handle<edm::ValueMap<float>> pfNewIso_ph;
+
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt05_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt05_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt05_ph_;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt05_ch;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt05_nh;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt05_ph;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt05_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt05_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt05_ph_;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt05_ch;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt05_nh;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt05_ph;
   
-  edm::EDGetTokenT<edm::ValueMap<float> > pfIsolation_charged_hadrons_;
-  edm::EDGetTokenT<edm::ValueMap<float> > pfIsolation_neutral_hadrons_;
-  edm::EDGetTokenT<edm::ValueMap<float> > pfIsolation_photons_;
-  edm::Handle<edm::ValueMap<float>> pfIsolation_charged_hadrons;
-  edm::Handle<edm::ValueMap<float>> pfIsolation_neutral_hadrons;
-  edm::Handle<edm::ValueMap<float>> pfIsolation_photons;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt10_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt10_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt10_ph_;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt10_ch;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt10_nh;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt10_ph;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt10_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt10_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt10_ph_;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt10_ch;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt10_nh;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt10_ph;
+
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt15_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt15_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt15_ph_;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt15_ch;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt15_nh;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt15_ph;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt15_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt15_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt15_ph_;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt15_ch;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt15_nh;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt15_ph;
+  
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt20_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt20_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt20_ph_;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt20_ch;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt20_nh;
+  edm::Handle<edm::ValueMap<float>> puppiNewIsoPt20_ph;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt20_ch_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt20_nh_;
+  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIsoPt20_ph_;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt20_ch;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt20_nh;
+  edm::Handle<edm::ValueMap<float>> pfNewIsoPt20_ph;
 
   reco::Vertex priVertex_;
   
@@ -95,6 +146,27 @@ private:
   float b_muon_puppiIso_ChargedHadron, b_muon_puppiIso_NeutralHadron, b_muon_puppiIso_Photon;  
   float b_muon_puppiIsoNoLep_ChargedHadron, b_muon_puppiIsoNoLep_NeutralHadron, b_muon_puppiIsoNoLep_Photon;  
 
+  float b_muon_puppiNewIso_ch, b_muon_puppiNewIso_nh, b_muon_puppiNewIso_ph, b_muon_puppiNewIso;
+  float b_muon_pfNewIso_ch, b_muon_pfNewIso_nh, b_muon_pfNewIso_ph, b_muon_pfNewIso_pu, b_muon_pfNewIso;
+
+  float b_muon_puppiNewIsoPt05_ch, b_muon_puppiNewIsoPt05_nh, b_muon_puppiNewIsoPt05_ph, b_muon_puppiNewIsoPt05;
+  float b_muon_pfNewIsoPt05_ch, b_muon_pfNewIsoPt05_nh, b_muon_pfNewIsoPt05_ph, b_muon_pfNewIsoPt05_pu, b_muon_pfNewIsoPt05;
+  
+  float b_muon_puppiNewIsoPt10_ch, b_muon_puppiNewIsoPt10_nh, b_muon_puppiNewIsoPt10_ph, b_muon_puppiNewIsoPt10;
+  float b_muon_pfNewIsoPt10_ch, b_muon_pfNewIsoPt10_nh, b_muon_pfNewIsoPt10_ph, b_muon_pfNewIsoPt10_pu, b_muon_pfNewIsoPt10;
+
+  float b_muon_puppiNewIsoPt15_ch, b_muon_puppiNewIsoPt15_nh, b_muon_puppiNewIsoPt15_ph, b_muon_puppiNewIsoPt15;
+  float b_muon_pfNewIsoPt15_ch, b_muon_pfNewIsoPt15_nh, b_muon_pfNewIsoPt15_ph, b_muon_pfNewIsoPt15_pu, b_muon_pfNewIsoPt15;
+
+  float b_muon_puppiNewIsoPt20_ch, b_muon_puppiNewIsoPt20_nh, b_muon_puppiNewIsoPt20_ph, b_muon_puppiNewIsoPt20;
+  float b_muon_pfNewIsoPt20_ch, b_muon_pfNewIsoPt20_nh, b_muon_pfNewIsoPt20_ph, b_muon_pfNewIsoPt20_pu, b_muon_pfNewIsoPt20;
+
+  float b_muon_PFIsoFixOnlyCH;
+  float b_muon_puppiIsoFixOnlyCH;
+  
+  float b_muon_PFIsoRepTrk;
+  float b_muon_puppiIsoRepTrk;
+
 };
 PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
@@ -102,13 +174,41 @@ PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   prunedGenToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("pruned")))
 {
   putoken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
-  PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
-  PUPPINoLeptonsIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationNeutralHadrons"));
-  PUPPINoLeptonsIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationPhotons"));
+  
+  puppiNewIso_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIso_ch"));
+  puppiNewIso_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIso_nh"));
+  puppiNewIso_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIso_ph"));
+  pfNewIso_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_ch"));
+  pfNewIso_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_nh"));
+  pfNewIso_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_ph"));
 
-  pfIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfIsolationChargedHadrons"));
-  pfIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfIsolationNeutralHadrons"));
-  pfIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfIsolationPhotons"));
+  puppiNewIsoPt05_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt05_ch"));
+  puppiNewIsoPt05_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt05_nh"));
+  puppiNewIsoPt05_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt05_ph"));
+  pfNewIsoPt05_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt05_ch"));
+  pfNewIsoPt05_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt05_nh"));
+  pfNewIsoPt05_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt05_ph"));
+  
+  puppiNewIsoPt10_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt10_ch"));
+  puppiNewIsoPt10_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt10_nh"));
+  puppiNewIsoPt10_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt10_ph"));
+  pfNewIsoPt10_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt10_ch"));
+  pfNewIsoPt10_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt10_nh"));
+  pfNewIsoPt10_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt10_ph"));
+  
+  puppiNewIsoPt15_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt15_ch"));
+  puppiNewIsoPt15_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt15_nh"));
+  puppiNewIsoPt15_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt15_ph"));
+  pfNewIsoPt15_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt15_ch"));
+  pfNewIsoPt15_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt15_nh"));
+  pfNewIsoPt15_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt15_ph"));
+  
+  puppiNewIsoPt20_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt20_ch"));
+  puppiNewIsoPt20_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt20_nh"));
+  puppiNewIsoPt20_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt20_ph"));
+  pfNewIsoPt20_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt20_ch"));
+  pfNewIsoPt20_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt20_nh"));
+  pfNewIsoPt20_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt20_ph"));
   
   usesResource("TFileService");
   edm::Service<TFileService> fs;
@@ -148,14 +248,41 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   Handle<edm::View<reco::GenParticle> > pruned;
   iEvent.getByToken(prunedGenToken_,pruned);
 
-  iEvent.getByToken(PUPPINoLeptonsIsolation_charged_hadrons_, PUPPINoLeptonsIsolation_charged_hadrons);
-  iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
-  iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
+  iEvent.getByToken(puppiNewIso_ch_, puppiNewIso_ch);
+  iEvent.getByToken(puppiNewIso_nh_, puppiNewIso_nh);
+  iEvent.getByToken(puppiNewIso_ph_, puppiNewIso_ph);  
+  iEvent.getByToken(pfNewIso_ch_, pfNewIso_ch);
+  iEvent.getByToken(pfNewIso_nh_, pfNewIso_nh);
+  iEvent.getByToken(pfNewIso_ph_, pfNewIso_ph);  
+    
+  iEvent.getByToken(puppiNewIsoPt05_ch_, puppiNewIsoPt05_ch);
+  iEvent.getByToken(puppiNewIsoPt05_nh_, puppiNewIsoPt05_nh);
+  iEvent.getByToken(puppiNewIsoPt05_ph_, puppiNewIsoPt05_ph);  
+  iEvent.getByToken(pfNewIsoPt05_ch_, pfNewIsoPt05_ch);
+  iEvent.getByToken(pfNewIsoPt05_nh_, pfNewIsoPt05_nh);
+  iEvent.getByToken(pfNewIsoPt05_ph_, pfNewIsoPt05_ph);
 
-  iEvent.getByToken(pfIsolation_charged_hadrons_, pfIsolation_charged_hadrons);
-  iEvent.getByToken(pfIsolation_neutral_hadrons_, pfIsolation_neutral_hadrons);
-  iEvent.getByToken(pfIsolation_photons_, pfIsolation_photons);  
+  iEvent.getByToken(puppiNewIsoPt10_ch_, puppiNewIsoPt10_ch);
+  iEvent.getByToken(puppiNewIsoPt10_nh_, puppiNewIsoPt10_nh);
+  iEvent.getByToken(puppiNewIsoPt10_ph_, puppiNewIsoPt10_ph);  
+  iEvent.getByToken(pfNewIsoPt10_ch_, pfNewIsoPt10_ch);
+  iEvent.getByToken(pfNewIsoPt10_nh_, pfNewIsoPt10_nh);
+  iEvent.getByToken(pfNewIsoPt10_ph_, pfNewIsoPt10_ph);  
   
+  iEvent.getByToken(puppiNewIsoPt15_ch_, puppiNewIsoPt15_ch);
+  iEvent.getByToken(puppiNewIsoPt15_nh_, puppiNewIsoPt15_nh);
+  iEvent.getByToken(puppiNewIsoPt15_ph_, puppiNewIsoPt15_ph);  
+  iEvent.getByToken(pfNewIsoPt15_ch_, pfNewIsoPt15_ch);
+  iEvent.getByToken(pfNewIsoPt15_nh_, pfNewIsoPt15_nh);
+  iEvent.getByToken(pfNewIsoPt15_ph_, pfNewIsoPt15_ph);  
+
+  iEvent.getByToken(puppiNewIsoPt20_ch_, puppiNewIsoPt20_ch);
+  iEvent.getByToken(puppiNewIsoPt20_nh_, puppiNewIsoPt20_nh);
+  iEvent.getByToken(puppiNewIsoPt20_ph_, puppiNewIsoPt20_ph);  
+  iEvent.getByToken(pfNewIsoPt20_ch_, pfNewIsoPt20_ch);
+  iEvent.getByToken(pfNewIsoPt20_nh_, pfNewIsoPt20_nh);
+  iEvent.getByToken(pfNewIsoPt20_ph_, pfNewIsoPt20_ph);  
+
   // edm::Handle<std::vector <PileupSummaryInfo> > PupInfo;
   // iEvent.getByToken(putoken, PupInfo);
   // b_pu_density = 0; b_pu_numInteractions = 0;
@@ -247,13 +374,36 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
   b_muon_TrkIso05 = 0;  b_muon_TrkIso03 = 0;
   b_muon_puppiIso = 0; b_muon_puppiIso_ChargedHadron = 0; b_muon_puppiIso_NeutralHadron = 0; b_muon_puppiIso_Photon = 0;
   b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
+
+  b_muon_puppiNewIso_ch = -1; b_muon_puppiNewIso_nh = -1; b_muon_puppiNewIso_ph = -1; b_muon_puppiNewIso = -1;
+  b_muon_pfNewIso_ch = -1; b_muon_pfNewIso_nh = -1; b_muon_pfNewIso_ph = -1; b_muon_pfNewIso_pu = -1; b_muon_pfNewIso = -1;
+    
+  b_muon_puppiNewIsoPt05_ch = -1; b_muon_puppiNewIsoPt05_nh = -1; b_muon_puppiNewIsoPt05_ph = -1; b_muon_puppiNewIsoPt05 = -1;
+  b_muon_pfNewIsoPt05_ch = -1; b_muon_pfNewIsoPt05_nh = -1; b_muon_pfNewIsoPt05_ph = -1; b_muon_pfNewIsoPt05_pu = -1; b_muon_pfNewIsoPt05 = -1;
+
+  b_muon_puppiNewIsoPt10_ch = -1; b_muon_puppiNewIsoPt10_nh = -1; b_muon_puppiNewIsoPt10_ph = -1; b_muon_puppiNewIsoPt10 = -1;
+  b_muon_pfNewIsoPt10_ch = -1; b_muon_pfNewIsoPt10_nh = -1; b_muon_pfNewIsoPt10_ph = -1; b_muon_pfNewIsoPt10_pu = -1; b_muon_pfNewIsoPt10 = -1;
+
+  b_muon_puppiNewIsoPt15_ch = -1; b_muon_puppiNewIsoPt15_nh = -1; b_muon_puppiNewIsoPt15_ph = -1; b_muon_puppiNewIsoPt15 = -1;
+  b_muon_pfNewIsoPt15_ch = -1; b_muon_pfNewIsoPt15_nh = -1; b_muon_pfNewIsoPt15_ph = -1; b_muon_pfNewIsoPt15_pu = -1; b_muon_pfNewIsoPt15 = -1;
+
+  b_muon_puppiNewIsoPt20_ch = -1; b_muon_puppiNewIsoPt20_nh = -1; b_muon_puppiNewIsoPt20_ph = -1; b_muon_puppiNewIsoPt20 = -1;
+  b_muon_pfNewIsoPt20_ch = -1; b_muon_pfNewIsoPt20_nh = -1; b_muon_pfNewIsoPt20_ph = -1; b_muon_pfNewIsoPt20_pu = -1; b_muon_pfNewIsoPt20 = -1;
+
+  b_muon_PFIsoFixOnlyCH = 0;
+  b_muon_puppiIsoFixOnlyCH = 0;
+  
+  b_muon_PFIsoRepTrk = 0;
+  b_muon_puppiIsoRepTrk = 0;
+
   b_muon_isME0MuonTight = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonLoose = 0;
   
   if (muref.isNonnull()){
     auto muon = muref;
-
+    
     b_muon_poszPV0  = priVertex_.position().z();
     b_muon_poszMuon = muon->vz();
+    
     b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
     b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
     
@@ -289,26 +439,56 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
 
     b_muon_isME0MuonLoose = isME0MuonSelNew(*muon, 0.077, dPhiCut_, dPhiBendCut_);
     
-    double muon_puppiIsoNoLep_ChargedHadron = (*PUPPINoLeptonsIsolation_charged_hadrons)[muref];
-    double muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
-    double muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
-    double relIso = (muon_puppiIsoNoLep_ChargedHadron+muon_puppiIsoNoLep_NeutralHadron+muon_puppiIsoNoLep_Photon)/muon->pt();
+    b_muon_puppiNewIso_ch = (*puppiNewIso_ch)[muref];
+    b_muon_puppiNewIso_nh = (*puppiNewIso_nh)[muref];
+    b_muon_puppiNewIso_ph = (*puppiNewIso_ph)[muref];
+    b_muon_puppiNewIso    = ( b_muon_puppiNewIso_ch + b_muon_puppiNewIso_nh + b_muon_puppiNewIso_ph )/muon->pt();
+    b_muon_pfNewIso_ch = (*pfNewIso_ch)[muref];
+    b_muon_pfNewIso_nh = (*pfNewIso_nh)[muref];
+    b_muon_pfNewIso_ph = (*pfNewIso_ph)[muref];
+    b_muon_pfNewIso_pu = muon->pfIsolationR03().sumPUPt;
+    b_muon_pfNewIso    = ( b_muon_pfNewIso_ch + max(0.0, b_muon_pfNewIso_nh + b_muon_pfNewIso_ph - 0.5 * b_muon_pfNewIso_pu) ) / muon->pt();
 
-    double muon_ChargedHadron = (*pfIsolation_charged_hadrons)[muref];
-    double muon_NeutralHadron = (*pfIsolation_neutral_hadrons)[muref];
-    double muon_Photon = (*pfIsolation_photons)[muref];
-    double relpfIso = (muon_ChargedHadron+muon_NeutralHadron+muon_Photon)/muon->pt();
+    b_muon_puppiNewIsoPt05_ch = (*puppiNewIsoPt05_ch)[muref];
+    b_muon_puppiNewIsoPt05_nh = (*puppiNewIsoPt05_nh)[muref];
+    b_muon_puppiNewIsoPt05_ph = (*puppiNewIsoPt05_ph)[muref];
+    b_muon_puppiNewIsoPt05    = ( b_muon_puppiNewIsoPt05_ch + b_muon_puppiNewIsoPt05_nh + b_muon_puppiNewIsoPt05_ph )/muon->pt();    
+    b_muon_pfNewIsoPt05_ch = (*pfNewIsoPt05_ch)[muref];
+    b_muon_pfNewIsoPt05_nh = (*pfNewIsoPt05_nh)[muref];
+    b_muon_pfNewIsoPt05_ph = (*pfNewIsoPt05_ph)[muref];
+    b_muon_pfNewIsoPt05_pu = muon->pfIsolationR03().sumPUPt;
+    b_muon_pfNewIsoPt05    = ( b_muon_pfNewIsoPt05_ch + max(0.0, b_muon_pfNewIsoPt05_nh + b_muon_pfNewIsoPt05_ph - 0.5 * b_muon_pfNewIsoPt05_pu) ) / muon->pt();
+    
+    b_muon_puppiNewIsoPt10_ch = (*puppiNewIsoPt10_ch)[muref];
+    b_muon_puppiNewIsoPt10_nh = (*puppiNewIsoPt10_nh)[muref];
+    b_muon_puppiNewIsoPt10_ph = (*puppiNewIsoPt10_ph)[muref];
+    b_muon_puppiNewIsoPt10    = ( b_muon_puppiNewIsoPt10_ch + b_muon_puppiNewIsoPt10_nh + b_muon_puppiNewIsoPt10_ph )/muon->pt();    
+    b_muon_pfNewIsoPt10_ch = (*pfNewIsoPt10_ch)[muref];
+    b_muon_pfNewIsoPt10_nh = (*pfNewIsoPt10_nh)[muref];
+    b_muon_pfNewIsoPt10_ph = (*pfNewIsoPt10_ph)[muref];
+    b_muon_pfNewIsoPt10_pu = muon->pfIsolationR03().sumPUPt;
+    b_muon_pfNewIsoPt10    = ( b_muon_pfNewIsoPt10_ch + max(0.0, b_muon_pfNewIsoPt10_nh + b_muon_pfNewIsoPt10_ph - 0.5 * b_muon_pfNewIsoPt10_pu) ) / muon->pt();
 
-    if (muon_ChargedHadron > 1.1*muon->isolationR03().sumPt){
-    cout <<"muon->pt() "<< muon->pt()
-	 <<" isSignal "<< isSignal
-	 <<" puppiIsoNoLep "<< muon_puppiIsoNoLep_ChargedHadron
-	 <<" pfCharge "<< muon->pfIsolationR03().sumChargedHadronPt
-	 <<" pfCharge "<< muon_ChargedHadron
-	 <<" trk "<< muon->isolationR03().sumPt
-	 << endl;
-    }
-      
+    b_muon_puppiNewIsoPt15_ch = (*puppiNewIsoPt15_ch)[muref];
+    b_muon_puppiNewIsoPt15_nh = (*puppiNewIsoPt15_nh)[muref];
+    b_muon_puppiNewIsoPt15_ph = (*puppiNewIsoPt15_ph)[muref];
+    b_muon_puppiNewIsoPt15    = ( b_muon_puppiNewIsoPt15_ch + b_muon_puppiNewIsoPt15_nh + b_muon_puppiNewIsoPt15_ph )/muon->pt();    
+    b_muon_pfNewIsoPt15_ch = (*pfNewIsoPt15_ch)[muref];
+    b_muon_pfNewIsoPt15_nh = (*pfNewIsoPt15_nh)[muref];
+    b_muon_pfNewIsoPt15_ph = (*pfNewIsoPt15_ph)[muref];
+    b_muon_pfNewIsoPt15_pu = muon->pfIsolationR03().sumPUPt;
+    b_muon_pfNewIsoPt15    = ( b_muon_pfNewIsoPt15_ch + max(0.0, b_muon_pfNewIsoPt15_nh + b_muon_pfNewIsoPt15_ph - 0.5 * b_muon_pfNewIsoPt15_pu) ) / muon->pt();
+    
+    b_muon_puppiNewIsoPt20_ch = (*puppiNewIsoPt20_ch)[muref];
+    b_muon_puppiNewIsoPt20_nh = (*puppiNewIsoPt20_nh)[muref];
+    b_muon_puppiNewIsoPt20_ph = (*puppiNewIsoPt20_ph)[muref];
+    b_muon_puppiNewIsoPt20    = ( b_muon_puppiNewIsoPt20_ch + b_muon_puppiNewIsoPt20_nh + b_muon_puppiNewIsoPt20_ph )/muon->pt();    
+    b_muon_pfNewIsoPt20_ch = (*pfNewIsoPt20_ch)[muref];
+    b_muon_pfNewIsoPt20_nh = (*pfNewIsoPt20_nh)[muref];
+    b_muon_pfNewIsoPt20_ph = (*pfNewIsoPt20_ph)[muref];
+    b_muon_pfNewIsoPt20_pu = muon->pfIsolationR03().sumPUPt;
+    b_muon_pfNewIsoPt20    = ( b_muon_pfNewIsoPt20_ch + max(0.0, b_muon_pfNewIsoPt20_nh + b_muon_pfNewIsoPt20_ph - 0.5 * b_muon_pfNewIsoPt20_pu) ) / muon->pt();
+    
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
     if (muon->innerTrack().isNonnull()){
       ipxy = std::abs(muon->muonBestTrack()->dxy(priVertex_.position())) < 0.2;
@@ -414,6 +594,62 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_puppiIsoNoLep_ChargedHadron",&b_muon_puppiIsoNoLep_ChargedHadron,"muon_puppiIsoNoLep_ChargedHadron/F");
   tree->Branch("muon_puppiIsoNoLep_NeutralHadron",&b_muon_puppiIsoNoLep_NeutralHadron,"muon_puppiIsoNoLep_NeutralHadron/F");
   tree->Branch("muon_puppiIsoNoLep_Photon",&b_muon_puppiIsoNoLep_Photon,"muon_puppiIsoNoLep_Photon/F");
+
+  
+  tree->Branch("muon_puppiNewIso_ch",&b_muon_puppiNewIso_ch,"muon_puppiNewIso_ch/F");
+  tree->Branch("muon_puppiNewIso_nh",&b_muon_puppiNewIso_nh,"muon_puppiNewIso_nh/F");
+  tree->Branch("muon_puppiNewIso_ph",&b_muon_puppiNewIso_ph,"muon_puppiNewIso_ph/F");
+  tree->Branch("muon_puppiNewIso",&b_muon_puppiNewIso,"muon_puppiNewIso/F");
+  tree->Branch("muon_pfNewIso_ch",&b_muon_pfNewIso_ch,"muon_pfNewIso_ch/F");
+  tree->Branch("muon_pfNewIso_nh",&b_muon_pfNewIso_nh,"muon_pfNewIso_nh/F");
+  tree->Branch("muon_pfNewIso_ph",&b_muon_pfNewIso_ph,"muon_pfNewIso_ph/F");
+  tree->Branch("muon_pfNewIso_pu",&b_muon_pfNewIso_pu,"muon_pfNewIso_pu/F");
+  tree->Branch("muon_pfNewIso",&b_muon_pfNewIso,"muon_pfNewIso/F");
+
+  tree->Branch("muon_puppiNewIsoPt05_ch",&b_muon_puppiNewIsoPt05_ch,"muon_puppiNewIsoPt05_ch/F");
+  tree->Branch("muon_puppiNewIsoPt05_nh",&b_muon_puppiNewIsoPt05_nh,"muon_puppiNewIsoPt05_nh/F");
+  tree->Branch("muon_puppiNewIsoPt05_ph",&b_muon_puppiNewIsoPt05_ph,"muon_puppiNewIsoPt05_ph/F");
+  tree->Branch("muon_puppiNewIsoPt05",&b_muon_puppiNewIsoPt05,"muon_puppiNewIsoPt05/F");
+  tree->Branch("muon_pfNewIsoPt05_ch",&b_muon_pfNewIsoPt05_ch,"muon_pfNewIsoPt05_ch/F");
+  tree->Branch("muon_pfNewIsoPt05_nh",&b_muon_pfNewIsoPt05_nh,"muon_pfNewIsoPt05_nh/F");
+  tree->Branch("muon_pfNewIsoPt05_ph",&b_muon_pfNewIsoPt05_ph,"muon_pfNewIsoPt05_ph/F");
+  tree->Branch("muon_pfNewIsoPt05_pu",&b_muon_pfNewIsoPt05_pu,"muon_pfNewIsoPt05_pu/F");
+  tree->Branch("muon_pfNewIsoPt05",&b_muon_pfNewIsoPt05,"muon_pfNewIsoPt05/F");
+  
+  tree->Branch("muon_puppiNewIsoPt10_ch",&b_muon_puppiNewIsoPt10_ch,"muon_puppiNewIsoPt10_ch/F");
+  tree->Branch("muon_puppiNewIsoPt10_nh",&b_muon_puppiNewIsoPt10_nh,"muon_puppiNewIsoPt10_nh/F");
+  tree->Branch("muon_puppiNewIsoPt10_ph",&b_muon_puppiNewIsoPt10_ph,"muon_puppiNewIsoPt10_ph/F");
+  tree->Branch("muon_puppiNewIsoPt10",&b_muon_puppiNewIsoPt10,"muon_puppiNewIsoPt10/F");
+  tree->Branch("muon_pfNewIsoPt10_ch",&b_muon_pfNewIsoPt10_ch,"muon_pfNewIsoPt10_ch/F");
+  tree->Branch("muon_pfNewIsoPt10_nh",&b_muon_pfNewIsoPt10_nh,"muon_pfNewIsoPt10_nh/F");
+  tree->Branch("muon_pfNewIsoPt10_ph",&b_muon_pfNewIsoPt10_ph,"muon_pfNewIsoPt10_ph/F");
+  tree->Branch("muon_pfNewIsoPt10_pu",&b_muon_pfNewIsoPt10_pu,"muon_pfNewIsoPt10_pu/F");
+  tree->Branch("muon_pfNewIsoPt10",&b_muon_pfNewIsoPt10,"muon_pfNewIsoPt10/F");
+  
+  tree->Branch("muon_puppiNewIsoPt15_ch",&b_muon_puppiNewIsoPt15_ch,"muon_puppiNewIsoPt15_ch/F");
+  tree->Branch("muon_puppiNewIsoPt15_nh",&b_muon_puppiNewIsoPt15_nh,"muon_puppiNewIsoPt15_nh/F");
+  tree->Branch("muon_puppiNewIsoPt15_ph",&b_muon_puppiNewIsoPt15_ph,"muon_puppiNewIsoPt15_ph/F");
+  tree->Branch("muon_puppiNewIsoPt15",&b_muon_puppiNewIsoPt15,"muon_puppiNewIsoPt15/F");
+  tree->Branch("muon_pfNewIsoPt15_ch",&b_muon_pfNewIsoPt15_ch,"muon_pfNewIsoPt15_ch/F");
+  tree->Branch("muon_pfNewIsoPt15_nh",&b_muon_pfNewIsoPt15_nh,"muon_pfNewIsoPt15_nh/F");
+  tree->Branch("muon_pfNewIsoPt15_ph",&b_muon_pfNewIsoPt15_ph,"muon_pfNewIsoPt15_ph/F");
+  tree->Branch("muon_pfNewIsoPt15_pu",&b_muon_pfNewIsoPt15_pu,"muon_pfNewIsoPt15_pu/F");
+  tree->Branch("muon_pfNewIsoPt15",&b_muon_pfNewIsoPt15,"muon_pfNewIsoPt15/F");
+  
+  tree->Branch("muon_puppiNewIsoPt20_ch",&b_muon_puppiNewIsoPt20_ch,"muon_puppiNewIsoPt20_ch/F");
+  tree->Branch("muon_puppiNewIsoPt20_nh",&b_muon_puppiNewIsoPt20_nh,"muon_puppiNewIsoPt20_nh/F");
+  tree->Branch("muon_puppiNewIsoPt20_ph",&b_muon_puppiNewIsoPt20_ph,"muon_puppiNewIsoPt20_ph/F");
+  tree->Branch("muon_puppiNewIsoPt20",&b_muon_puppiNewIsoPt20,"muon_puppiNewIsoPt20/F");
+  tree->Branch("muon_pfNewIsoPt20_ch",&b_muon_pfNewIsoPt20_ch,"muon_pfNewIsoPt20_ch/F");
+  tree->Branch("muon_pfNewIsoPt20_nh",&b_muon_pfNewIsoPt20_nh,"muon_pfNewIsoPt20_nh/F");
+  tree->Branch("muon_pfNewIsoPt20_ph",&b_muon_pfNewIsoPt20_ph,"muon_pfNewIsoPt20_ph/F");
+  tree->Branch("muon_pfNewIsoPt20_pu",&b_muon_pfNewIsoPt20_pu,"muon_pfNewIsoPt20_pu/F");
+  tree->Branch("muon_pfNewIsoPt20",&b_muon_pfNewIsoPt20,"muon_pfNewIsoPt20/F");
+  
+  tree->Branch("muon_PFIsoFixOnlyCH",&b_muon_PFIsoFixOnlyCH,"muon_PFIsoFixOnlyCH/F");
+  tree->Branch("muon_puppiIsoFixOnlyCH",&b_muon_puppiIsoFixOnlyCH,"muon_puppiIsoFixOnlyCH/F");
+  tree->Branch("muon_PFIsoRepTrk",&b_muon_PFIsoRepTrk,"muon_PFIsoRepTrk/F");
+  tree->Branch("muon_puppiIsoRepTrk",&b_muon_puppiIsoRepTrk,"muon_puppiIsoRepTrk/F");
 }
 
 void
