@@ -305,8 +305,10 @@ def drawPlotFromDict(dicMainCmd):
         
         strHistTitle = dicMainCmd[ "title" ]
         
+        #x_name = "Muon " + dicMainCmd[ "xtitle" ]
+        #y_name = "Muon " + dicMainCmd[ "ytitle" ]
         x_name = "Muon " + dicMainCmd[ "xtitle" ]
-        y_name = "Muon " + dicMainCmd[ "ytitle" ]
+        y_name = dicMainCmd[ "ytitle" ]
         
         if "nomu_inxtitle" in dicMainCmd and dicMainCmd[ "nomu_inxtitle" ]: 
             x_name = dicMainCmd[ "xtitle" ]
@@ -335,6 +337,9 @@ def drawPlotFromDict(dicMainCmd):
     nIsUseMax = 0
     fMin =  1000000000
     fMax = -1000000000
+    
+    fMinRatio = 1.0
+    fMaxRatio = 1.15
 
     strCutNum = ""
     strCutDen = ""
@@ -346,6 +351,7 @@ def drawPlotFromDict(dicMainCmd):
     fLegBottom = 0.80
     
     fLegTextSize = 0.04
+    nLegFonttype = 62
     
     fTitleX = 0.18
     fTitleY = 0.85
@@ -363,6 +369,9 @@ def drawPlotFromDict(dicMainCmd):
         dicCutConfig[ strItemForCut.replace(strNameTagCut, "") ] = dicMainCmd[ strItemForCut ]
       elif strNameTagVarCut in strItemForCut: 
         dicCutExtraVarConfig[ strItemForCut.replace(strNameTagVarCut, "") ] = dicMainCmd[ strItemForCut ]
+    
+    x_name = x_name%dicCutConfig
+    y_name = y_name%dicCutConfig
     
     if "maintree" in dicMainCmd:
       strNameMainTree = dicMainCmd[ "maintree" ].encode("ascii", "ignore")
@@ -388,12 +397,20 @@ def drawPlotFromDict(dicMainCmd):
         nIsLogY = 1
     
     if "min" in dicMainCmd: 
-        fMin = dicMainCmd[ "min" ]
-        nIsUseMin = 1
+        if type(dicMainCmd[ "min" ]) == float: 
+            fMin = dicMainCmd[ "min" ]
+            nIsUseMin = 1
     
     if "max" in dicMainCmd: 
-        fMax = dicMainCmd[ "max" ]
-        nIsUseMax = 1
+        if type(dicMainCmd[ "max" ]) == float: 
+            fMax = dicMainCmd[ "max" ]
+            nIsUseMax = 1
+    
+    if "minratio" in dicMainCmd:
+        fMinRatio = dicMainCmd[ "minratio" ]
+    
+    if "maxratio" in dicMainCmd:
+        fMaxRatio = dicMainCmd[ "maxratio" ]
     
     if not ( nIsTypeSet == 1 and strPlotType != "effrate" ) and "effrate" in dicMainCmd: 
         strCutNum = " && " + dicMainCmd[ "effrate" ]
@@ -440,6 +457,9 @@ def drawPlotFromDict(dicMainCmd):
         
         if "textsize" in dicMainCmd[ "legend" ]: 
             fLegTextSize = dicMainCmd[ "legend" ][ "textsize" ]
+        
+        if "fonttype" in dicMainCmd[ "legend" ]: 
+            nLegFonttype = dicMainCmd[ "legend" ][ "fonttype" ]
     
     if "normoff" in dicMainCmd: 
         bNormalOff = True
@@ -529,15 +549,24 @@ def drawPlotFromDict(dicMainCmd):
     # The remainings are for drawing the total plot
     h_init = ROOT.TH1F("", "", binCurr[ 0 ], binCurr[ 1 ], binCurr[ 2 ])
     
+    if nIsUseMin == 0: 
+        fMin = fMin * fMinRatio
+    
     if nIsUseMax == 0: 
-        fMax = fMax * 1.15
+        fMax = fMax * fMaxRatio
     
     h_init.SetMinimum(fMin)
     h_init.SetMaximum(fMax)
     
     h_init.GetXaxis().SetTitle(x_name)
     h_init.GetYaxis().SetTitle(y_name)
-    h_init.GetYaxis().SetTitleOffset(1)
+    
+    h_init.GetXaxis().SetTitleSize(0.05)
+    h_init.GetYaxis().SetTitleOffset(1.20)
+    h_init.GetYaxis().SetTitleSize(0.05)
+    
+    h_init.GetXaxis().SetLabelSize(0.037)
+    h_init.GetYaxis().SetLabelSize(0.037)
     
     #Set canvas
     canv = makeCanvas("canvMain", False)
@@ -570,7 +599,7 @@ def drawPlotFromDict(dicMainCmd):
         if "legendopt" in varHead: strLegendOpt = varHead[ "legendopt" ]
         leg.AddEntry(varHead[ "hist" ], varHead[ "hist" ].GetTitle(), strLegendOpt)
     
-    leg.SetTextFont(61)
+    leg.SetTextFont(nLegFonttype)
     leg.SetTextSize(fLegTextSize)
     leg.SetBorderSize(0)
     leg.Draw()

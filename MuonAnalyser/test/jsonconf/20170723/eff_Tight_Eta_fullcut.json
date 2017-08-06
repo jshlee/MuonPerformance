@@ -2,7 +2,7 @@
   "vars": [
     {
       "color": 4, 
-      "effrate": "muon_puppiIsoNoLep < %(isocutPUPPI)s", 
+      "effrate": "( ( abs(muon.Eta()) < 2.4 && muon_puppiIsoNoLep < %(isocutPUPPI)s ) && ( abs(muon.Eta()) > 2.4 && muon_puppiIsoNoLep < %(isocutME0PUPPI)s ) )", 
       "shape": 20, 
       "title": "PUPPI, R = 0.4"
     }, 
@@ -30,36 +30,39 @@
     "nevents": 2555040, 
     "type": "simplenevents"
   }, 
+  "maxratio": 1.75, 
   "effrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
+  "extravarcut_isocutME0PUPPI": "0.500", 
   "ytitle": "Efficiency", 
   "commonsource": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_zmm_200.root", 
-  "cut": "1 == 1", 
-  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, \n%(ID)s Muon", 
-  "filename": "plots/20170723/effbkgplots/eff_Loose_Eta.png", 
-  "extravarcut_isocutPF": "2.232", 
+  "cut": "muon.Pt() > %(pT)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
+  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, %(ID)s Muon, \np_{T} > %(pT)s GeV, |z_{reco} - z_{sim}| < 0.5 cm", 
+  "filename": "plots/20170723/effbkgplots/eff_Tight_Eta_fullcut.png", 
+  "extravarcut_isocutPF": "1.820", 
+  "extravarcut_isocutME0PF": "1.136", 
   "titlepos": {
     "x": 0.155
   }, 
-  "extracut_ID": "Loose", 
-  "max": 1.2, 
-  "extravarcut_isocutPUPPI": "0.408", 
+  "extracut_ID": "Tight", 
+  "xtitle": "#eta", 
+  "extravarcut_isocutPUPPI": "0.304", 
   "binning": [
     28, 
     0, 
     2.8
   ], 
+  "extravarcut_isocutME0Trk": "0.164", 
   "cutconfig": {
     "Eta": "2.4", 
     "pT": "15"
   }, 
-  "xtitle": "#eta", 
   "legend": {
     "top": 0.2, 
     "right": 0.85, 
     "left": 0.65, 
     "bottom": 0.4
   }, 
-  "extravarcut_isocutTrk": "0.656", 
+  "extravarcut_isocutTrk": "0.188", 
   "min": 0.55, 
   "tree": "gen", 
   "plottype": "effrate", 
