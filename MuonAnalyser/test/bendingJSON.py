@@ -6,9 +6,19 @@ strBendMul     = "###multibend"
 strBendMulList = "###mullist"
 strBendMulVal  = "###mulval"
 strBendSave    = "###savedic"
+strBendJSONInf = "###jsoninfo"
 
 
-def myBendJSON(dicIn, dicStack, dicRead, dicSaveInfo):
+def myCreateDir(strPath):
+  strDirCurr = ""
+  listPartPath = strPath.split("/")
+  
+  for strPart in listPartPath[ 0:-1 ]: 
+    strDirCurr = strDirCurr + strPart + "/"
+    if not os.path.isdir(strDirCurr): os.mkdir(strDirCurr)
+
+
+def myBendJSON(dicIn, dicStack, dicRead, dicSaveInfo, listOutput):
   nIsSplited = 0
   
   for itemIn in dicIn.keys():
@@ -31,7 +41,7 @@ def myBendJSON(dicIn, dicStack, dicRead, dicSaveInfo):
           dicStackSub[ itemIn ] = dicIn[ itemIn ][ strCase ]
           dicReadSub[ strID ] = strCase
           
-          myBendJSON(dicInSub, dicStackSub, dicReadSub, dicSaveInfo)
+          myBendJSON(dicInSub, dicStackSub, dicReadSub, dicSaveInfo, listOutput)
         
         nIsSplited = 1
         break
@@ -65,18 +75,45 @@ def myBendJSON(dicIn, dicStack, dicRead, dicSaveInfo):
   
   if nIsSplited == 0: 
     strItemSave = ""
+    strOutputFile = ""
     
     for itemIn in dicStack.keys(): 
       if type(dicStack[ itemIn ]) == dict and strBendSave in dicStack[ itemIn ]: 
         strItemSave = itemIn
-        break
+        #break
+      if itemIn == strBendJSONInf and "jsonname" in dicStack[ strBendJSONInf ]: 
+        strOutputFile = dicStack[ strBendJSONInf ][ "jsonname" ]%dicRead
     
     if strItemSave != "": 
       dicStack[ strItemSave ] = dicStack[ strItemSave ][ strBendSave ]%dicRead
     
-    json.dump(dicStack, open(dicSaveInfo[ "outputfile" ]%dicRead, "w"), indent=2)
+    if strOutputFile == "":
+      strOutputFile = dicSaveInfo[ "outputfile" ]%dicRead
+    
+    if strBendJSONInf in dicStack: dicStack.pop(strBendJSONInf)
+    
+    
+    json.dump(dicStack, open(strOutputFile, "w"), indent=2)
+    listOutput.append(strOutputFile)
 
 
-myBendJSON(json.load(open(sys.argv[ 1 ], "r")), {}, {}, json.loads(sys.argv[ 2 ]))
+dicBendJSON = json.load(open(sys.argv[ 1 ], "r"))
+dicOutputInfo = {}
+
+if len(sys.argv) >= 3: 
+  dicOutputInfo = json.loads(sys.argv[ 2 ])
+
+listResJSON = []
+myBendJSON(dicBendJSON, {}, {}, dicOutputInfo, listResJSON)
+
+if strBendJSONInf in dicBendJSON and "cmd" in dicBendJSON[ strBendJSONInf ]: 
+  strMulCmd = ""
+
+  for strJSON in listResJSON: 
+    #strMulCmd += "python ../python/universaldrawer.py " + strJSON + " & "
+    strMulCmd += dicBendJSON[ strBendJSONInf ][ "cmd" ]%strJSON + " & \n"
+
+  strMulCmd += "while true ; do if [ \"`ps -ef | grep $PSID | grep pytho[n] | wc -l`\" = \"0\" ] ; then break ; fi ; sleep 0.5 ; done"
+  print strMulCmd
 
 

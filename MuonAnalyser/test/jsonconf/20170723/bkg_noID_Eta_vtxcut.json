@@ -2,7 +2,7 @@
   "vars": [
     {
       "color": 4, 
-      "effrate": "muon_puppiIsoNoLep < %(isocutPUPPI)s", 
+      "effrate": "( ( abs(muon.Eta()) < 2.4 && muon_puppiIsoNoLep < %(isocutPUPPI)s ) && ( abs(muon.Eta()) > 2.4 && muon_puppiIsoNoLep < %(isocutME0PUPPI)s ) )", 
       "shape": 20, 
       "title": "PUPPI, R = 0.4"
     }, 
@@ -24,42 +24,43 @@
       "title": "No Iso cut"
     }
   ], 
-  "plotvar": "muon.Pt()", 
+  "plotvar": "abs(muon.Eta())", 
   "bkgdenominator": {
-    "bkgrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
     "nevents": 2555040, 
     "type": "simplenevents"
   }, 
-  "effrate": "( ( abs(muon.Eta()) < 2.4 && muon_is%(ID)s ) || ( abs(muon.Eta()) > 2.4 && muon_isME0Muon%(ID)s ) )", 
+  "maxratio": 1.75, 
+  "extravarcut_isocutME0PUPPI": "0.328", 
   "ytitle": "Background rate", 
   "commonsource": "/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170719_1_qcd_200.root", 
-  "cut": "muon.Pt() > %(pT)s && abs(muon.Eta()) < %(Eta)s && abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
-  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, p_{T} > %(pT)s GeV, |#eta| < %(Eta)s, \n|z_{reco} - z_{sim}| < 0.5 cm, %(ID)s Muon", 
-  "filename": "plots/20170723/effbkgplots/bkg_Tight_Pt.png", 
-  "extravarcut_isocutPF": "1.776", 
+  "cut": "abs(muon_poszPV0 - muon_poszMuon) < 0.5", 
+  "title": "Z/#gamma*#rightarrow#font[12]{#mu#mu} and QCD events, PU 200, \n|z_{reco} - z_{sim}| < 0.5 cm", 
+  "filename": "plots/20170723/effbkgplots/bkg_noID_Eta_vtxcut.png", 
+  "extravarcut_isocutPF": "1.448", 
+  "extravarcut_isocutME0PF": "0.892", 
   "titlepos": {
     "x": 0.155
   }, 
-  "extracut_ID": "Tight", 
-  "max": 0.6, 
-  "extravarcut_isocutPUPPI": "0.220", 
+  "xtitle": "#eta", 
+  "extravarcut_isocutPUPPI": "0.176", 
   "binning": [
-    20, 
-    5, 
-    105
+    28, 
+    0, 
+    2.8
   ], 
+  "extravarcut_isocutME0Trk": "0.112", 
   "cutconfig": {
     "Eta": "2.4", 
+    "ID": "noID", 
     "pT": "15"
   }, 
-  "xtitle": "p_{T} (GeV)", 
   "legend": {
     "top": 0.8, 
     "right": 0.85, 
-    "left": 0.65, 
-    "bottom": 0.6
+    "bottom": 0.6, 
+    "left": 0.65
   }, 
-  "extravarcut_isocutTrk": "0.204", 
+  "extravarcut_isocutTrk": "0.124", 
   "min": 0.0, 
   "tree": "reco", 
   "plottype": "bkgdenominator", 
