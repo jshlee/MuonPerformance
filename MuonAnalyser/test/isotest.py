@@ -16,9 +16,9 @@ def drawSampleName(samplename, fX, fY, fSizeTex):
     tex2.DrawLatex(fX, fY - i * 1.2 * fSizeTex, strLine)
 
 etarange = sys.argv[1]
-channel = 'ph'
+channel = 'ch'
 iso = "muon_pfNewIso"
-#iso = "muon_puppiNewIso" #"muon_pfNewIso"
+iso = "muon_puppiNewIso" #"muon_pfNewIso"
 
 if etarange == 'high':
     rangecut = 'muon.Pt()>15&&abs(muon.Eta())<2.8&&abs(muon.Eta())>2.4&&muon_isME0MuonLoose&&abs(muon_poszPV0-muon_poszMuon)<0.5'
@@ -27,22 +27,30 @@ if etarange == 'low':
     rangecut = 'muon.Pt()>15&&abs(muon.Eta())<2.4&&muon_isLoose&&abs(muon_poszPV0-muon_poszMuon)<0.1'
     text = "Loose Muon, \np_{T} > 15 GeV, 0.0 < |#eta| < 2.4, |z_{reco} - z_{sim}| < 0.1 cm"
 
-datadir = '/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170806_1_' 
+datadir = '/xrootd/store/user/quark2930/muon_upgrade/TDRSpring2017/tdr_170806_1_'
+datadir = ''
 treename = "PatMuonAnalyser"
 tfile = ROOT.TFile(datadir+'qcd_200.root')
 nevents = tfile.Get("PatMuonAnalyser/nevents").Integral()
 
 grs = []
-for i, pfminPt in enumerate(["", "Pt02", "Pt04", "Pt06", "Pt08", "Pt10"]):
+#for i, pfminPt in enumerate(["", "Pt02", "Pt04", "Pt06", "Pt08", "Pt10","TrkIsolation03"]):
+for i, pfminPt in enumerate(["0.01", "0.05","0.1","TrkIsolation03"]):
     print pfminPt
     x=array.array('f',[])
     y=array.array('f',[])
-    isocut = iso+pfminPt+"_"+channel
-    h_zmm = makeTH1(datadir+'zmm_200.root', treename+"/gen", isocut, [10000,0,40], isocut, rangecut)
-    h_qcd = makeTH1(datadir+'qcd_200.root', treename+"/reco", isocut, [10000,0,40], isocut, rangecut)
-    for j in range(1,10000):
-        sigeff = h_zmm.Integral(1,j)/h_zmm.Integral(0,10001)
-        bkgrej = h_qcd.Integral(1,j)/float(nevents)
+    isocut = "("+iso+pfminPt+"_"+channel+"+muon_puppiNewIso_ph+muon_puppiNewIso_nh)/muon.Pt()"
+    isocut = "(muon_pfNewIsoPt04_ch)/muon.Pt()"
+    rangecut = 'muon.Pt()>15&&abs(muon.Eta())<2.4&&muon_isLoose&&abs(muon_poszPV0-muon_poszMuon)<0.1&&(muon_pfNewIsoPt04_nh)/muon.Pt()<'+pfminPt
+    if pfminPt == "TrkIsolation03":
+        isocut = "muon_TrkIsolation03/muon.Pt()"
+        rangecut = 'muon.Pt()>15&&abs(muon.Eta())<2.4&&muon_isLoose&&abs(muon_poszPV0-muon_poszMuon)<0.1'
+        
+    h_zmm = makeTH1(datadir+'zmm_200.root', treename+"/gen", isocut, [10000,0,5], isocut, rangecut)
+    h_qcd = makeTH1(datadir+'qcd_200.root', treename+"/reco", isocut, [10000,0,5], isocut, rangecut)
+    for j in range(0,10001):
+        sigeff = h_zmm.Integral(0,j)/h_zmm.Integral(0,10001)
+        bkgrej = h_qcd.Integral(0,j)/float(nevents)
         x.append(sigeff)
         y.append(bkgrej)
         #print j, sigeff, bkgrej
