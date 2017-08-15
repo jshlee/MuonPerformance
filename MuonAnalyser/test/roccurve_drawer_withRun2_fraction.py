@@ -41,7 +41,7 @@ fBkg = ROOT.TFile(strBkgRun2)
 nNumEvtBkgRun2 = fBkg.Get("PatMuonAnalyser/nevents").Integral()
 fBkg.Close()
 
-strCut = "muon.Pt() > 15 && 0.0 <= abs(muon.Eta()) && abs(muon.Eta()) < 2.4 && ( ( abs(muon.Eta()) <= 2.4 && muon_isLoose ) || ( abs(muon.Eta()) > 2.4 && muon_isME0MuonLoose ) )"
+strCut = "muon.Pt() > 15 && 0.0 <= abs(muon.Eta()) && abs(muon.Eta()) < 2.4 && muon_isLoose"
 
 ### dics (infos) for strIdxType
 
