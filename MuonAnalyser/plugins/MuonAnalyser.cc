@@ -37,6 +37,7 @@
 
 #include "MuonPerformance/MuonAnalyser/src/TMVAClassification_BDT.class.C"
 #include "MuonPerformance/MuonAnalyser/src/TMVAClassification_MLP.class.C"
+#include "MuonPerformance/MuonAnalyser/src/TMVAClassification_ME0_BDT.class.C"
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
@@ -67,6 +68,7 @@ public:
 		  bool useIPxy, bool useIPz, bool debug);
   
   std::vector<double> collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0) const;
+  
   int nGEMhit(const reco::Muon * mu) const;
   int nME0hit(const reco::Muon * mu) const;
   
@@ -115,7 +117,7 @@ private:
   float b_muon_poszPV0, b_muon_poszSimPV, b_muon_poszMuon;
 
   float b_muon_ME0segX, b_muon_ME0chamX;
-  float b_muon_ME0deltaX, b_muon_ME0deltaY, b_muon_ME0deltaDXDZ, b_muon_ME0deltaDYDZ, b_muon_ME0pullX, b_muon_ME0pullY, b_muon_ME0dPhi, b_muon_ME0dEta, b_muon_ME0pullPhi;
+  float b_muon_ME0deltaX, b_muon_ME0deltaY, b_muon_ME0deltaDXDZ, b_muon_ME0deltaDYDZ, b_muon_ME0pullX, b_muon_ME0pullY, b_muon_ME0dPhi, b_muon_ME0dEta, b_muon_ME0pullPhi, b_muon_ME0dPhiBend;
   int b_muon_ME0noRecHit;
   float b_muon_GE11deltaX, b_muon_GE11deltaY, b_muon_GE11deltaDXDZ, b_muon_GE11deltaDYDZ, b_muon_GE11pullX, b_muon_GE11pullY, b_muon_GE11dPhi, b_muon_GE11dEta, b_muon_GE11pullPhi;
   int b_muon_GE11noRecHit;
@@ -134,10 +136,12 @@ private:
   bool b_muon_isMuon;
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
-  float b_muon_tmva_bdt, b_muon_tmva_mlp; 
+  float b_muon_tmva_bdt, b_muon_tmva_mlp;
+  float b_muon_tmva_me0_bdt;
 
   ReadBDT* bdt_;
   ReadMLP* mlp_;
+  ReadBDT_ME0* me0_bdt_;
 
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_charged_hadrons;
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_neutral_hadrons;
@@ -227,10 +231,16 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   setBranches(recottree_);
 
   string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility_Arbitrate" }; 
+  string me0_dummy[] = { "fabs(muon_ME0dPhiBend)", "fabs(muon_ME0dPhi)", "fabs(muon_ME0dEta)", "fabs(muon_ME0deltaX)", "fabs(muon_ME0deltaY)", "fabs(muon_ME0deltaDXDZ)", "fabs(muon_ME0deltaDYDZ)", "fabs(muon_ME0pullX)", "fabs(muon_ME0pullY)" };
   vector< string > dummy_label;
+  vector< string > me0_dummy_label;
+
   dummy_label.assign(dummy, dummy+15);
+  me0_dummy_label.assign(me0_dummy, me0_dummy+9);
+
   bdt_ = new ReadBDT(dummy_label);
   mlp_ = new ReadMLP(dummy_label);
+  me0_bdt_ = new ReadBDT_ME0(me0_dummy_label);
 
 }
 MuonAnalyser::~MuonAnalyser(){}
@@ -398,9 +408,9 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
 
   b_muon_ME0segX = 100; b_muon_ME0chamX = 100;
-  b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 100; b_muon_ME0deltaDXDZ = 100; b_muon_ME0deltaDYDZ = 100; b_muon_ME0noRecHit = 100; b_muon_ME0pullX = 100; b_muon_ME0pullY = 100; b_muon_ME0dPhi = 100; b_muon_ME0dEta = 100, b_muon_ME0pullPhi = 100;
-  b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 100; b_muon_GE11deltaDXDZ = 100; b_muon_GE11deltaDYDZ = 100; b_muon_GE11noRecHit = 100; b_muon_GE11pullX = 100; b_muon_GE11pullY = 100; b_muon_GE11dPhi = 100; b_muon_GE11dEta = 100, b_muon_GE11pullPhi = 100;
-  b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100, b_muon_GE21pullPhi = 100;
+  b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 100; b_muon_ME0deltaDXDZ = 100; b_muon_ME0deltaDYDZ = 100; b_muon_ME0noRecHit = 100; b_muon_ME0pullX = 100; b_muon_ME0pullY = 100; b_muon_ME0dPhi = 100; b_muon_ME0dEta = 100; b_muon_ME0pullPhi = 100; b_muon_ME0dPhiBend = 100;
+  b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 100; b_muon_GE11deltaDXDZ = 100; b_muon_GE11deltaDYDZ = 100; b_muon_GE11noRecHit = 100; b_muon_GE11pullX = 100; b_muon_GE11pullY = 100; b_muon_GE11dPhi = 100; b_muon_GE11dEta = 100; b_muon_GE11pullPhi = 100;
+  b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100; b_muon_GE21pullPhi = 100;
 
   b_muon_tracker = 0;  b_muon_global = 0;  b_muon_pf = 0;
   b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segmentCompatibility = 0;
@@ -420,7 +430,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_isMuon = 0;
   b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
 
-  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0;
+  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0; b_muon_tmva_me0_bdt = 0;
 
   const Muon* mu = muref.get();
   if (mu){
@@ -535,6 +545,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 
 	    LocalPoint segLp(segment.x, segment.y, 0);
 	    LocalPoint chmLp(chamber.x, chamber.y, 0);
+        LocalVector chmLv(chamber.dXdZ, chamber.dYdZ, 1);
 	    GlobalPoint segGp = me0Det->toGlobal(segLp);
 	    GlobalPoint chmGp = me0Det->toGlobal(chmLp);
 
@@ -543,9 +554,26 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    GlobalError segGe = tran.transform(segLe, me0Det->surface());
 	    GlobalError chmGe = tran.transform(chmLe, me0Det->surface());
 
+        double segdPhi = me0Segment.deltaPhi();
+        double chmdPhi = me0Det->computeDeltaPhi(chmLp, chmLv); 
+
+        b_muon_ME0dPhiBend = segdPhi - chmdPhi;
 	    b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	    b_muon_ME0dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	    b_muon_ME0dEta = chmGp.eta()- segGp.eta();
+
+        std::vector<double> me0tmvaValues;
+        me0tmvaValues.push_back(fabs(b_muon_ME0dPhiBend));
+        me0tmvaValues.push_back(fabs(b_muon_ME0dPhi)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0dEta)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaX)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaY)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDXDZ)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); 
+        b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
+
 	  }
 	}
       }
@@ -648,6 +676,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
       }
       
     }
+    
 
     std::vector<double> tmvaValues = collectTMVAvalues(*mu, pv0);
     b_muon_tmva_bdt = bdt_->GetMvaValue(tmvaValues);
@@ -1168,6 +1197,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_segmentCompatibility_Arbitrate", &b_muon_segmentCompatibility_Arbitrate, "muon_segmentCompatibility_Arbitrate/F");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
+  tree->Branch("muon_tmva_me0_bdt", &b_muon_tmva_me0_bdt, "muon_tmva_me0_bdt/F");
 
   tree->Branch("muon_ME0segX", &b_muon_ME0segX, "muon_ME0segX/F");  
   tree->Branch("muon_ME0chamX", &b_muon_ME0chamX, "muon_ME0chamX/F");  
@@ -1175,6 +1205,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_ME0deltaY", &b_muon_ME0deltaY, "muon_ME0deltaY/F");  
   tree->Branch("muon_ME0pullX", &b_muon_ME0pullX, "muon_ME0pullX/F");  
   tree->Branch("muon_ME0pullY", &b_muon_ME0pullY, "muon_ME0pullY/F");  
+  tree->Branch("muon_ME0dPhiBend", &b_muon_ME0dPhiBend, "muon_ME0dPhiBend/F");  
   tree->Branch("muon_ME0dPhi", &b_muon_ME0dPhi, "muon_ME0dPhi/F");  
   tree->Branch("muon_ME0dEta", &b_muon_ME0dEta, "muon_ME0dEta/F");  
   tree->Branch("muon_ME0pullPhi", &b_muon_ME0pullPhi, "muon_ME0pullPhi/F");  
