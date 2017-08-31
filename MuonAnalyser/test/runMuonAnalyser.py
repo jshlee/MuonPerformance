@@ -2,11 +2,11 @@ import FWCore.ParameterSet.Config as cms
 import os
 
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process("MuonAnalyser",eras.Phase2C2)
+process = cms.Process("MuonAnalyser",eras.Phase2)
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
-process.load('Configuration.Geometry.GeometryExtended2023D13Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -32,7 +32,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'file:/cms/home/jlee/scratch/test/gemSeeding/src/24811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D13_GenSimHLBeamSpotFull+DigiFullTrigger_2023D13+RecoFullGlobal_2023D13+HARVESTFullGlobal_2023D13/step3.root'
-        'file:/cms/home/jlee/scratch/test/baseline/src/26211.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D14_GenSimHLBeamSpotFull+DigiFull_2023D14+RecoFullGlobal_2023D14+HARVESTFullGlobal_2023D14/step3.root'
+        'file:/xrootd/store/relval/CMSSW_9_3_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/93X_upgrade2023_realistic_v0_2023D17noPU-v1/00000/1AB17385-8E87-E711-AEB7-0CC47A78A4BA.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )

@@ -1,0 +1,12 @@
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_000.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_001.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_002.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_003.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_004.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_005.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_006.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_007.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_008.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_009.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_010.root
+root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/CMSSW_9_1_0_pre3/me0seed/zmmD4PU0/rereco_011.root
