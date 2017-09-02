@@ -72,7 +72,7 @@ public:
   int nME0hit(const reco::Muon * mu) const;
   
   bool isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut);
-  void setBranches(TTree *tree, TMVA::Reader *bdt_);
+  void setBranches(TTree *tree);
   void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId);
   
 private:
@@ -137,15 +137,15 @@ private:
   bool b_muon_isMuon;
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
-  float b_muon_tmva_bdt;
+  float b_muon_tmva_bdt, b_muon_tmva_mlp, b_muon_tmva_me0_bdt;
   
   float b_muon_istracker, b_muon_isglobal, b_muon_ispf;
   float b_muon_chi2, b_muon_chi2pos, b_muon_trkKink, b_muon_segmentCompatibility, b_muon_nstations, b_muon_nglobalhits;
   float b_muon_trackdxy, b_muon_trackdz, b_muon_ninnerhits, b_muon_trackerlayers, b_muon_innerquality, b_muon_caloCompatibility;
 
-  ReadBDT* bdt_;
-  ReadMLP* mlp_;
-  ReadBDT_ME0* me0_bdt_;
+  TMVA::Reader* bdt_;
+  TMVA::Reader* mlp_;
+  TMVA::Reader* me0_bdt_;
 
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_charged_hadrons;
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_neutral_hadrons;
@@ -235,7 +235,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   bdt_->AddVariable("muon_trackerLayersWithMeasurement",&b_muon_trackerlayers);
   bdt_->AddVariable("muon_innerquality",&b_muon_innerquality);
   bdt_->AddVariable("muon_caloCompatibility",&b_muon_caloCompatibility);
-  bdt_->BookMVA("BDT", "/cms/scratch/tt8888tt/isolation/src/MuonPerformance/MuonAnalyser/src/TMVAClassification_BDT.weights.xml");
+  bdt_->BookMVA("BDT", "../src/TMVAClassification_BDT.weights.xml");
+  //bdt_->BookMVA("BDT", "/cms/scratch/tt8888tt/isolation/src/MuonPerformance/MuonAnalyser/src/TMVAClassification_BDT.weights.xml");
   
   usesResource("TFileService");
   edm::Service<TFileService> fs;
@@ -249,9 +250,9 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   h_vertex4DBS = fs->make<TH1D>("vertex reco 4D with BS vs sim", "vertex reco 4D with BS vs sim", 100, -1, 1);
   h_gemStation = fs->make<TH1D>("gemstation", "gemstation", 20, -10, 10);
   genttree_ = fs->make<TTree>("gen", "gen");
-  setBranches(genttree_, bdt_);
+  setBranches(genttree_);
   recottree_ = fs->make<TTree>("reco", "reco");
-  setBranches(recottree_, bdt_);
+  setBranches(recottree_);
   /*
 =======
   setBranches(recottree_);
@@ -601,7 +602,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
         me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); 
         me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); 
         me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); 
-        b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
+        //b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
 
 	  }
 	}
@@ -1138,7 +1139,7 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
     
   return result;
 }
-void MuonAnalyser::setBranches(TTree *tree, TMVA::Reader *bdt_)
+void MuonAnalyser::setBranches(TTree *tree)
 {
   tree->Branch("nvertex", &b_nvertex, "nvertex/I");
   tree->Branch("pu_density", &b_pu_density, "pu_density/I");
@@ -1255,21 +1256,6 @@ void MuonAnalyser::setBranches(TTree *tree, TMVA::Reader *bdt_)
   tree->Branch("muon_puppiIsoNoLep_ChargedHadron",&b_muon_puppiIsoNoLep_ChargedHadron,"muon_puppiIsoNoLep_ChargedHadron/F");
   tree->Branch("muon_puppiIsoNoLep_NeutralHadron",&b_muon_puppiIsoNoLep_NeutralHadron,"muon_puppiIsoNoLep_NeutralHadron/F");
   tree->Branch("muon_puppiIsoNoLep_Photon",&b_muon_puppiIsoNoLep_Photon,"muon_puppiIsoNoLep_Photon/F");
-
-  //bdt_->AddVariable("muon_isTrackerMuon",&b_muon_istracker);
-  //bdt_->AddVariable("muon_isGlobalMuon",&b_muon_isglobal);
-  //bdt_->AddVariable("muon_isPFMuon",&b_muon_ispf);
-  //bdt_->AddVariable("muon_normalizedChi2",&b_muon_chi2);
-  //bdt_->AddVariable("muon_chi2LocalPosition",&b_muon_chi2pos);
-  //bdt_->AddVariable("muon_trkKink",&b_muon_trkKink);
-  //bdt_->AddVariable("muon_segmentCompatibility",&b_muon_segmentCompatibility);
-  //bdt_->AddVariable("muon_numberOfMatchedStations",&b_muon_nstations);
-  //bdt_->AddVariable("muon_numberOfValidMuonHits",&b_muon_nglobalhits);
-  //bdt_->AddVariable("muon_pv0pos_dxy",&b_muon_trackdxy);
-  //bdt_->AddVariable("muon_numberOfValidPixelHits",&b_muon_ninnerhits);
-  //bdt_->AddVariable("muon_trackerLayersWithMeasurement",&b_muon_trackerlayers);
-  //bdt_->AddVariable("muon_innerquality",&b_muon_innerquality);
-  //bdt_->AddVariable("muon_caloCompatibility",&b_muon_caloCompatibility);
 
 }
 DEFINE_FWK_MODULE(MuonAnalyser);
