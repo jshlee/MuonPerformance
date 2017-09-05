@@ -137,7 +137,7 @@ private:
   bool b_muon_isMuon;
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
-  float b_muon_tmva_bdt, b_muon_tmva_mlp, b_muon_tmva_me0_bdt;
+  float b_muon_tmva_bdt, b_muon_tmva_mlp;
   
   float b_muon_istracker, b_muon_isglobal, b_muon_ispf;
   float b_muon_chi2, b_muon_chi2pos, b_muon_trkKink, b_muon_segmentCompatibility, b_muon_nstations, b_muon_nglobalhits;
@@ -145,7 +145,6 @@ private:
 
   TMVA::Reader* bdt_;
   TMVA::Reader* mlp_;
-  TMVA::Reader* me0_bdt_;
 
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_charged_hadrons;
   edm::Handle<edm::ValueMap<float>> PUPPIIsolation_neutral_hadrons;
@@ -176,6 +175,8 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
   edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
 
+  string tmvaWeight_;
+
   const GEMGeometry* gemGeo_;
   const ME0Geometry* me0Geo_;
 
@@ -191,6 +192,8 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   vtx4DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4DBS"));
   vtxBSToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertexBS"));
   
+  //tmvaWeight_   = (pset.getParameter<string>("tmvaWeightLabel"));
+  tmvaWeight_ = edm::FileInPath(pset.getParameter<std::string>("tmvaWeightLabel")).fullPath();
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
   simVertexToken_ = consumes<std::vector<SimVertex> >(pset.getParameter<edm::InputTag> ("simVertexCollection"));  
   putoken = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
@@ -235,8 +238,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   bdt_->AddVariable("muon_trackerLayersWithMeasurement",&b_muon_trackerlayers);
   bdt_->AddVariable("muon_innerquality",&b_muon_innerquality);
   bdt_->AddVariable("muon_caloCompatibility",&b_muon_caloCompatibility);
-  bdt_->BookMVA("BDT", "../src/TMVAClassification_BDT.weights.xml");
-  //bdt_->BookMVA("BDT", "/cms/scratch/tt8888tt/isolation/src/MuonPerformance/MuonAnalyser/src/TMVAClassification_BDT.weights.xml");
+  bdt_->BookMVA("BDT", tmvaWeight_);
   
   usesResource("TFileService");
   edm::Service<TFileService> fs;
@@ -253,23 +255,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   setBranches(genttree_);
   recottree_ = fs->make<TTree>("reco", "reco");
   setBranches(recottree_);
-  /*
-=======
-  setBranches(recottree_);
-
-  string dummy[] = { "muon_isTrackerMuon", "muon_isGlobalMuon", "muon_isPFMuon", "muon_normalizedChi2", "muon_chi2LocalPosition", "muon_trkKink", "muon_segmentCompatibility", "muon_numberOfMatchedStations", "muon_numberOfValidMuonHits", "muon_pv0pos_dxy", "muon_numberOfValidPixelHits", "muon_trackerLayersWithMeasurement", "muon_innerquality", "muon_caloCompatibility", "muon_segmentCompatibility_Arbitrate" }; 
-  string me0_dummy[] = { "fabs(muon_ME0dPhiBend)", "fabs(muon_ME0dPhi)", "fabs(muon_ME0dEta)", "fabs(muon_ME0deltaX)", "fabs(muon_ME0deltaY)", "fabs(muon_ME0deltaDXDZ)", "fabs(muon_ME0deltaDYDZ)", "fabs(muon_ME0pullX)", "fabs(muon_ME0pullY)" };
-  vector< string > dummy_label;
-  vector< string > me0_dummy_label;
-
-  dummy_label.assign(dummy, dummy+15);
-  me0_dummy_label.assign(me0_dummy, me0_dummy+9);
-
-  bdt_ = new ReadBDT(dummy_label);
-  mlp_ = new ReadMLP(dummy_label);
-  me0_bdt_ = new ReadBDT_ME0(me0_dummy_label);
->>>>>>> 677968e45ec95af8472643c2843d815d577b8cf2
-*/
 
 }
 MuonAnalyser::~MuonAnalyser(){}
@@ -460,7 +445,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_isMuon = 0;
   b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
 
-  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0; b_muon_tmva_me0_bdt = 0;
+  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0;
 
   const Muon* mu = muref.get();
   if (mu){
@@ -591,18 +576,6 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	    b_muon_ME0dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	    b_muon_ME0dEta = chmGp.eta()- segGp.eta();
-
-        std::vector<double> me0tmvaValues;
-        me0tmvaValues.push_back(fabs(b_muon_ME0dPhiBend));
-        me0tmvaValues.push_back(fabs(b_muon_ME0dPhi)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0dEta)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0deltaX)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0deltaY)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDXDZ)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); 
-        me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); 
-        //b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
 
 	  }
 	}
@@ -1193,7 +1166,6 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/D");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
-  tree->Branch("muon_tmva_me0_bdt", &b_muon_tmva_me0_bdt, "muon_tmva_me0_bdt/F");
 
   tree->Branch("muon_ME0segX", &b_muon_ME0segX, "muon_ME0segX/F");  
   tree->Branch("muon_ME0chamX", &b_muon_ME0chamX, "muon_ME0chamX/F");  
