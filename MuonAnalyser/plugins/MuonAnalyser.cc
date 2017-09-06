@@ -363,7 +363,12 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  muonRef = trkMu;
       }
     }
-    
+
+        const GenParticleRefVector g = simTP->genParticles();
+        for(reco::GenParticleRefVector::const_iterator idr = g.begin(); idr!= g.end(); ++idr ) {
+                    const reco::GenParticle& part = **idr;
+                    if (part.mother()) {cout << part.mother()->pdgId() << endl;}
+        }
     fillBranches(genttree_, gentlv, muonRef, true, simTP->pdgId());
   }
 
@@ -1127,10 +1132,10 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isMedium", &b_muon_isMedium, "muon_isMedium/O");
   tree->Branch("muon_isLoose", &b_muon_isLoose, "muon_isLoose/O");
   tree->Branch("muon_isMuon", &b_muon_isMuon, "muon_isMuon/O");
-  tree->Branch("muon_isTrackerMuon", &b_muon_isTrackerMuon, "muon_isTrackerMuon/O");
-  tree->Branch("muon_isGlobalMuon", &b_muon_isGlobalMuon, "muon_isGlobalMuon/O");
+  tree->Branch("muon_isTrackerMuon", &b_muon_isTrackerMuon, "muon_isTrackerMuon/F");
+  tree->Branch("muon_isGlobalMuon", &b_muon_isGlobalMuon, "muon_isGlobalMuon/F");
   tree->Branch("muon_isStandAloneMuon", &b_muon_isStandAloneMuon, "muon_isStandAloneMuon/O");
-  tree->Branch("muon_isPFMuon", &b_muon_isPFMuon, "muon_isPFMuon/O");
+  tree->Branch("muon_isPFMuon", &b_muon_isPFMuon, "muon_isPFMuon/F");
   tree->Branch("muon_isME0Muon", &b_muon_isME0Muon, "muon_isME0Muon/O");
   tree->Branch("muon_isME0MuonLoose", &b_muon_isME0MuonLoose, "muon_isME0MuonLoose/O");
   tree->Branch("muon_isME0MuonMedium", &b_muon_isME0MuonMedium, "muon_isME0MuonMedium/O");
@@ -1152,18 +1157,18 @@ void MuonAnalyser::setBranches(TTree *tree)
   //tree->Branch("muon_istracker", &b_muon_istracker, "muon_istracker/O");
   //tree->Branch("muon_isglobal", &b_muon_isglobal, "muon_isglobal/O");
   //tree->Branch("muon_ispf", &b_muon_ispf, "muon_ispf/O");
-  tree->Branch("muon_normalizedChi2", &b_muon_chi2, "muon_normalizedChi2/D");
-  tree->Branch("muon_chi2LocalPosition", &b_muon_chi2pos, "muon_chi2LocalPosition/D");
-  tree->Branch("muon_trkKink", &b_muon_trkKink, "muon_trkKink/D");
-  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/D");
-  tree->Branch("muon_numberOfValidMuonHits", &b_muon_nglobalhits, "muon_numberOfValidMuonHits/I");
-  tree->Branch("muon_numberOfMatchedStations", &b_muon_nstations, "muon_numberOfMatchedStations/I");
-  tree->Branch("muon_pv0pos_dxy", &b_muon_trackdxy, "muon_pv0pos_dxy/D");
-  tree->Branch("muon_pv0pos_dz", &b_muon_trackdz, "muon_pv0pos_dz/D");
-  tree->Branch("muon_numberOfValidPixelHits", &b_muon_ninnerhits, "muon_numberOfValidPixelHits/I");
-  tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/D");
-  tree->Branch("muon_innerquality", &b_muon_innerquality, "muon_innerquality/D");
-  tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/D");
+  tree->Branch("muon_normalizedChi2", &b_muon_chi2, "muon_normalizedChi2/F");
+  tree->Branch("muon_chi2LocalPosition", &b_muon_chi2pos, "muon_chi2LocalPosition/F");
+  tree->Branch("muon_trkKink", &b_muon_trkKink, "muon_trkKink/F");
+  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
+  tree->Branch("muon_numberOfValidMuonHits", &b_muon_nglobalhits, "muon_numberOfValidMuonHits/F");
+  tree->Branch("muon_numberOfMatchedStations", &b_muon_nstations, "muon_numberOfMatchedStations/F");
+  tree->Branch("muon_pv0pos_dxy", &b_muon_trackdxy, "muon_pv0pos_dxy/F");
+  tree->Branch("muon_pv0pos_dz", &b_muon_trackdz, "muon_pv0pos_dz/F");
+  tree->Branch("muon_numberOfValidPixelHits", &b_muon_ninnerhits, "muon_numberOfValidPixelHits/F");
+  tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/F");
+  tree->Branch("muon_innerquality", &b_muon_innerquality, "muon_innerquality/F");
+  tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/F");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
 
