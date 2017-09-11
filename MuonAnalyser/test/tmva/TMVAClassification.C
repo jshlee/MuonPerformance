@@ -119,7 +119,6 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN"]             = 0;     // Deep Neural Network
    Use["DNN_GPU"]         = 0; // CUDA-accelerated DNN training.
    Use["DNN_CPU"]         = 0; // Multi-core accelerated DNN.
    //
@@ -128,12 +127,6 @@ int TMVAClassification( TString myMethodList = "" )
    //
    // Boosted Decision Trees
    Use["BDT"]             = 1; // uses Adaptive Boost
-   Use["BDT10"]           = 0; 
-   Use["BDT100"]          = 0; 
-   Use["BDT500"]          = 0; 
-   Use["BDT1000"]         = 0; 
-   Use["BDT5000"]         = 0; 
-   Use["BDT10000"]        = 0; 
    Use["BDTG"]            = 0; // uses Gradient Boost
    Use["BDTB"]            = 0; // uses Bagging
    Use["BDTD"]            = 0; // decorrelation + Adaptive Boost
@@ -170,24 +163,25 @@ int TMVAClassification( TString myMethodList = "" )
 
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   //TString fname = "../out_orig.root";
-   TString fname = "/xrootd/store/user/tt8888tt/muon/9_1_1_patch1/ttbartotal.root";
-   //TString fname = "/xrootd/store/user/tt8888tt/muon/9_1_1_patch1/tenmutotal.root";
-   //TString fname = "/xrootd/store/user/tt8888tt/muon/9_1_1/zmmtotal.root";
-   //TString fname = "../ttbartotal.root";
-   //TString fname = "root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/tt8888tt/muon/9_1_1/zmmtotal.root";
-   //TString fname = "root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/tt8888tt/muon/9_1_1/zmmtotal_phase.root";
-
-   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-
-   TFile *input = TFile::Open( fname );
-
+   TFile *input(0);
+   //TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/zmm.root";
+   //TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/tenmu.root";
+   TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/ttbar.root";
+   if (!gSystem->AccessPathName( fname )) {
+      input = TFile::Open( fname ); // check if file in local directory exists
+   }
+   else {
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+   }
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
+   }
    std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
 
    // Register the training and test trees
 
-   //TTree *signalTree     = (TTree*)input->Get("MuonAnalyser/gen");
    TTree *signalTree     = (TTree*)input->Get("MuonAnalyser/reco");
    TTree *background     = (TTree*)input->Get("MuonAnalyser/reco");
 
@@ -206,8 +200,8 @@ int TMVAClassification( TString myMethodList = "" )
    // All TMVA output can be suppressed by removing the "!" (not) in
    // front of the "Silent" argument in the option string
    TMVA::Factory *factory = new TMVA::Factory( "TMVAClassification", outputFile,
-                                               "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G:AnalysisType=Classification" );
-//                                               "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
+                                               "!V:!Silent:Color:DrawProgressBar:Transformations=I;:AnalysisType=Classification" );
+                                               //"!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
 
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
    // If you wish to modify default settings
@@ -220,22 +214,21 @@ int TMVAClassification( TString myMethodList = "" )
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-   dataloader->AddVariable( "muon_isTrackerMuon", 'I' );
-   dataloader->AddVariable( "muon_isGlobalMuon", 'I' );
-   dataloader->AddVariable( "muon_isPFMuon", 'I' );
+   dataloader->AddVariable( "muon_istracker", 'F' );
+   dataloader->AddVariable( "muon_isglobal", 'F' );
+   dataloader->AddVariable( "muon_ispf", 'F' );
    dataloader->AddVariable( "muon_normalizedChi2", 'F' );
    dataloader->AddVariable( "muon_chi2LocalPosition", 'F' );
    dataloader->AddVariable( "muon_trkKink", 'F' );
    dataloader->AddVariable( "muon_segmentCompatibility", 'F' );
-   dataloader->AddVariable( "muon_numberOfMatchedStations", 'I' );
-   dataloader->AddVariable( "muon_numberOfValidMuonHits", 'I' );
+   dataloader->AddVariable( "muon_numberOfMatchedStations", 'F' );
+   dataloader->AddVariable( "muon_numberOfValidMuonHits", 'F' );
    dataloader->AddVariable( "muon_pv0pos_dxy", 'F' );
    //dataloader->AddVariable( "muon_pv0pos_dz", 'F' );
-   dataloader->AddVariable( "muon_numberOfValidPixelHits", 'I' );
+   dataloader->AddVariable( "muon_numberOfValidPixelHits", 'F' );
    dataloader->AddVariable( "muon_trackerLayersWithMeasurement", 'F' );
    dataloader->AddVariable( "muon_innerquality", 'F' );
    dataloader->AddVariable( "muon_caloCompatibility", 'F' );
-
 
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
@@ -297,11 +290,8 @@ int TMVAClassification( TString myMethodList = "" )
    // -  for signal    : `dataloader->SetSignalWeightExpression    ("weight1*weight2");`
    // -  for background: `dataloader->SetBackgroundWeightExpression("weight1*weight2");`
    dataloader->SetBackgroundWeightExpression( "" );
-   //dataloader->SetBackgroundWeightExpression( "weight" );
 
    // Apply additional cuts on the signal and background samples (can be different)
-   //TCut mycuts =  "muon_signal && abs(muon.Eta())<2.4"; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
-   //TCut mycutb = "!muon_signal && abs(muon.Eta())<2.4"; // for example: TCut mycutb = "abs(var1)<0.5";
    TCut mycuts =  "muon_signal && muon.Pt()>5 && abs(muon.Eta())<2.4"; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
    TCut mycutb = "!muon_signal && muon.Pt()>5 && abs(muon.Eta())<2.4"; // for example: TCut mycutb = "abs(var1)<0.5";
 
@@ -310,22 +300,17 @@ int TMVAClassification( TString myMethodList = "" )
    // If no numbers of events are given, half of the events in the tree are used
    // for training, and the other half for testing:
    //
-   //    dataloader->PrepareTrainingAndTestTree( mycuts, "SplitMode=random:!V" );
+   //    dataloader->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );
    //
    // To also specify the number of testing events, use:
    //
    //    dataloader->PrepareTrainingAndTestTree( mycut,
    //         "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" );
    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
-                                        // tenmu
-                                        //"nTrain_Signal=151740:nTrain_Background=24525:SplitMode=Random:NormMode=NumEvents:!V" );// 90%
-                                        //"nTrain_Signal=168600:nTrain_Background=27250:SplitMode=Random:NormMode=NumEvents:!V" );// total
-                                        // zmm200
-                                        //"nTrain_Signal=18781:nTrain_Background=15118:SplitMode=Random:NormMode=NumEvents:!V" );// 90%
-                                        //"nTrain_Signal=20868:nTrain_Background=18898:SplitMode=Random:NormMode=NumEvents:!V" );// total
-                                        // ttbar
-                                        "nTrain_Signal=6255:nTrain_Background=10781:SplitMode=Random:NormMode=NumEvents:!V" ); // 90%
-                                        //"nTrain_Signal=6951:nTrain_Background=11979:SplitMode=Random:NormMode=NumEvents:!V" ); // total
+                                        //"nTrain_Signal=5000:nTrain_Background=5000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm140
+                                        //"nTrain_Signal=150000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//tenmu
+                                        "nTrain_Signal=10000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//ttbar
+                                        //"nTrain_Signal=60000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm
 
    // ### Book MVA methods
    //
@@ -439,7 +424,7 @@ int TMVAClassification( TString myMethodList = "" )
 
    if (Use["FDA_GA"]) // can also use Simulated Annealing (SA) algorithm (see Cuts_SA options])
       factory->BookMethod( dataloader, TMVA::Types::kFDA, "FDA_GA",
-                           "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
+                           "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=100:Cycles=2:Steps=5:Trim=True:SaveBestGen=1" );
 
    if (Use["FDA_SA"]) // can also use Simulated Annealing (SA) algorithm (see Cuts_SA options])
       factory->BookMethod( dataloader, TMVA::Types::kFDA, "FDA_SA",
@@ -465,12 +450,11 @@ int TMVAClassification( TString myMethodList = "" )
       factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBFGS", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:!UseRegulator" );
 
    if (Use["MLPBNN"])
-      factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
+      factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=60:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
 
 
    // Multi-architecture DNN implementation.
-   if (Use["DNN"])
-   {
+   if (Use["DNN_CPU"] or Use["DNN_GPU"]) {
       // General layout.
       TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
@@ -496,25 +480,21 @@ int TMVAClassification( TString myMethodList = "" )
       dnnOptions.Append (":"); dnnOptions.Append (layoutString);
       dnnOptions.Append (":"); dnnOptions.Append (trainingStrategyString);
 
-      // Standard implementation, no dependencies.
-      TString stdOptions = dnnOptions + ":Architecture=STANDARD";
-      factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", stdOptions);
-
       // Cuda implementation.
       if (Use["DNN_GPU"]) {
          TString gpuOptions = dnnOptions + ":Architecture=GPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN GPU", gpuOptions);
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_GPU", gpuOptions);
       }
       // Multi-core CPU implementation.
       if (Use["DNN_CPU"]) {
          TString cpuOptions = dnnOptions + ":Architecture=CPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN CPU", cpuOptions);
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_CPU", cpuOptions);
       }
    }
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])
-      factory->BookMethod( dataloader, TMVA::Types::kCFMlpANN, "CFMlpANN", "!H:!V:NCycles=2000:HiddenLayers=N+1,N"  ); // n_cycles:#nodes:#nodes:...
+      factory->BookMethod( dataloader, TMVA::Types::kCFMlpANN, "CFMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N"  ); // n_cycles:#nodes:#nodes:...
 
    // Tmlp(Root)ANN
    if (Use["TMlpANN"])
@@ -528,30 +508,6 @@ int TMVAClassification( TString myMethodList = "" )
    if (Use["BDTG"]) // Gradient Boost
       factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
                            "!H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" );
-
-   if (Use["BDT10000"])  // Adaptive Boost
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT10000",
-                           "!H:!V:NTrees=10000:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
-
-   if (Use["BDT5000"])  // Adaptive Boost
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT5000",
-                           "!H:!V:NTrees=5000:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
-
-   if (Use["BDT1000"])  // Adaptive Boost
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT1000",
-                           "!H:!V:NTrees=1000:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
-
-   if (Use["BDT500"])  // Adaptive Boost
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT500",
-                           "!H:!V:NTrees=500:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
-
-   if (Use["BDT100"])  // Adaptive Boost
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT100",
-                           "!H:!V:NTrees=100:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
-
-   if (Use["BDT10"])  // Adaptive Boost
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT10",
-                           "!H:!V:NTrees=10:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
 
    if (Use["BDT"])  // Adaptive Boost
       factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT",
