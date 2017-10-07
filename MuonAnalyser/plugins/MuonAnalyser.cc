@@ -73,7 +73,7 @@ public:
   
   bool isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut);
   void setBranches(TTree *tree);
-  void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId, int mpdgId);
+  void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, bool isFromLeadingVtx, int pdgId, int mpdgId);
   
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -96,7 +96,7 @@ private:
   int b_pu_density, b_pu_numInteractions;
   
   TLorentzVector b_muon;
-  bool b_muon_signal;
+  bool b_muon_signal, b_muon_leadingVtx;
   int b_muon_pdgId;
   int b_muon_no;
  
@@ -149,6 +149,7 @@ private:
   bool b_muon_isMuon;
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
+  float b_muon_ipxySim, b_muon_ipzSim;
   float b_muon_tmva_bdt, b_muon_tmva_mlp;
   
   float b_muon_istracker, b_muon_isglobal, b_muon_ispf;
@@ -382,7 +383,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const reco::GenParticle& gen = *(simTP->genParticles()[0]);
     if ( gen.mother()) { mpdgId = gen.mother()->pdgId(); }
 
-    fillBranches(genttree_, gentlv, muonRef, true, simTP->pdgId(), mpdgId);
+    fillBranches(genttree_, gentlv, muonRef, true, true, simTP->pdgId(), mpdgId);
   }
 
   
@@ -415,8 +416,11 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
     bool isSignalMuon = false;
-    if (simTP)
-      isSignalMuon = abs(simTP->pdgId())==13 && !simTP->genParticles().empty() && (simTP->eventId().event() == 0) && (simTP->eventId().bunchCrossing() == 0);
+    bool isFromLeadingVtx = false;
+    if (simTP){
+      isSignalMuon = abs(simTP->pdgId())==13;
+      isFromLeadingVtx = !simTP->genParticles().empty() && (simTP->eventId().event() == 0) && (simTP->eventId().bunchCrossing() == 0);
+    }
 
     int mpdgId = 0;
     if (simTP){
@@ -426,36 +430,36 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
 
-    fillBranches(recottree_, recotlv, muRef, isSignalMuon, pdgId, mpdgId);
+    fillBranches(recottree_, recotlv, muRef, isSignalMuon, isFromLeadingVtx, pdgId, mpdgId);
   }
 
 }
 
-void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, int pdgId, int mpdgId)
+void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, bool isFromLeadingVtx, int pdgId, int mpdgId)
 {
   b_muon = tlv;
   b_muon_signal = isSignal;
+  b_muon_leadingVtx = isFromLeadingVtx;
   b_muon_pdgId = pdgId;
   b_muon_mpdgId = mpdgId;
   ++b_muon_no;
   reco::Vertex pv0 = vertexes_->at(0);
-  
 
   //Resolution #2/4
-  b_muon_DZresolution = 0;
-  b_muon_Etaresolution = 0;
-  b_muon_Phiresolution = 0;
-  b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
-  b_muon_DXDYresolution = 0;
+  b_muon_DZresolution = -999;
+  b_muon_Etaresolution = -999;
+  b_muon_Phiresolution = -999;
+  b_muon_pTresolution = -999; b_muon_pTinvresolution = -999;
+  b_muon_DXDYresolution = -999;
 
 
-  b_muon_isTightOptimized = 0; b_muon_isTightCustom = 0; b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isME0Muon = 0; b_muon_isME0MuonLoose = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonTight = 0;
-  b_muon_isGEMMuon = 0; b_muon_isGE11Muon = 0; b_muon_isGE21Muon = 0; b_muon_isRPCMuon = 0; b_muon_isCaloMuon = 0; b_muon_isTrackerMuon = 0;
-  b_muon_isStandAloneMuon = 0;
-  b_muon_isGlobalMuon = 0; b_muon_isStandAloneMuon = 0; b_muon_isPFMuon = 0;
-  b_muon_isLooseMod = 0;
-  b_muon_isTightModNoIP = 0; b_muon_isTightModIPxy = 0; b_muon_isTightModIPz = 0; b_muon_isTightModIPxyz = 0;
+  b_muon_isTightOptimized = -999; b_muon_isTightCustom = -999; b_muon_isTight = -999; b_muon_isMedium = -999; b_muon_isLoose = -999;
+  b_muon_isME0Muon = -999; b_muon_isME0MuonLoose = -999; b_muon_isME0MuonMedium = -999; b_muon_isME0MuonTight = -999;
+  b_muon_isGEMMuon = -999; b_muon_isGE11Muon = -999; b_muon_isGE21Muon = -999; b_muon_isRPCMuon = -999; b_muon_isCaloMuon = -999; b_muon_isTrackerMuon = -999;
+  b_muon_isStandAloneMuon = -999;
+  b_muon_isGlobalMuon = -999; b_muon_isStandAloneMuon = -999; b_muon_isPFMuon = -999;
+  b_muon_isLooseMod = -999;
+  b_muon_isTightModNoIP = -999; b_muon_isTightModIPxy = -999; b_muon_isTightModIPz = -999; b_muon_isTightModIPxyz = -999;
 
   b_muon_ME0segX = 100; b_muon_ME0chamX = 100;
 
@@ -463,25 +467,26 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 100; b_muon_GE11deltaDXDZ = 100; b_muon_GE11deltaDYDZ = 100; b_muon_GE11noRecHit = 100; b_muon_GE11pullX = 100; b_muon_GE11pullY = 100; b_muon_GE11dPhi = 100; b_muon_GE11dEta = 100; b_muon_GE11pullPhi = 100;
   b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100; b_muon_GE21pullPhi = 100;
 
-  b_muon_istracker = 0;  b_muon_isglobal = 0;  b_muon_ispf = 0;
-  b_muon_chi2pos = 0;  b_muon_trkKink = 0;  b_muon_segmentCompatibility = 0;
-  b_muon_chi2 = 0;  b_muon_nglobalhits = 0;  b_muon_nstations = 0;
-  b_muon_trackdxy = 0;  b_muon_trackdz = 0;
-  b_muon_ninnerhits = 0;  b_muon_trackerlayers = 0;
-  b_muon_innerquality = 0; b_muon_caloCompatibility = 0;
-  b_muon_poszPV0 = 0; b_muon_poszSimPV = 0; b_muon_poszMuon = 0;
-  b_muon_PFIso04 = 0;  b_muon_PFIso03 = 0;
-  b_muon_PFIso03ChargedHadronPt = 0; b_muon_PFIso03NeutralHadronEt = 0;
-  b_muon_PFIso03PhotonEt = 0; b_muon_PFIso03PUPt = 0;
-  b_muon_PFIso04ChargedHadronPt = 0; b_muon_PFIso04NeutralHadronEt = 0;
-  b_muon_PFIso04PhotonEt = 0; b_muon_PFIso04PUPt = 0;
-  b_muon_TrkIso05 = 0;  b_muon_TrkIso03 = 0;
-  b_muon_puppiIso = 0; b_muon_puppiIso_ChargedHadron = 0; b_muon_puppiIso_NeutralHadron = 0; b_muon_puppiIso_Photon = 0;
-  b_muon_puppiIsoNoLep = 0; b_muon_puppiIsoNoLep_ChargedHadron = 0; b_muon_puppiIsoNoLep_NeutralHadron = 0; b_muon_puppiIsoNoLep_Photon = 0;  
-  b_muon_isMuon = 0;
-  b_muon_numberOfValidMuonGEMHits = 0; b_muon_numberOfValidMuonME0Hits = 0;
+  b_muon_istracker = -999;  b_muon_isglobal = -999;  b_muon_ispf = -999;
+  b_muon_chi2pos = -999;  b_muon_trkKink = -999;  b_muon_segmentCompatibility = -999;
+  b_muon_chi2 = -999;  b_muon_nglobalhits = -999;  b_muon_nstations = -999;
+  b_muon_trackdxy = -999;  b_muon_trackdz = -999;
+  b_muon_ninnerhits = -999;  b_muon_trackerlayers = -999;
+  b_muon_innerquality = -999; b_muon_caloCompatibility = -999;
+  b_muon_poszPV0 = -999; b_muon_poszSimPV = -999; b_muon_poszMuon = -999;
+  b_muon_PFIso04 = -999;  b_muon_PFIso03 = -999;
+  b_muon_PFIso03ChargedHadronPt = -999; b_muon_PFIso03NeutralHadronEt = -999;
+  b_muon_PFIso03PhotonEt = -999; b_muon_PFIso03PUPt = -999;
+  b_muon_PFIso04ChargedHadronPt = -999; b_muon_PFIso04NeutralHadronEt = -999;
+  b_muon_PFIso04PhotonEt = -999; b_muon_PFIso04PUPt = -999;
+  b_muon_TrkIso05 = -999;  b_muon_TrkIso03 = -999;
+  b_muon_puppiIso = -999; b_muon_puppiIso_ChargedHadron = -999; b_muon_puppiIso_NeutralHadron = -999; b_muon_puppiIso_Photon = -999;
+  b_muon_puppiIsoNoLep = -999; b_muon_puppiIsoNoLep_ChargedHadron = -999; b_muon_puppiIsoNoLep_NeutralHadron = -999; b_muon_puppiIsoNoLep_Photon = -999;  
+  b_muon_isMuon = -999;
+  b_muon_numberOfValidMuonGEMHits = -999; b_muon_numberOfValidMuonME0Hits = -999;
 
-  b_muon_tmva_bdt = 0; b_muon_tmva_mlp = 0;
+  b_muon_ipxySim = -999; b_muon_ipzSim = -999;
+  b_muon_tmva_bdt = -999; b_muon_tmva_mlp = -999;
   
   const Muon* mu = muref.get();
   if (mu){
@@ -730,6 +735,9 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
       
     }
     
+    GlobalPoint point(simVertex_.position().x(), simVertex_.position().y(), simVertex_.position().z());
+    b_muon_ipxySim = abs(mu->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
+    b_muon_ipzSim = abs(mu->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
 
     collectTMVAvalues(*mu, pv0);
     b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
@@ -1171,6 +1179,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_no", &b_muon_no, "muon_no/I");
   tree->Branch("muon_pdgId", &b_muon_pdgId, "muon_pdgId/I");
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
+  tree->Branch("muon_leadingVtx", &b_muon_leadingVtx, "muon_leadingVtx/O");
  
   //Resolution #4/4
   tree->Branch("muon_pTresolution",&b_muon_pTresolution,"muon_pTresolution/F");
@@ -1220,6 +1229,8 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/F");
   tree->Branch("muon_innerquality", &b_muon_innerquality, "muon_innerquality/F");
   tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/F");
+  tree->Branch("muon_ipxySim", &b_muon_ipxySim, "muon_ipxySim/F");
+  tree->Branch("muon_ipzSim", &b_muon_ipzSim, "muon_ipzSim/F");
   tree->Branch("muon_tmva_bdt", &b_muon_tmva_bdt, "muon_tmva_bdt/F");
   tree->Branch("muon_tmva_mlp", &b_muon_tmva_mlp, "muon_tmva_mlp/F");  
 
