@@ -104,9 +104,10 @@ private:
   float b_muon_Etaresolution;
   float b_muon_Phiresolution;
   float b_muon_pTresolution, b_muon_pTinvresolution;
-   
+  float b_muon_Charge;
+
+
   float b_muon_DXDYresolution;
-  
   
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
   bool b_muon_isME0Muon, b_muon_isME0MuonLoose, b_muon_isME0MuonMedium, b_muon_isME0MuonTight;
@@ -239,6 +240,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
                                          tpset.getParameter<std::vector<int> >("pdgId"));
 
   // tmva booking
+  /*
   bdt_ = new TMVA::Reader();
   bdt_->AddVariable("muon_istracker",&b_muon_istracker);
   bdt_->AddVariable("muon_isglobal",&b_muon_isglobal);
@@ -461,12 +463,12 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   reco::Vertex pv0 = vertexes_->at(0);
 
   //Resolution #2/4
-  b_muon_DZresolution = -999;
-  b_muon_Etaresolution = -999;
-  b_muon_Phiresolution = -999;
-  b_muon_pTresolution = -999; b_muon_pTinvresolution = -999;
-  b_muon_DXDYresolution = -999;
-
+  b_muon_DZresolution = 0;
+  b_muon_Etaresolution = 0;
+  b_muon_Phiresolution = 0;
+  b_muon_pTresolution = 0; b_muon_pTinvresolution = 0;
+  b_muon_DXDYresolution = 0;
+  b_muon_Charge = 0;
 
   b_muon_isTightOptimized = -999; b_muon_isTightCustom = -999; b_muon_isTight = -999; b_muon_isMedium = -999; b_muon_isLoose = -999;
   b_muon_isME0Muon = -999; b_muon_isME0MuonLoose = -999; b_muon_isME0MuonMedium = -999; b_muon_isME0MuonTight = -999;
@@ -507,17 +509,18 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   const Muon* mu = muref.get();
   if (mu){
 
+//cout << "mu charge: "<<mu->charge() <<endl;
     //Resolution #3/4
     b_muon_Etaresolution = (b_muon.Eta()-mu->eta())/b_muon.Eta();
     b_muon_pTresolution = (b_muon.Pt()-mu->pt())/b_muon.Pt();
     b_muon_Phiresolution = (b_muon.Phi()-mu->phi())/b_muon.Phi();
-    
-    //b_muon_DZ1resolution = (pv0.position().z()-mu->muonBestTrack()->vz())/pv0.position().z();
+    b_muon_Charge = mu->charge();
+
+
     b_muon_DZresolution = (simVertex_.position().z()-mu->muonBestTrack()->dz(pv0.position()))/simVertex_.position().z();
-    //b_muon_DXDY1resolution = (pv0.position().xy()-mu->muonBestTrack()->vxy())/pv0.position().xy();
-    //b_muon_DXDYresolution =(simVertex_.position().xy()-mu->muonBestTrack()->dxy(pv0.position()))/simVertex_.position().PxPy();
-
-
+    b_muon_DXDYresolution =(b_muon_isTightModIPxy-mu->muonBestTrack()->dxy(pv0.position()))/b_muon_isTightModIPxy;
+      
+   
     
     b_muon_pTinvresolution = (1/b_muon.Pt() - 1/mu->pt())/(1/b_muon.Pt());
     b_muon_poszPV0       = pv0.position().z();
@@ -647,6 +650,18 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    b_muon_ME0pullPhi = ( chmGp.phi() - segGp.phi() ) / std::sqrt(chmGe.phierr(chmGp) + segGe.phierr(segGp) );
 	    b_muon_ME0dPhi = deltaPhi(float(chmGp.phi()), float(segGp.phi()));
 	    b_muon_ME0dEta = chmGp.eta()- segGp.eta();
+
+        std::vector<double> me0tmvaValues;
+        me0tmvaValues.push_back(fabs(b_muon_ME0dPhiBend));
+        me0tmvaValues.push_back(fabs(b_muon_ME0dPhi)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0dEta)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaX)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaY)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDXDZ)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0deltaDYDZ)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0pullX)); 
+        me0tmvaValues.push_back(fabs(b_muon_ME0pullY)); 
+        //b_muon_tmva_me0_bdt = me0_bdt_->GetMvaValueME0(me0tmvaValues);
 
 	  }
 	}
@@ -1205,6 +1220,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_Etaresolution",&b_muon_Etaresolution,"muon_Etaresolution/F");
   tree->Branch("muon_DXDYresolution",&b_muon_DXDYresolution,"muon_DXDYresolution/F");
   tree->Branch("muon_DZresolution",&b_muon_DZresolution,"muon_DZresolution/F");
+  tree->Branch("muon_Charge",&b_muon_Charge,"muon_Charge/F");
   
   tree->Branch("muon_pTinvresolution",&b_muon_pTinvresolution,"muon_pTinvresolution/F");
   tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
@@ -1256,7 +1272,6 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_ME0segX", &b_muon_ME0segX, "muon_ME0segX/F");  
   tree->Branch("muon_ME0chamX", &b_muon_ME0chamX, "muon_ME0chamX/F");  
 
-  //Resolution DXYZ #5
   tree->Branch("muon_ME0deltaX", &b_muon_ME0deltaX, "muon_ME0deltaX/F");  
   tree->Branch("muon_ME0deltaY", &b_muon_ME0deltaY, "muon_ME0deltaY/F");  
   tree->Branch("muon_ME0pullX", &b_muon_ME0pullX, "muon_ME0pullX/F");  
