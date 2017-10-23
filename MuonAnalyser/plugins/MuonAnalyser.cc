@@ -469,7 +469,6 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_DXDYresolution = -999;
   b_muon_Charge = -999;
 
-
   b_muon_isTightOptimized = -999; b_muon_isTightCustom = -999; b_muon_isTight = -999; b_muon_isMedium = -999; b_muon_isLoose = -999;
   b_muon_isME0Muon = -999; b_muon_isME0MuonLoose = -999; b_muon_isME0MuonMedium = -999; b_muon_isME0MuonTight = -999;
   b_muon_isGEMMuon = -999; b_muon_isGE11Muon = -999; b_muon_isGE21Muon = -999; b_muon_isRPCMuon = -999; b_muon_isCaloMuon = -999; b_muon_isTrackerMuon = -999;
