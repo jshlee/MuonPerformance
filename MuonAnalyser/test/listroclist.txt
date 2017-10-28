@@ -1,0 +1,12 @@
+Trk_compmini
+PF_compmini
+PUPPI_compmini
+Trk_compminiRun2
+PF_compminiRun2
+PUPPI_compminiRun2
+Trk_mini
+PF_mini
+PUPPI_mini
+Trk_miniRun2
+PF_miniRun2
+PUPPI_miniRun2

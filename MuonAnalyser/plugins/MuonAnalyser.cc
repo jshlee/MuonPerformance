@@ -106,6 +106,7 @@ private:
   float b_muon_pTresolution, b_muon_pTinvresolution;
    
   float b_muon_DXDYresolution;
+  float b_muon_Charge;
   
   
   bool b_muon_isTightOptimized, b_muon_isTightCustom, b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
@@ -466,7 +467,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   b_muon_Phiresolution = -999;
   b_muon_pTresolution = -999; b_muon_pTinvresolution = -999;
   b_muon_DXDYresolution = -999;
-
+  b_muon_Charge = -999;
 
   b_muon_isTightOptimized = -999; b_muon_isTightCustom = -999; b_muon_isTight = -999; b_muon_isMedium = -999; b_muon_isLoose = -999;
   b_muon_isME0Muon = -999; b_muon_isME0MuonLoose = -999; b_muon_isME0MuonMedium = -999; b_muon_isME0MuonTight = -999;
@@ -511,6 +512,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_Etaresolution = (b_muon.Eta()-mu->eta())/b_muon.Eta();
     b_muon_pTresolution = (b_muon.Pt()-mu->pt())/b_muon.Pt();
     b_muon_Phiresolution = (b_muon.Phi()-mu->phi())/b_muon.Phi();
+    b_muon_Charge = mu->charge();
     
     //b_muon_DZ1resolution = (pv0.position().z()-mu->muonBestTrack()->vz())/pv0.position().z();
     b_muon_DZresolution = (simVertex_.position().z()-mu->muonBestTrack()->dz(pv0.position()))/simVertex_.position().z();
@@ -1205,6 +1207,7 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_Etaresolution",&b_muon_Etaresolution,"muon_Etaresolution/F");
   tree->Branch("muon_DXDYresolution",&b_muon_DXDYresolution,"muon_DXDYresolution/F");
   tree->Branch("muon_DZresolution",&b_muon_DZresolution,"muon_DZresolution/F");
+  tree->Branch("muon_Charge",&b_muon_Charge,"muon_Charge/F");
   
   tree->Branch("muon_pTinvresolution",&b_muon_pTinvresolution,"muon_pTinvresolution/F");
   tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
