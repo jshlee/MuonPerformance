@@ -6,8 +6,8 @@ ROOT.gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
 def getMarker(filename, sig_tot, bkg_tot, cut, style):
-    sig = getWeightedEntries(filename, treename, "muon_tmva_bdt", rangecut+"&&muon_signal&&%s"%cut)
-    bkg = getWeightedEntries(filename, treename, "muon_tmva_bdt", rangecut+"&&!muon_signal&&%s"%cut)
+    sig = getWeightedEntries(filename, "MuonAnalyser/gen", "muon_tmva_bdt", rangecut+"&&(muon_signal)&&%s"%cut)
+    bkg = getWeightedEntries(filename, "MuonAnalyser/reco", "muon_tmva_bdt", rangecut+"&&!(muon_signal)&&%s"%cut)
     sigeff = sig/sig_tot
     bkgrej = (bkg_tot-bkg)/bkg_tot
     return ROOT.TMarker(sigeff, bkgrej, style)
@@ -20,7 +20,7 @@ def getRoc(h_sig, h_bkg):
         bkgrej = (h_bkg.Integral(0,101)-h_bkg.Integral(k,101))/h_bkg.Integral(0,101)
         x.append(sigeff)
         y.append(bkgrej)
-        #print j, h_sig.GetBinCenter(j), sigeff, bkgrej, fake
+        #print k, h_sig.GetBinCenter(k), sigeff, bkgrej
     return ROOT.TGraph(len(x), x, y)
 
 def getTmvaRoc(sample):
@@ -29,22 +29,24 @@ def getTmvaRoc(sample):
     return copy.deepcopy(htmp)
     
 
-datadir = '/xrootd/store/user/tt8888tt/muon/9_1_1_patch1/tmva/'
+datadir = '/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/tmva/'
 treename = "MuonAnalyser/reco"
 rangecut = 'muon.Pt()>5&&abs(muon.Eta())<2.4'
 method = "BDT"
 
-samples= {"tenmu":[0.12,0.038], "ttbar":[0.08,0.02], "zmm":[0.03,-0.07]}
+samples= {"tenmu":[0,-0.06], "ttbar":[-0.02,-0.12], "zmm":[0,-0.06]}
 col = [[ROOT.kRed, ROOT.kOrange+7, ROOT.kPink+9], [ROOT.kBlue,ROOT.kViolet+7,ROOT.kAzure+7], [ROOT.kGreen,ROOT.kTeal+9,ROOT.kSpring+9]]
 
 grs = []
 hists = []
 marks = []
+marks_id = []
+auc = []
 for i, sample in enumerate(samples):
     for j, applied in enumerate(samples):
         samplename = sample+"_"+applied+"applied"
         if sample==applied: samplename=sample
-        #else break
+        #else: continue 
         filename = datadir+samplename+".root"
         print samplename
 
@@ -53,26 +55,43 @@ for i, sample in enumerate(samples):
 
         gr = getRoc(h_sig, h_bkg) 
         gr.SetLineColor(col[i][j])
+        #gr.SetTitle(sample.capitalize())
         gr.SetTitle("TMVA trained with "+applied.capitalize()+" on "+sample.capitalize())
         grs.append(gr)
 
-        #tmva roc
-        #h = getTmvaRoc(sample)
-        #h.SetLineColor(col[i][j])
-        #h.SetLineStyle(2)
-        #h.SetLineWidth(3)
-        #h.SetTitle(sample.split('/')[-1].split('.')[0]+" (TMVA)")
-        #hists.append(h)
-
         ##id point
-        #m = getMarker(filename, h_sig.Integral(0,101), h_bkg.Integral(0,101), "muon_tmva_bdt<%d"%samples[sample][0], 26)
-        #m.SetMarkerSize(3)
-        #m.SetMarkerColor(col[i][j])
-        #marks.append(m)
+        m1 = getMarker(filename, h_sig.Integral(0,101), h_bkg.Integral(0,101), "muon_tmva_bdt>%f"%samples[sample][0], 22)
+        m2 = getMarker(filename, h_sig.Integral(0,101), h_bkg.Integral(0,101), "muon_tmva_bdt>%f"%samples[sample][1], 23)
+        m1.SetMarkerSize(3)
+        m2.SetMarkerSize(3)
+        m1.SetMarkerColor(col[i][j])
+        m2.SetMarkerColor(col[i][j])
+        marks.append([m1, m2])
 
-h_init = ROOT.TH1F("","",1000,0.85,1.01)
-h_init.SetMaximum(1.01)
-h_init.SetMinimum(0.85)
+        m_tight = getMarker(filename, h_sig.Integral(0,101), h_bkg.Integral(0,101), "muon_isTightCustom", 26)
+        m_loose = getMarker(filename, h_sig.Integral(0,101), h_bkg.Integral(0,101), "muon_isLoose", 32)
+        m_tight.SetMarkerSize(3)
+        m_loose.SetMarkerSize(3)
+        m_tight.SetMarkerColor(col[i][j])
+        m_loose.SetMarkerColor(col[i][j])
+        marks_id.append([m_tight, m_loose])
+
+        bdt = ROOT.vector('float')()
+        mvaid = ROOT.vector('bool')()
+        tfile = ROOT.TFile(filename)
+        for t in tfile.Get("MuonAnalyser/reco"):
+            if t.muon.Pt() < 5: continue
+            if abs(t.muon.Eta()) > 2.4: continue
+            bdt.push_back(t.muon_tmva_bdt)
+            mvaid.push_back(t.muon_signal)
+        auc = ROOT.TMVA.ROCCurve(bdt, mvaid).GetROCIntegral()
+        gr.SetTitle(gr.GetTitle()+" (%.4f)"%auc)
+        print gr.GetTitle()
+
+
+h_init = ROOT.TH1F("","",1000,0.9,1.001)
+h_init.SetMaximum(1.001)
+h_init.SetMinimum(0.9)
 h_init.GetXaxis().SetTitle("Signal Efficiency")
 h_init.GetYaxis().SetTitle("Background Rejection")
 h_init.GetYaxis().SetTitleOffset(1)
@@ -82,7 +101,8 @@ canv.SetGrid()
 setMargins(canv, False)
 h_init.Draw()
 
-leg = ROOT.TLegend(0.15,0.18,0.62,0.58)
+#leg = ROOT.TLegend(0.15,0.18,0.4,0.4)
+leg = ROOT.TLegend(0.15,0.17,0.65,0.55)
 
 for i, gr in enumerate(grs):
     gr.SetLineWidth(3)
@@ -92,9 +112,14 @@ for i, gr in enumerate(grs):
     hists[i].Draw("same")
     leg.AddEntry(hists[i],hists[i].GetTitle(),"l")
 
+    marks[i][0].Draw("same")
+    marks[i][1].Draw("same")
+    print marks[i][0].GetX(), marks[i][0].GetY()
+    marks_id[i][0].Draw("same")
+    marks_id[i][1].Draw("same")
 
 leg.SetTextFont(61)
-leg.SetTextSize(0.028)
+leg.SetTextSize(0.026)
 leg.Draw()
 
 iPos = 0
