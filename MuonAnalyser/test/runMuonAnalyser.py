@@ -50,9 +50,13 @@ if not run2:
     process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
     process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
     process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
+process.load('JetMETCorrections.Configuration.JetCorrectors_cff')
     
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
+    pfCands = cms.InputTag("packedPFCandidates"),
+    miniIsoParams = cms.vdouble(0.05, 0.2, 10.0, 0.5, 0.0001, 0.01, 0.01, 0.01, 0.0),
+
     primaryVertex     = cms.InputTag('offlinePrimaryVertices'),
     primaryVertex1D   = cms.InputTag('offlinePrimaryVertices1D'),
     primaryVertex1DBS = cms.InputTag('offlinePrimaryVertices1DWithBS'),
@@ -60,6 +64,11 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     primaryVertex4DBS = cms.InputTag('offlinePrimaryVertices4DWithBS'),
     primaryVertexBS   = cms.InputTag('offlinePrimaryVerticesWithBS'),
     
+    mvaJetTag = cms.InputTag("pfCombinedInclusiveSecondaryVertexV2BJetTags"),
+    mvaL1Corrector = cms.InputTag("ak4PFCHSL1FastjetCorrector"),
+    mvaL1L2L3ResCorrector = cms.InputTag("ak4PFCHSL1FastL2L3Corrector"),
+    rho = cms.InputTag("fixedGridRhoFastjetCentralNeutral"),
+
     simLabel = cms.InputTag("mix","MergedTrackTruth"),
     simVertexCollection = cms.InputTag("g4SimHits"),
     addPileupInfo = cms.InputTag("addPileupInfo"),
@@ -128,6 +137,7 @@ process.muonIsolationPUPPI = cms.EDProducer( "CITKPFIsolationSumProducerForPUPPI
 process.muonIsolationPUPPINoLep = process.muonIsolationPUPPI.clone(usePUPPINoLepton = cms.bool(True))
 
 process.p = cms.Path(process.muonAssociatorByHitsHelper
+                         +process.ak4PFCHSL1FastjetCorrector
                          +process.primaryVertexAssociation
                          +process.puppi
                          +process.particleFlowNoLep+process.puppiNoLep
