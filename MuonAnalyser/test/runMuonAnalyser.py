@@ -32,6 +32,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'file:/cms/home/jlee/scratch/test/gemSeeding/src/24811.0_TenMuExtendedE_0_200+TenMuExtendedE_0_200_pythia8_2023D13_GenSimHLBeamSpotFull+DigiFullTrigger_2023D13+RecoFullGlobal_2023D13+HARVESTFullGlobal_2023D13/step3.root'
+        #'root://cms-xrd-global.cern.ch//store/relval/CMSSW_9_3_0_pre4/RelValZMM_13/GEN-SIM-RECO/PU25ns_93X_mc2017_realistic_v1-v1/00000/242094EF-3A87-E711-A643-0CC47A4D763C.root'
         'file:/xrootd/store/relval/CMSSW_9_3_0_pre4/RelValTenMuExtendedE_0_200/GEN-SIM-RECO/93X_upgrade2023_realistic_v0_2023D17noPU-v1/00000/1AB17385-8E87-E711-AEB7-0CC47A78A4BA.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
@@ -50,12 +51,16 @@ if not run2:
     process.muonAssociatorByHitsHelper.useGEMs = cms.bool(True)
     process.muonAssociatorByHitsHelper.pixelSimLinkSrc = cms.InputTag("simSiPixelDigis:Pixel")
     process.muonAssociatorByHitsHelper.stripSimLinkSrc = cms.InputTag("simSiPixelDigis:Tracker")
-process.load('JetMETCorrections.Configuration.JetCorrectors_cff')
     
 from Validation.RecoMuon.selectors_cff import muonTPSet
 process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     pfCands = cms.InputTag("packedPFCandidates"),
     miniIsoParams = cms.vdouble(0.05, 0.2, 10.0, 0.5, 0.0001, 0.01, 0.01, 0.01, 0.0),
+
+    mvaJetTag = cms.InputTag("pfCombinedInclusiveSecondaryVertexV2BJetTags"),
+    mvaL1Corrector = cms.InputTag("ak4PFCHSL1FastjetCorrector"),
+    mvaL1L2L3ResCorrector = cms.InputTag("ak4PFCHSL1FastL2L3Corrector"),
+    rho = cms.InputTag("fixedGridRhoFastjetCentralNeutral"),
 
     primaryVertex     = cms.InputTag('offlinePrimaryVertices'),
     primaryVertex1D   = cms.InputTag('offlinePrimaryVertices1D'),
@@ -64,13 +69,8 @@ process.MuonAnalyser = cms.EDAnalyzer("MuonAnalyser",
     primaryVertex4DBS = cms.InputTag('offlinePrimaryVertices4DWithBS'),
     primaryVertexBS   = cms.InputTag('offlinePrimaryVerticesWithBS'),
     
-    mvaJetTag = cms.InputTag("pfCombinedInclusiveSecondaryVertexV2BJetTags"),
-    mvaL1Corrector = cms.InputTag("ak4PFCHSL1FastjetCorrector"),
-    mvaL1L2L3ResCorrector = cms.InputTag("ak4PFCHSL1FastL2L3Corrector"),
-    rho = cms.InputTag("fixedGridRhoFastjetCentralNeutral"),
-
-    simLabel = cms.InputTag("mix","MergedTrackTruth"),
     simVertexCollection = cms.InputTag("g4SimHits"),
+    simLabel = cms.InputTag("mix","MergedTrackTruth"),
     addPileupInfo = cms.InputTag("addPileupInfo"),
     muonLabel = cms.InputTag("muons"),
     muAssocLabel = cms.InputTag("muonAssociatorByHitsHelper"),
@@ -136,11 +136,32 @@ process.muonIsolationPUPPI = cms.EDProducer( "CITKPFIsolationSumProducerForPUPPI
 )
 process.muonIsolationPUPPINoLep = process.muonIsolationPUPPI.clone(usePUPPINoLepton = cms.bool(True))
 
+process.load('JetMETCorrections.Configuration.JetCorrectors_cff')
+process.ak4PFCHSL1FastjetCorrector = cms.EDProducer(
+    'L1FastjetCorrectorProducer',
+    level       = cms.string('L1FastJet'),
+    algorithm   = cms.string('AK4PFchs'),
+    srcRho      = cms.InputTag( 'fixedGridRhoFastjetAll' )
+    )
+
+process.ak4PFCHSL2RelativeCorrector = cms.EDProducer(
+    'LXXXCorrectorProducer',
+    level     = cms.string('L2Relative'),
+    algorithm = cms.string('AK4PFchs')
+    )
+process.ak4PFCHSL3AbsoluteCorrector = process.ak4PFCHSL2RelativeCorrector.clone( level = cms.string('L3Absolute') )
+
+process.ak4PFCHSL1FastL2L3Corrector = cms.EDProducer(
+    'ChainedJetCorrectorProducer',
+    correctors = cms.VInputTag('ak4PFCHSL1FastjetCorrector','ak4PFCHSL2RelativeCorrector','ak4PFCHSL3AbsoluteCorrector')
+    )
+
 process.p = cms.Path(process.muonAssociatorByHitsHelper
-                         +process.ak4PFCHSL1FastjetCorrector
                          +process.primaryVertexAssociation
                          +process.puppi
                          +process.particleFlowNoLep+process.puppiNoLep
                          +process.offlineSlimmedPrimaryVertices+process.packedPFCandidates
                          +process.muonIsolationPUPPI+process.muonIsolationPUPPINoLep
+                         +process.ak4PFCHSL2RelativeCorrector+process.ak4PFCHSL3AbsoluteCorrector
+                         +process.ak4PFCHSL1FastjetCorrector+process.ak4PFCHSL1FastL2L3Corrector
                          +process.MuonAnalyser)

@@ -247,7 +247,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   vtx4DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4DBS"));
   vtxBSToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertexBS"));
   
-  //tmvaWeight_   = (pset.getParameter<string>("tmvaWeightLabel"));
   tmvaWeight_ = edm::FileInPath(pset.getParameter<std::string>("tmvaWeightLabel")).fullPath();
   tmvaWeightme0_ = edm::FileInPath(pset.getParameter<std::string>("tmvaWeightLabelme0")).fullPath();
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
@@ -302,13 +301,13 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   bdt_->AddVariable("LepGood_miniRelIsoCharged",     &b_tmva_miniRelIsoCharged_);
   bdt_->AddVariable("LepGood_miniRelIsoNeutral",     &b_tmva_miniRelIsoNeutral_);
   bdt_->AddVariable("LepGood_jetPtRelv2",            &b_tmva_jetPtRel_         );
-  bdt_->AddVariable("min(LepGood_jetPtRatiov2,1.5)", &b_tmva_jetPtRatio_       );
-  bdt_->AddVariable("max(LepGood_jetBTagCSV,0)",     &b_tmva_jetBTagCSV_       );
-  bdt_->AddVariable("LepGood_sip3d",                 &b_tmva_sip_              );
-  bdt_->AddVariable("log(abs(LepGood_dxy))",         &b_tmva_log_abs_dxyBS_    ); 
-  bdt_->AddVariable("log(abs(LepGood_dz))",          &b_tmva_log_abs_dzPV_     );
+  bdt_->AddVariable("LepGood_jetPtRatio", &b_tmva_jetPtRatio_       );
+  bdt_->AddVariable("LepGood_jetBTagCSV",     &b_tmva_jetBTagCSV_       );
+  //bdt_->AddVariable("LepGood_sip3d",                 &b_tmva_sip_              );
+  //bdt_->AddVariable("LepGood_dxy",         &b_tmva_log_abs_dxyBS_    ); 
+  bdt_->AddVariable("LepGood_dz",          &b_tmva_log_abs_dzPV_     );
   bdt_->AddVariable("LepGood_segmentCompatibility",  &b_tmva_segmentCompatibility_);
-  //bdt_->BookMVA("BDT", tmvaWeight_);
+  bdt_->BookMVA("BDT", tmvaWeight_);
 
   me0bdt_ = new TMVA::Reader();
   me0bdt_->AddVariable("muon_ME0deltaX", &b_muon_ME0deltaX);  
@@ -810,7 +809,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_ipxySim = abs(mu->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
     b_muon_ipzSim = abs(mu->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
 
-    collectTMVAvalues(*mu, pv0);
+    //collectTMVAvalues(*mu, pv0);
     //b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
 
     //b_muon_tmva_me0bdt = me0bdt_->EvaluateMVA("BDT");
@@ -1326,7 +1325,7 @@ void MuonAnalyser::computeMva(const pat::Muon& muon,
 
   if (b_tmva_jetPtRatio_>1.5) b_tmva_jetPtRatio_ = 1.5;
   if (b_tmva_jetBTagCSV_<0) b_tmva_jetBTagCSV_ = 0;
-  //mva_ = tmvaReader_.EvaluateMVA("BDTG");
+  b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
 };
 
 float MuonAnalyser::ptRel(const reco::Candidate::LorentzVector& muP4, const reco::Candidate::LorentzVector& jetP4, bool subtractMuon) 
@@ -1389,19 +1388,19 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isTightModIPxy", &b_muon_isTightModIPxy, "muon_isTightModIPxy/O");
   tree->Branch("muon_isTightModIPz", &b_muon_isTightModIPz, "muon_isTightModIPz/O");
   tree->Branch("muon_isTightModIPxyz", &b_muon_isTightModIPxyz, "muon_isTightModIPxyz/O");
-  
-  tree->Branch("tmva_pt", &b_tmva_pt_, "tmva_pt");
-  tree->Branch("tmva_eta", &b_tmva_eta_, "tmva_eta");
-  tree->Branch("tmva_jetNDauCharged", &b_tmva_jetNDauCharged_, "tmva_jetNDauCharged");
-  tree->Branch("tmva_miniRelIsoCharged", &b_tmva_miniRelIsoCharged_, "tmva_miniRelIsoCharged");
-  tree->Branch("tmva_miniRelIsoNeutral", &b_tmva_miniRelIsoNeutral_, "tmva_miniRelIsoNeutral");
-  tree->Branch("tmva_jetPtRel", &b_tmva_jetPtRel_, "tmva_jetPtRel");
-  tree->Branch("tmva_jetPtRatio", &b_tmva_jetPtRatio_, "tmva_jetPtRatio");
-  tree->Branch("tmva_jetBTagCSV", &b_tmva_jetBTagCSV_, "tmva_jetBTagCSV");
-  tree->Branch("tmva_sip", &b_tmva_sip_, "tmva_sip");
-  tree->Branch("tmva_log_abs_dxyBS", &b_tmva_log_abs_dxyBS_, "tmva_log_abs_dxyBS"); 
-  tree->Branch("tmva_log_abs_dzPV", &b_tmva_log_abs_dzPV_, "tmva_log_abs_dzPV");
-  tree->Branch("tmva_segmentCompatibility", &b_tmva_segmentCompatibility_, "tmva_segmentCompatibility");
+
+  tree->Branch("LepGood_pt",                   &b_tmva_pt_, "LepGood_pt");
+  tree->Branch("LepGood_eta",                  &b_tmva_eta_, "LepGood_eta");
+  tree->Branch("LepGood_jetNDauChargedMVASel", &b_tmva_jetNDauCharged_, "LepGood_jetNDauChargedMVASel");
+  tree->Branch("LepGood_miniRelIsoCharged",    &b_tmva_miniRelIsoCharged_, "LepGood_miniRelIsoCharged");
+  tree->Branch("LepGood_miniRelIsoNeutral",    &b_tmva_miniRelIsoNeutral_, "LepGood_miniRelIsoNeutral");
+  tree->Branch("LepGood_jetPtRelv2",           &b_tmva_jetPtRel_, "LepGood_jetPtRelv2");
+  tree->Branch("LepGood_jetPtRatio",           &b_tmva_jetPtRatio_, "LepGood_jetPtRatio");
+  tree->Branch("LepGood_jetBTagCSV",           &b_tmva_jetBTagCSV_, "LepGood_jetBTagCSV");
+  tree->Branch("LepGood_sip3d",                &b_tmva_sip_, "LepGood_sip3d");
+  tree->Branch("LepGood_dxy",        &b_tmva_log_abs_dxyBS_, "LepGood_dxy"); 
+  tree->Branch("LepGood_dz",         &b_tmva_log_abs_dzPV_, "LepGood_dz");
+  tree->Branch("LepGood_segmentCompatibility", &b_tmva_segmentCompatibility_, "LepGood_segmentCompatibility");
 
   tree->Branch("muon_istracker", &b_muon_istracker, "muon_istracker/F");
   tree->Branch("muon_isglobal", &b_muon_isglobal, "muon_isglobal/F");

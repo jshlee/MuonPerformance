@@ -42,7 +42,7 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   void setBranches(TTree *tree);
-  void fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref,bool isSignal, int pdgId);
+  void fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref,bool isSignal, int pdgId, pat::PFIsolation miniiso);
 
   bool isSignalMuon(const reco::GenParticle &gen);
   
@@ -216,6 +216,12 @@ private:
   bool b_muon_signal;
   int b_muon_pdgId;
   int b_muon_no;
+
+  float b_muon_miniIso_ch;
+  float b_muon_miniIso_nh;
+  float b_muon_miniIso_ph;
+  float b_muon_miniIso_pu;
+
   float b_muon_poszPV0, b_muon_poszMuon;
   bool b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
   bool b_muon_isME0MuonTight, b_muon_isME0MuonMedium, b_muon_isME0MuonLoose;
@@ -518,7 +524,7 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
                                                         miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
                                                         miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
                                                         miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
-    fillBranches(genttree_, gentlv, muref, true, gen.pdgId());
+    fillBranches(genttree_, gentlv, muref, true, gen.pdgId(), miniiso);
   }
 
   
@@ -543,7 +549,8 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
                                                         miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
                                                         miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
                                                         miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
-    fillBranches(recottree_, recotlv, muref, isSignal, pdgId);
+    //muon.setMiniPFIsolation(miniiso)
+    fillBranches(recottree_, recotlv, muref, isSignal, pdgId, miniiso);
   }
   
   return;
@@ -563,13 +570,18 @@ bool PatMuonAnalyser::isSignalMuon(const reco::GenParticle &gen)
   
 }
 
-void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref, bool isSignal, int pdgId)
+void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref, bool isSignal, int pdgId, pat::PFIsolation miniiso)
 {
   b_muon = tlv;
   b_muon_signal = isSignal;
   b_muon_pdgId = pdgId;
   ++b_muon_no;
-  
+
+  b_muon_miniIso_ch = -999;
+  b_muon_miniIso_nh= -999;
+  b_muon_miniIso_ph = -999;
+  b_muon_miniIso_pu = -999;
+
   b_muon_poszPV0  = 0;
   b_muon_poszMuon = 0;
     
@@ -624,6 +636,11 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
   b_muon_puppiIsoRepTrk = 0;
 
   b_muon_isME0MuonTight = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonLoose = 0;
+ 
+  b_muon_miniIso_ch = miniiso.chargedHadronIso();
+  b_muon_miniIso_nh = miniiso.neutralHadronIso();
+  b_muon_miniIso_ph = miniiso.photonIso();
+  b_muon_miniIso_pu = miniiso.puChargedHadronIso(); 
   
   if (muref.isNonnull()){
     auto muon = muref;
@@ -862,6 +879,12 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_poszPV0",&b_muon_poszPV0,"muon_poszPV0/F");
   tree->Branch("muon_poszMuon",&b_muon_poszMuon,"muon_poszMuon/F");
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
+
+  tree->Branch("muon_miniIso_ch", &b_muon_miniIso_ch, "muon_miniIso_ch/F");
+  tree->Branch("muon_miniIso_nh", &b_muon_miniIso_nh, "muon_miniIso_nh/F");
+  tree->Branch("muon_miniIso_ph", &b_muon_miniIso_ph, "muon_miniIso_ph/F");
+  tree->Branch("muon_miniIso_pu", &b_muon_miniIso_pu, "muon_miniIso_pu/F");
+
   tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
   tree->Branch("muon_isMedium", &b_muon_isMedium, "muon_isMedium/O");
   tree->Branch("muon_isLoose", &b_muon_isLoose, "muon_isLoose/O");

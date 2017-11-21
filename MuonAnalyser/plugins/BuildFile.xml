@@ -18,4 +18,5 @@
 <use name="Geometry/Records"/>
 <use name="Geometry/GEMGeometry"/>
 <use name="PhysicsTools/PatUtils"/>
+<use name="JetMETCorrections/JetCorrector"/>
 <flags EDM_PLUGIN="1"/>
