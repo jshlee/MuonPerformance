@@ -20,6 +20,9 @@
 #include "DataFormats/GeometryCommonDetAlgo/interface/ErrorFrameTransformer.h"
 #include "RecoParticleFlow/PFProducer/interface/PFMuonAlgo.h"
 
+#include "DataFormats/PatCandidates/interface/Lepton.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/Associations/interface/MuonToTrackingParticleAssociator.h"
@@ -34,6 +37,13 @@
 #include "Geometry/GEMGeometry/interface/ME0Chamber.h"
 #include "Geometry/GEMGeometry/interface/GEMGeometry.h"
 #include "Geometry/GEMGeometry/interface/GEMSuperChamber.h"
+
+#include "PhysicsTools/PatUtils/interface/MiniIsolation.h"
+#include "DataFormats/JetReco/interface/PFJet.h"
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "JetMETCorrections/JetCorrector/interface/JetCorrector.h"
+#include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
@@ -70,7 +80,11 @@ public:
   
   bool isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut);
   void setBranches(TTree *tree);
-  void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, bool isFromLeadingVtx, int pdgId, int mpdgId);
+  void fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, bool isFromLeadingVtx, int pdgId, int mpdgId, pat::PFIsolation miniiso);
+
+  void computeMva(const pat::Muon& muon, const reco::Vertex& vertex, const reco::JetTagCollection& bTags, const reco::JetCorrector* correctorL1, const reco::JetCorrector* correctorL1L2L3Res);
+  float ptRel(const reco::Candidate::LorentzVector& muP4, const reco::Candidate::LorentzVector& jetP4, bool subtractMuon); 
+  void initTreeValues(); 
   
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -97,6 +111,10 @@ private:
   int b_muon_pdgId;
   int b_muon_no;
  
+  float b_muon_miniIso_ch; 
+  float b_muon_miniIso_nh;
+  float b_muon_miniIso_ph;
+  float b_muon_miniIso_pu;
 
   //Resolution #1/4
   float b_muon_DZresolution;
@@ -147,6 +165,11 @@ private:
   bool b_muon_isMuon;
   int b_muon_numberOfValidMuonGEMHits, b_muon_numberOfValidMuonME0Hits;
 
+  float b_tmva_pt_, b_tmva_eta_;
+  float b_tmva_jetNDauCharged_, b_tmva_miniRelIsoCharged_, b_tmva_miniRelIsoNeutral_;
+  float b_tmva_jetPtRel_, b_tmva_jetPtRatio_, b_tmva_jetBTagCSV_;
+  float b_tmva_sip_, b_tmva_log_abs_dxyBS_, b_tmva_log_abs_dzPV_, b_tmva_segmentCompatibility_;
+
   float b_muon_ipxySim, b_muon_ipzSim;
   float b_muon_tmva_bdt, b_muon_tmva_mlp;
   float b_muon_tmva_me0bdt;
@@ -171,6 +194,12 @@ private:
   SimVertex simVertex_;
   const std::vector<pat::PackedCandidate> * candidates_;
 
+  edm::EDGetTokenT<reco::JetTagCollection> mvaBTagCollectionTag_;
+  edm::EDGetTokenT<reco::JetCorrector> mvaL1Corrector_;
+  edm::EDGetTokenT<reco::JetCorrector> mvaL1L2L3ResCorrector_;
+  edm::EDGetTokenT<double> rho_;
+
+  edm::EDGetTokenT<std::vector<pat::PackedCandidate> > pfCandsToken_;
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtxToken_;
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DToken_;
   edm::EDGetTokenT<std::vector<reco::Vertex> > vtx1DBSToken_;
@@ -197,10 +226,20 @@ private:
   const ME0Geometry* me0Geo_;
 
   TrackingParticleSelector tpSelector_;
+
+  std::vector<double> miniIsoParams_;
 };
 
 MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 {
+  pfCandsToken_ = consumes<std::vector<pat::PackedCandidate> >(pset.getParameter<edm::InputTag>("pfCands"));
+  miniIsoParams_ = pset.getParameter<std::vector<double> >("miniIsoParams");
+
+  mvaBTagCollectionTag_  = consumes<reco::JetTagCollection>(pset.getParameter<edm::InputTag>("mvaJetTag"));
+  mvaL1Corrector_        = consumes<reco::JetCorrector>(pset.getParameter<edm::InputTag>("mvaL1Corrector"));
+  mvaL1L2L3ResCorrector_ = consumes<reco::JetCorrector>(pset.getParameter<edm::InputTag>("mvaL1L2L3ResCorrector"));
+  rho_                   = consumes<double>(pset.getParameter<edm::InputTag>("rho"));
+
   vtxToken_     = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex"));
   vtx1DToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex1D"));
   vtx1DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex1DBS"));
@@ -208,7 +247,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   vtx4DBSToken_ = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertex4DBS"));
   vtxBSToken_   = consumes<vector<Vertex> >(pset.getParameter<edm::InputTag>("primaryVertexBS"));
   
-  //tmvaWeight_   = (pset.getParameter<string>("tmvaWeightLabel"));
   tmvaWeight_ = edm::FileInPath(pset.getParameter<std::string>("tmvaWeightLabel")).fullPath();
   tmvaWeightme0_ = edm::FileInPath(pset.getParameter<std::string>("tmvaWeightLabelme0")).fullPath();
   simToken_ = consumes<TrackingParticleCollection>(pset.getParameter<InputTag>("simLabel"));
@@ -241,6 +279,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   // tmva booking
   bdt_ = new TMVA::Reader();
+  /*
   bdt_->AddVariable("muon_istracker",&b_muon_istracker);
   bdt_->AddVariable("muon_isglobal",&b_muon_isglobal);
   bdt_->AddVariable("muon_ispf",&b_muon_ispf);
@@ -255,6 +294,19 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   bdt_->AddVariable("muon_trackerLayersWithMeasurement",&b_muon_trackerlayers);
   bdt_->AddVariable("muon_innerquality",&b_muon_innerquality);
   bdt_->AddVariable("muon_caloCompatibility",&b_muon_caloCompatibility);
+  */
+  bdt_->AddVariable("LepGood_pt",                    &b_tmva_pt_               );
+  bdt_->AddVariable("LepGood_eta",                   &b_tmva_eta_              );
+  bdt_->AddVariable("LepGood_jetNDauChargedMVASel",  &b_tmva_jetNDauCharged_   );
+  bdt_->AddVariable("LepGood_miniRelIsoCharged",     &b_tmva_miniRelIsoCharged_);
+  bdt_->AddVariable("LepGood_miniRelIsoNeutral",     &b_tmva_miniRelIsoNeutral_);
+  bdt_->AddVariable("LepGood_jetPtRelv2",            &b_tmva_jetPtRel_         );
+  bdt_->AddVariable("LepGood_jetPtRatio", &b_tmva_jetPtRatio_       );
+  bdt_->AddVariable("LepGood_jetBTagCSV",     &b_tmva_jetBTagCSV_       );
+  //bdt_->AddVariable("LepGood_sip3d",                 &b_tmva_sip_              );
+  //bdt_->AddVariable("LepGood_dxy",         &b_tmva_log_abs_dxyBS_    ); 
+  bdt_->AddVariable("LepGood_dz",          &b_tmva_log_abs_dzPV_     );
+  bdt_->AddVariable("LepGood_segmentCompatibility",  &b_tmva_segmentCompatibility_);
   bdt_->BookMVA("BDT", tmvaWeight_);
 
   me0bdt_ = new TMVA::Reader();
@@ -300,6 +352,16 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   edm::ESHandle<ME0Geometry> me0g;
   iSetup.get<MuonGeometryRecord>().get(me0g);
   me0Geo_ = &*me0g;
+
+  Handle<std::vector<pat::PackedCandidate>> pfCands;
+  iEvent.getByToken(pfCandsToken_, pfCands);
+
+  edm::Handle<reco::JetTagCollection> mvaBTagCollectionTag;
+  edm::Handle<reco::JetCorrector> mvaL1Corrector;
+  edm::Handle<reco::JetCorrector> mvaL1L2L3ResCorrector;
+  iEvent.getByToken(mvaBTagCollectionTag_,mvaBTagCollectionTag);
+  iEvent.getByToken(mvaL1Corrector_,mvaL1Corrector);
+  iEvent.getByToken(mvaL1L2L3ResCorrector_,mvaL1L2L3ResCorrector);
 
   Handle<VertexCollection> vertices;
   Handle<VertexCollection> vertices1D, vertices1DBS, vertices4D, vertices4DBS, verticesBS;
@@ -395,11 +457,27 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
 
+    initTreeValues();
+
     int mpdgId = 0;
     const reco::GenParticle& gen = *(simTP->genParticles()[0]);
     if ( gen.mother()) { mpdgId = gen.mother()->pdgId(); }
 
-    fillBranches(genttree_, gentlv, muonRef, true, true, simTP->pdgId(), mpdgId);
+    ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4;
+    const Muon* mu = muonRef.get();
+    if (mu) { p4 = mu->p4(); }
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), p4,
+                                                        miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
+                                                        miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
+                                                        miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
+    if (mu) {
+      auto patmu = pat::Muon(*mu);
+      patmu.setMiniPFIsolation(miniiso);
+      b_tmva_miniRelIsoCharged_ = patmu.miniPFIsolation().chargedHadronIso();
+      b_tmva_miniRelIsoNeutral_ = patmu.miniPFIsolation().neutralHadronIso();
+      computeMva(patmu, vertexes_->at(0), *(mvaBTagCollectionTag.product()), &*mvaL1Corrector, &*mvaL1L2L3ResCorrector);
+    }
+    fillBranches(genttree_, gentlv, muonRef, true, true, simTP->pdgId(), mpdgId, miniiso);
   }
 
   
@@ -446,12 +524,25 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
 
-    fillBranches(recottree_, recotlv, muRef, isSignalMuon, isFromLeadingVtx, pdgId, mpdgId);
+    initTreeValues();
+
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), (mu->p4()),
+                                                        miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
+                                                        miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
+                                                        miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
+
+    auto patmu = pat::Muon(*mu);
+    patmu.setMiniPFIsolation(miniiso);
+    b_tmva_miniRelIsoCharged_ = patmu.miniPFIsolation().chargedHadronIso();
+    b_tmva_miniRelIsoNeutral_ = patmu.miniPFIsolation().neutralHadronIso();
+    computeMva(patmu, vertexes_->at(0), *(mvaBTagCollectionTag.product()), &*mvaL1Corrector, &*mvaL1L2L3ResCorrector);
+
+    fillBranches(recottree_, recotlv, muRef, isSignalMuon, isFromLeadingVtx, pdgId, mpdgId, miniiso);
   }
 
 }
 
-void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, bool isFromLeadingVtx, int pdgId, int mpdgId)
+void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<reco::Muon> muref, bool isSignal, bool isFromLeadingVtx, int pdgId, int mpdgId, pat::PFIsolation miniiso)
 {
   b_muon = tlv;
   b_muon_signal = isSignal;
@@ -461,50 +552,11 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
   ++b_muon_no;
   reco::Vertex pv0 = vertexes_->at(0);
 
-  //Resolution #2/4
-  b_muon_DZresolution = -999;
-  b_muon_Etaresolution = -999;
-  b_muon_Phiresolution = -999;
-  b_muon_pTresolution = -999; b_muon_pTinvresolution = -999;
-  b_muon_DXDYresolution = -999;
-  b_muon_Charge = -999;
+  b_muon_miniIso_ch = miniiso.chargedHadronIso();
+  b_muon_miniIso_nh = miniiso.neutralHadronIso();
+  b_muon_miniIso_ph = miniiso.photonIso();
+  b_muon_miniIso_pu = miniiso.puChargedHadronIso();
 
-  b_muon_isTightOptimized = -999; b_muon_isTightCustom = -999; b_muon_isTight = -999; b_muon_isMedium = -999; b_muon_isLoose = -999;
-  b_muon_isME0Muon = -999; b_muon_isME0MuonLoose = -999; b_muon_isME0MuonMedium = -999; b_muon_isME0MuonTight = -999;
-  b_muon_isGEMMuon = -999; b_muon_isGE11Muon = -999; b_muon_isGE21Muon = -999; b_muon_isRPCMuon = -999; b_muon_isCaloMuon = -999; b_muon_isTrackerMuon = -999;
-  b_muon_isStandAloneMuon = -999;
-  b_muon_isGlobalMuon = -999; b_muon_isStandAloneMuon = -999; b_muon_isPFMuon = -999;
-  b_muon_isLooseMod = -999;
-  b_muon_isTightModNoIP = -999; b_muon_isTightModIPxy = -999; b_muon_isTightModIPz = -999; b_muon_isTightModIPxyz = -999;
-
-  b_muon_ME0segX = 100; b_muon_ME0chamX = 100;
-
-  b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 100; b_muon_ME0deltaZ = 100; b_muon_ME0deltaDXDZ = 100; b_muon_ME0deltaDYDZ = 100; b_muon_ME0deltaDXDY = 100;  b_muon_ME0noRecHit = 100; b_muon_ME0pullX = 100; b_muon_ME0pullY = 100; b_muon_ME0dPhi = 100; b_muon_ME0dEta = 100; b_muon_ME0pullPhi = 100; b_muon_ME0dPhiBend = 100;
-  b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 100; b_muon_GE11deltaDXDZ = 100; b_muon_GE11deltaDYDZ = 100; b_muon_GE11noRecHit = 100; b_muon_GE11pullX = 100; b_muon_GE11pullY = 100; b_muon_GE11dPhi = 100; b_muon_GE11dEta = 100; b_muon_GE11pullPhi = 100;
-  b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100; b_muon_GE21pullPhi = 100;
-
-  b_muon_istracker = -999;  b_muon_isglobal = -999;  b_muon_ispf = -999;
-  b_muon_chi2pos = -999;  b_muon_trkKink = -999;  b_muon_segmentCompatibility = -999;
-  b_muon_chi2 = -999;  b_muon_nglobalhits = -999;  b_muon_nstations = -999;
-  b_muon_trackdxy = -999;  b_muon_trackdz = -999;
-  b_muon_ninnerhits = -999;  b_muon_trackerlayers = -999;
-  b_muon_innerquality = -999; b_muon_caloCompatibility = -999;
-  b_muon_poszPV0 = -999; b_muon_poszSimPV = -999; b_muon_poszMuon = -999;
-  b_muon_PFIso04 = -999;  b_muon_PFIso03 = -999;
-  b_muon_PFIso03ChargedHadronPt = -999; b_muon_PFIso03NeutralHadronEt = -999;
-  b_muon_PFIso03PhotonEt = -999; b_muon_PFIso03PUPt = -999;
-  b_muon_PFIso04ChargedHadronPt = -999; b_muon_PFIso04NeutralHadronEt = -999;
-  b_muon_PFIso04PhotonEt = -999; b_muon_PFIso04PUPt = -999;
-  b_muon_TrkIso05 = -999;  b_muon_TrkIso03 = -999;
-  b_muon_puppiIso = -999; b_muon_puppiIso_ChargedHadron = -999; b_muon_puppiIso_NeutralHadron = -999; b_muon_puppiIso_Photon = -999;
-  b_muon_puppiIsoNoLep = -999; b_muon_puppiIsoNoLep_ChargedHadron = -999; b_muon_puppiIsoNoLep_NeutralHadron = -999; b_muon_puppiIsoNoLep_Photon = -999;  
-  b_muon_isMuon = -999;
-  b_muon_numberOfValidMuonGEMHits = -999; b_muon_numberOfValidMuonME0Hits = -999;
-
-  b_muon_ipxySim = -999; b_muon_ipzSim = -999;
-  b_muon_tmva_bdt = -999; b_muon_tmva_mlp = -999;
-  b_muon_tmva_me0bdt = -999;
-  
   const Muon* mu = muref.get();
   if (mu){
 
@@ -757,10 +809,10 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     b_muon_ipxySim = abs(mu->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
     b_muon_ipzSim = abs(mu->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
 
-    collectTMVAvalues(*mu, pv0);
-    b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
+    //collectTMVAvalues(*mu, pv0);
+    //b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
 
-    b_muon_tmva_me0bdt = me0bdt_->EvaluateMVA("BDT");
+    //b_muon_tmva_me0bdt = me0bdt_->EvaluateMVA("BDT");
   }
   tree->Fill();
 }
@@ -1190,6 +1242,103 @@ bool MuonAnalyser::isTightMod(const reco::VertexCollection* vertices, const SimV
     
   return result;
 }
+
+void MuonAnalyser::computeMva(const pat::Muon& muon,
+                  const reco::Vertex& vertex,
+                  const reco::JetTagCollection& bTags,
+                  const reco::JetCorrector* correctorL1,
+                  const reco::JetCorrector* correctorL1L2L3Res)
+{
+  b_tmva_pt_                   = muon.pt();
+  b_tmva_eta_                  = muon.eta();
+  b_tmva_segmentCompatibility_ = muon.segmentCompatibility();
+  //b_tmva_miniRelIsoCharged_ = muon.miniPFIsolation()->chargedHadronIso();
+  //b_tmva_miniRelIsoNeutral_ = muon.miniPFIsolation()->neutralHadronIso();
+
+  double dB2D  = fabs(muon.dB(pat::Muon::BS2D));
+  double dB3D  = muon.dB(pat::Muon::PV3D);
+  double edB3D = muon.edB(pat::Muon::PV3D);
+  double dz    = fabs(muon.muonBestTrack()->dz(vertex.position()));
+  b_tmva_sip_  = edB3D>0?fabs(dB3D/edB3D):0.0; 
+  b_tmva_log_abs_dxyBS_     = dB2D>0?log(dB2D):0; 
+  b_tmva_log_abs_dzPV_      = dz>0?log(dz):0;
+
+  //Initialise loop variables
+  double minDr = 9999;
+  double jecL1L2L3Res = 1.;
+  double jecL1 = 1.;
+
+  b_tmva_jetPtRatio_ = -99;
+  b_tmva_jetPtRel_   = -99;
+  b_tmva_jetBTagCSV_ = -999;
+  b_tmva_jetNDauCharged_ = -1;
+
+  for (const auto& tagI: bTags){
+    // for each muon with the lepton 
+    double dr = deltaR(*(tagI.first), muon);
+    if(dr > minDr) continue;  
+    minDr = dr;
+      
+    const reco::Candidate::LorentzVector& muP4(muon.p4()); 
+    reco::Candidate::LorentzVector jetP4(tagI.first->p4());
+
+    if (correctorL1 && correctorL1L2L3Res){
+      jecL1L2L3Res = correctorL1L2L3Res->correction(*(tagI.first));
+      jecL1 = correctorL1->correction(*(tagI.first));
+    }
+
+    // Get b-jet info
+    b_tmva_jetBTagCSV_ = tagI.second;
+    b_tmva_jetNDauCharged_ = 0;
+    for (auto jet: tagI.first->getJetConstituentsQuick()){
+      const reco::PFCandidate *pfcand = dynamic_cast<const reco::PFCandidate*>(jet);
+      if (pfcand==nullptr) throw cms::Exception("ConfigurationError") << "Cannot get jet constituents";
+      if (pfcand->charge()==0) continue;
+      auto bestTrackPtr = pfcand->bestTrack();
+      if (!bestTrackPtr) continue;
+      if (!bestTrackPtr->quality(reco::Track::highPurity)) continue;
+      if (bestTrackPtr->pt()<1.) continue;
+      if (bestTrackPtr->hitPattern().numberOfValidHits()<8) continue;
+      if (bestTrackPtr->hitPattern().numberOfValidPixelHits()<2) continue;
+      if (bestTrackPtr->normalizedChi2()>=5) continue;
+
+      if (std::fabs(bestTrackPtr->dxy(vertex.position())) > 0.2) continue;
+      if (std::fabs(bestTrackPtr->dz(vertex.position())) > 17) continue;
+      b_tmva_jetNDauCharged_++;
+    }
+
+    if(minDr < 0.4){
+    //if(minDr < dRmax_){
+      if ((jetP4-muP4).Rho()<0.0001){ 
+    b_tmva_jetPtRel_ = 0;
+    b_tmva_jetPtRatio_ = 1;
+      } else {
+    jetP4 -= muP4/jecL1;
+    jetP4 *= jecL1L2L3Res;
+    jetP4 += muP4;
+      
+    b_tmva_jetPtRatio_ = muP4.pt()/jetP4.pt();
+    b_tmva_jetPtRel_ = ptRel(muP4,jetP4, true);
+      }
+    }
+  }
+
+  if (b_tmva_jetPtRatio_>1.5) b_tmva_jetPtRatio_ = 1.5;
+  if (b_tmva_jetBTagCSV_<0) b_tmva_jetBTagCSV_ = 0;
+  b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
+};
+
+float MuonAnalyser::ptRel(const reco::Candidate::LorentzVector& muP4, const reco::Candidate::LorentzVector& jetP4, bool subtractMuon) 
+{
+  reco::Candidate::LorentzVector jp4 = jetP4;
+  if (subtractMuon) jp4-=muP4;
+  float dot = muP4.Vect().Dot( jp4.Vect() );
+  float ptrel = muP4.P2() - dot*dot/jp4.P2();
+  ptrel = ptrel>0 ? sqrt(ptrel) : 0.0;
+  return ptrel;
+};
+
+
 void MuonAnalyser::setBranches(TTree *tree)
 {
   tree->Branch("nvertex", &b_nvertex, "nvertex/I");
@@ -1201,6 +1350,11 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
   tree->Branch("muon_leadingVtx", &b_muon_leadingVtx, "muon_leadingVtx/O");
  
+  tree->Branch("muon_miniIso_ch", &b_muon_miniIso_ch, "muon_miniIso_ch/F"); 
+  tree->Branch("muon_miniIso_nh", &b_muon_miniIso_nh, "muon_miniIso_nh/F");
+  tree->Branch("muon_miniIso_ph", &b_muon_miniIso_ph, "muon_miniIso_ph/F");
+  tree->Branch("muon_miniIso_pu", &b_muon_miniIso_pu, "muon_miniIso_pu/F");
+
   //Resolution #4/4
   tree->Branch("muon_pTresolution",&b_muon_pTresolution,"muon_pTresolution/F");
   tree->Branch("muon_Phiresolution",&b_muon_Phiresolution,"muon_Phiresolution/F");
@@ -1234,7 +1388,20 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_isTightModIPxy", &b_muon_isTightModIPxy, "muon_isTightModIPxy/O");
   tree->Branch("muon_isTightModIPz", &b_muon_isTightModIPz, "muon_isTightModIPz/O");
   tree->Branch("muon_isTightModIPxyz", &b_muon_isTightModIPxyz, "muon_isTightModIPxyz/O");
-  
+
+  tree->Branch("LepGood_pt",                   &b_tmva_pt_, "LepGood_pt");
+  tree->Branch("LepGood_eta",                  &b_tmva_eta_, "LepGood_eta");
+  tree->Branch("LepGood_jetNDauChargedMVASel", &b_tmva_jetNDauCharged_, "LepGood_jetNDauChargedMVASel");
+  tree->Branch("LepGood_miniRelIsoCharged",    &b_tmva_miniRelIsoCharged_, "LepGood_miniRelIsoCharged");
+  tree->Branch("LepGood_miniRelIsoNeutral",    &b_tmva_miniRelIsoNeutral_, "LepGood_miniRelIsoNeutral");
+  tree->Branch("LepGood_jetPtRelv2",           &b_tmva_jetPtRel_, "LepGood_jetPtRelv2");
+  tree->Branch("LepGood_jetPtRatio",           &b_tmva_jetPtRatio_, "LepGood_jetPtRatio");
+  tree->Branch("LepGood_jetBTagCSV",           &b_tmva_jetBTagCSV_, "LepGood_jetBTagCSV");
+  tree->Branch("LepGood_sip3d",                &b_tmva_sip_, "LepGood_sip3d");
+  tree->Branch("LepGood_dxy",        &b_tmva_log_abs_dxyBS_, "LepGood_dxy"); 
+  tree->Branch("LepGood_dz",         &b_tmva_log_abs_dzPV_, "LepGood_dz");
+  tree->Branch("LepGood_segmentCompatibility", &b_tmva_segmentCompatibility_, "LepGood_segmentCompatibility");
+
   tree->Branch("muon_istracker", &b_muon_istracker, "muon_istracker/F");
   tree->Branch("muon_isglobal", &b_muon_isglobal, "muon_isglobal/F");
   tree->Branch("muon_ispf", &b_muon_ispf, "muon_ispf/F");
@@ -1323,4 +1490,60 @@ void MuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_mpdgId", &b_muon_mpdgId, "muon_mpdgId/I");
 
 }
+void MuonAnalyser::initTreeValues(){
+  b_muon_miniIso_ch = -999; 
+  b_muon_miniIso_nh= -999;  
+  b_muon_miniIso_ph = -999;
+  b_muon_miniIso_pu = -999;
+
+  b_muon_DZresolution = -999;
+  b_muon_Etaresolution = -999;
+  b_muon_Phiresolution = -999;
+  b_muon_pTresolution = -999; b_muon_pTinvresolution = -999;
+  b_muon_DXDYresolution = -999;
+  b_muon_Charge = -999;
+
+  b_muon_isTightOptimized = -999; b_muon_isTightCustom = -999; b_muon_isTight = -999; b_muon_isMedium = -999; b_muon_isLoose = -999;
+  b_muon_isME0Muon = -999; b_muon_isME0MuonLoose = -999; b_muon_isME0MuonMedium = -999; b_muon_isME0MuonTight = -999;
+  b_muon_isGEMMuon = -999; b_muon_isGE11Muon = -999; b_muon_isGE21Muon = -999; b_muon_isRPCMuon = -999; b_muon_isCaloMuon = -999; b_muon_isTrackerMuon = -999;
+  b_muon_isStandAloneMuon = -999;
+  b_muon_isGlobalMuon = -999; b_muon_isStandAloneMuon = -999; b_muon_isPFMuon = -999;
+  b_muon_isLooseMod = -999;
+  b_muon_isTightModNoIP = -999; b_muon_isTightModIPxy = -999; b_muon_isTightModIPz = -999; b_muon_isTightModIPxyz = -999;
+
+  b_muon_ME0segX = 100; b_muon_ME0chamX = 100;
+
+  b_muon_ME0deltaX = 100; b_muon_ME0deltaY = 100; b_muon_ME0deltaZ = 100; b_muon_ME0deltaDXDZ = 100; b_muon_ME0deltaDYDZ = 100; b_muon_ME0deltaDXDY = 100;  b_muon_ME0noRecHit = 100; b_muon_ME0pullX = 100; b_muon_ME0pullY = 100; b_muon_ME0dPhi = 100; b_muon_ME0dEta = 100; b_muon_ME0pullPhi = 100; b_muon_ME0dPhiBend = 100;
+  b_muon_GE11deltaX = 100; b_muon_GE11deltaY = 100; b_muon_GE11deltaDXDZ = 100; b_muon_GE11deltaDYDZ = 100; b_muon_GE11noRecHit = 100; b_muon_GE11pullX = 100; b_muon_GE11pullY = 100; b_muon_GE11dPhi = 100; b_muon_GE11dEta = 100; b_muon_GE11pullPhi = 100;
+  b_muon_GE21deltaX = 100; b_muon_GE21deltaY = 100; b_muon_GE21deltaDXDZ = 100; b_muon_GE21deltaDYDZ = 100; b_muon_GE21noRecHit = 100; b_muon_GE21pullX = 100; b_muon_GE21pullY = 100; b_muon_GE21dPhi = 100; b_muon_GE21dEta = 100; b_muon_GE21pullPhi = 100;
+
+  b_muon_istracker = -999;  b_muon_isglobal = -999;  b_muon_ispf = -999;
+  b_muon_chi2pos = -999;  b_muon_trkKink = -999;  b_muon_segmentCompatibility = -999;
+  b_muon_chi2 = -999;  b_muon_nglobalhits = -999;  b_muon_nstations = -999;
+  b_muon_trackdxy = -999;  b_muon_trackdz = -999;
+  b_muon_ninnerhits = -999;  b_muon_trackerlayers = -999;
+  b_muon_innerquality = -999; b_muon_caloCompatibility = -999;
+  b_muon_poszPV0 = -999; b_muon_poszSimPV = -999; b_muon_poszMuon = -999;
+  b_muon_PFIso04 = -999;  b_muon_PFIso03 = -999;
+  b_muon_PFIso03ChargedHadronPt = -999; b_muon_PFIso03NeutralHadronEt = -999;
+  b_muon_PFIso03PhotonEt = -999; b_muon_PFIso03PUPt = -999;
+  b_muon_PFIso04ChargedHadronPt = -999; b_muon_PFIso04NeutralHadronEt = -999;
+  b_muon_PFIso04PhotonEt = -999; b_muon_PFIso04PUPt = -999;
+  b_muon_TrkIso05 = -999;  b_muon_TrkIso03 = -999;
+  b_muon_puppiIso = -999; b_muon_puppiIso_ChargedHadron = -999; b_muon_puppiIso_NeutralHadron = -999; b_muon_puppiIso_Photon = -999;
+  b_muon_puppiIsoNoLep = -999; b_muon_puppiIsoNoLep_ChargedHadron = -999; b_muon_puppiIsoNoLep_NeutralHadron = -999; b_muon_puppiIsoNoLep_Photon = -999;  
+  b_muon_isMuon = -999;
+  b_muon_numberOfValidMuonGEMHits = -999; b_muon_numberOfValidMuonME0Hits = -999;
+
+  b_muon_ipxySim = -999; b_muon_ipzSim = -999;
+  b_muon_tmva_bdt = -999; b_muon_tmva_mlp = -999;
+  b_muon_tmva_me0bdt = -999;
+
+  b_tmva_pt_ = -999; b_tmva_eta_ = -999;
+  b_tmva_jetNDauCharged_ = -999; b_tmva_miniRelIsoCharged_ = -999; b_tmva_miniRelIsoNeutral_ = -999;
+  b_tmva_jetPtRel_ = -999; b_tmva_jetPtRatio_ = -999; b_tmva_jetBTagCSV_ = -999;
+  b_tmva_sip_ = -999; b_tmva_log_abs_dxyBS_ = -999; b_tmva_log_abs_dzPV_ = -999; b_tmva_segmentCompatibility_ = -999;
+
+}
+  
 DEFINE_FWK_MODULE(MuonAnalyser);

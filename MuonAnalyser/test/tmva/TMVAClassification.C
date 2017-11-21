@@ -164,9 +164,8 @@ int TMVAClassification( TString myMethodList = "" )
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
    TFile *input(0);
-   //TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/zmm.root";
-   //TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/tenmu.root";
-   TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/ttbar.root";
+   //TString fname = "../out.root";
+   TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/zmm200_newval.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
    }
@@ -214,6 +213,7 @@ int TMVAClassification( TString myMethodList = "" )
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
+   /*
    dataloader->AddVariable( "muon_istracker", 'F' );
    dataloader->AddVariable( "muon_isglobal", 'F' );
    dataloader->AddVariable( "muon_ispf", 'F' );
@@ -229,6 +229,19 @@ int TMVAClassification( TString myMethodList = "" )
    dataloader->AddVariable( "muon_trackerLayersWithMeasurement", 'F' );
    dataloader->AddVariable( "muon_innerquality", 'F' );
    dataloader->AddVariable( "muon_caloCompatibility", 'F' );
+   */
+   dataloader->AddVariable("LepGood_pt",                     'F' );
+   dataloader->AddVariable("LepGood_eta",                    'F' );
+   dataloader->AddVariable("LepGood_jetNDauChargedMVASel",   'F' );
+   dataloader->AddVariable("LepGood_miniRelIsoCharged",      'F' );
+   dataloader->AddVariable("LepGood_miniRelIsoNeutral",      'F' );
+   dataloader->AddVariable("LepGood_jetPtRelv2",             'F' );
+   dataloader->AddVariable("LepGood_jetPtRatio",  'F' );
+   dataloader->AddVariable("LepGood_jetBTagCSV",      'F' );
+   //dataloader->AddVariable("LepGood_sip3d",                  'F' );
+   //dataloader->AddVariable("LepGood_dxy",          'F' );
+   dataloader->AddVariable("LepGood_dz",           'F' );
+   dataloader->AddVariable("LepGood_segmentCompatibility",   'F' );
 
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
@@ -309,8 +322,9 @@ int TMVAClassification( TString myMethodList = "" )
    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         //"nTrain_Signal=5000:nTrain_Background=5000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm140
                                         //"nTrain_Signal=150000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//tenmu
-                                        "nTrain_Signal=10000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//ttbar
+                                        //"nTrain_Signal=10000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//ttbar
                                         //"nTrain_Signal=60000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm
+                                        "nTrain_Signal=20000:nTrain_Background=14000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm
 
    // ### Book MVA methods
    //

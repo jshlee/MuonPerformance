@@ -18,6 +18,8 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
+#include "PhysicsTools/PatUtils/interface/MiniIsolation.h"
+
 #include "Geometry/Records/interface/MuonGeometryRecord.h"
 #include "Geometry/GEMGeometry/interface/ME0Geometry.h"
 
@@ -40,7 +42,7 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   void setBranches(TTree *tree);
-  void fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref,bool isSignal, int pdgId);
+  void fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref,bool isSignal, int pdgId, pat::PFIsolation miniiso);
 
   bool isSignalMuon(const reco::GenParticle &gen);
   
@@ -51,6 +53,8 @@ private:
 
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> putoken_;
+  edm::EDGetTokenT<std::vector<pat::PackedCandidate>> pfCandsToken_; 
+  std::vector<double> miniIsoParams_ ;
 
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIso_ch_;
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIso_nh_;
@@ -63,11 +67,11 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_ch_;
   edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_nh_;
   edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_ph_;
-  edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_pu_;
+  //edm::EDGetTokenT<edm::ValueMap<float> > pfNewIso_pu_;
   edm::Handle<edm::ValueMap<float>> pfNewIso_ch;
   edm::Handle<edm::ValueMap<float>> pfNewIso_nh;
   edm::Handle<edm::ValueMap<float>> pfNewIso_ph;
-  edm::Handle<edm::ValueMap<float>> pfNewIso_pu;
+  //edm::Handle<edm::ValueMap<float>> pfNewIso_pu;
   edm::EDGetTokenT<edm::ValueMap<float> > minipuppiNewIso_ch_;
   edm::EDGetTokenT<edm::ValueMap<float> > minipuppiNewIso_nh_;
   edm::EDGetTokenT<edm::ValueMap<float> > minipuppiNewIso_ph_;
@@ -79,12 +83,13 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float> > minipfNewIso_ch_;
   edm::EDGetTokenT<edm::ValueMap<float> > minipfNewIso_nh_;
   edm::EDGetTokenT<edm::ValueMap<float> > minipfNewIso_ph_;
-  edm::EDGetTokenT<edm::ValueMap<float> > minipfNewIso_pu_;
+  //edm::EDGetTokenT<edm::ValueMap<float> > minipfNewIso_pu_;
   edm::Handle<edm::ValueMap<float>> minipfNewIso_ch;
   edm::Handle<edm::ValueMap<float>> minipfNewIso_nh;
   edm::Handle<edm::ValueMap<float>> minipfNewIso_ph;
-  edm::Handle<edm::ValueMap<float>> minipfNewIso_pu;
+  //edm::Handle<edm::ValueMap<float>> minipfNewIso_pu;
 
+  /*
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt02_ch_;
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt02_nh_;
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt02_ph_;
@@ -129,6 +134,7 @@ private:
   edm::Handle<edm::ValueMap<float>> pfNewIsoPt05_nh;
   edm::Handle<edm::ValueMap<float>> pfNewIsoPt05_ph;
   edm::Handle<edm::ValueMap<float>> pfNewIsoPt05_pu;
+  */
 
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt06_ch_;
   edm::EDGetTokenT<edm::ValueMap<float> > puppiNewIsoPt06_nh_;
@@ -210,6 +216,12 @@ private:
   bool b_muon_signal;
   int b_muon_pdgId;
   int b_muon_no;
+
+  float b_muon_miniIso_ch;
+  float b_muon_miniIso_nh;
+  float b_muon_miniIso_ph;
+  float b_muon_miniIso_pu;
+
   float b_muon_poszPV0, b_muon_poszMuon;
   bool b_muon_isTight, b_muon_isMedium, b_muon_isLoose;
   bool b_muon_isME0MuonTight, b_muon_isME0MuonMedium, b_muon_isME0MuonLoose;
@@ -226,11 +238,12 @@ private:
 
   float b_muon_puppiNewIso_ch, b_muon_puppiNewIso_nh, b_muon_puppiNewIso_ph, b_muon_puppiNewIso;
   float b_muon_trkNewIso;
-  float b_muon_pfNewIso_ch, b_muon_pfNewIso_nh, b_muon_pfNewIso_ph, b_muon_pfNewIso_pu, b_muon_pfNewIso;
+  float b_muon_pfNewIso_ch, b_muon_pfNewIso_nh, b_muon_pfNewIso_ph, /*b_muon_pfNewIso_pu, */b_muon_pfNewIso;
   float b_muon_minipuppiNewIso_ch, b_muon_minipuppiNewIso_nh, b_muon_minipuppiNewIso_ph, b_muon_minipuppiNewIso_pu, b_muon_minipuppiNewIso;
   float b_muon_minitrkNewIso;
-  float b_muon_minipfNewIso_ch, b_muon_minipfNewIso_nh, b_muon_minipfNewIso_ph, b_muon_minipfNewIso_pu, b_muon_minipfNewIso;
+  float b_muon_minipfNewIso_ch, b_muon_minipfNewIso_nh, b_muon_minipfNewIso_ph, /*b_muon_minipfNewIso_pu, */b_muon_minipfNewIso;
 
+  /*
   float b_muon_puppiNewIsoPt02_ch, b_muon_puppiNewIsoPt02_nh, b_muon_puppiNewIsoPt02_ph, b_muon_puppiNewIsoPt02;
   float b_muon_pfNewIsoPt02_ch, b_muon_pfNewIsoPt02_nh, b_muon_pfNewIsoPt02_ph, b_muon_pfNewIsoPt02_pu, b_muon_pfNewIsoPt02;
   
@@ -239,7 +252,7 @@ private:
 
   float b_muon_puppiNewIsoPt05_ch, b_muon_puppiNewIsoPt05_nh, b_muon_puppiNewIsoPt05_ph, b_muon_puppiNewIsoPt05;
   float b_muon_pfNewIsoPt05_ch, b_muon_pfNewIsoPt05_nh, b_muon_pfNewIsoPt05_ph, b_muon_pfNewIsoPt05_pu, b_muon_pfNewIsoPt05;
-
+  */
   float b_muon_puppiNewIsoPt06_ch, b_muon_puppiNewIsoPt06_nh, b_muon_puppiNewIsoPt06_ph, b_muon_puppiNewIsoPt06;
   float b_muon_pfNewIsoPt06_ch, b_muon_pfNewIsoPt06_nh, b_muon_pfNewIsoPt06_ph, b_muon_pfNewIsoPt06_pu, b_muon_pfNewIsoPt06;
 
@@ -268,6 +281,9 @@ PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   muonsToken_(consumes<edm::View<pat::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
   prunedGenToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("pruned")))
 {
+  pfCandsToken_ = consumes<std::vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("pfCands"));
+  miniIsoParams_ = iConfig.getParameter<std::vector<double> >("miniIsoParams");
+
   //putoken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
   putoken_ = consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("addPileupInfo"));
   
@@ -278,7 +294,7 @@ PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   pfNewIso_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_ch"));
   pfNewIso_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_nh"));
   pfNewIso_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_ph"));
-  pfNewIso_pu_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_pu"));
+  //pfNewIso_pu_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIso_pu"));
   minipuppiNewIso_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipuppiNewIso_ch"));
   minipuppiNewIso_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipuppiNewIso_nh"));
   minipuppiNewIso_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipuppiNewIso_ph"));
@@ -286,8 +302,9 @@ PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   minipfNewIso_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipfNewIso_ch"));
   minipfNewIso_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipfNewIso_nh"));
   minipfNewIso_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipfNewIso_ph"));
-  minipfNewIso_pu_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipfNewIso_pu"));
+  //minipfNewIso_pu_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("minipfNewIso_pu"));
 
+  /*
   puppiNewIsoPt02_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt02_ch"));
   puppiNewIsoPt02_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt02_nh"));
   puppiNewIsoPt02_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt02_ph"));
@@ -311,7 +328,7 @@ PatMuonAnalyser::PatMuonAnalyser(const edm::ParameterSet& iConfig):
   pfNewIsoPt05_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt05_nh"));
   pfNewIsoPt05_ph_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt05_ph"));
   pfNewIsoPt05_pu_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("pfNewIsoPt05_pu"));
-  
+  */
   /*
   puppiNewIsoPt06_ch_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt06_ch"));
   puppiNewIsoPt06_nh_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNewIsoPt06_nh"));
@@ -394,7 +411,7 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(pfNewIso_ch_, pfNewIso_ch);
   iEvent.getByToken(pfNewIso_nh_, pfNewIso_nh);
   iEvent.getByToken(pfNewIso_ph_, pfNewIso_ph);  
-  iEvent.getByToken(pfNewIso_pu_, pfNewIso_pu);  
+  //iEvent.getByToken(pfNewIso_pu_, pfNewIso_pu);  
   iEvent.getByToken(minipuppiNewIso_ch_, minipuppiNewIso_ch);
   iEvent.getByToken(minipuppiNewIso_nh_, minipuppiNewIso_nh);
   iEvent.getByToken(minipuppiNewIso_ph_, minipuppiNewIso_ph);  
@@ -402,8 +419,9 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(minipfNewIso_ch_, minipfNewIso_ch);
   iEvent.getByToken(minipfNewIso_nh_, minipfNewIso_nh);
   iEvent.getByToken(minipfNewIso_ph_, minipfNewIso_ph);  
-  iEvent.getByToken(minipfNewIso_pu_, minipfNewIso_pu);  
+  //iEvent.getByToken(minipfNewIso_pu_, minipfNewIso_pu);  
     
+  /*
   iEvent.getByToken(puppiNewIsoPt02_ch_, puppiNewIsoPt02_ch);
   iEvent.getByToken(puppiNewIsoPt02_nh_, puppiNewIsoPt02_nh);
   iEvent.getByToken(puppiNewIsoPt02_ph_, puppiNewIsoPt02_ph);  
@@ -427,7 +445,7 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(pfNewIsoPt05_nh_, pfNewIsoPt05_nh);
   iEvent.getByToken(pfNewIsoPt05_ph_, pfNewIsoPt05_ph);  
   iEvent.getByToken(pfNewIsoPt05_pu_, pfNewIsoPt05_pu);  
-  
+  */
   /*
   iEvent.getByToken(puppiNewIsoPt06_ch_, puppiNewIsoPt06_ch);
   iEvent.getByToken(puppiNewIsoPt06_nh_, puppiNewIsoPt06_nh);
@@ -465,6 +483,9 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(pfNewIsoPt20_ph_, pfNewIsoPt20_ph);  
   */
 
+  Handle<std::vector<pat::PackedCandidate>> pfCands;
+  iEvent.getByToken(pfCandsToken_, pfCands);
+
   edm::Handle<std::vector <PileupSummaryInfo> > PupInfo;
   iEvent.getByToken(putoken_, PupInfo);
   b_pu_density = 0; b_pu_numInteractions = 0;
@@ -495,8 +516,15 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 	break;
       }
     }
-    
-    fillBranches(genttree_, gentlv, muref, true, gen.pdgId());
+
+    ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4;
+    const pat::Muon* mu = muref.get();
+    if (mu) { p4 = mu->p4(); }
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), p4,
+                                                        miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
+                                                        miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
+                                                        miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
+    fillBranches(genttree_, gentlv, muref, true, gen.pdgId(), miniiso);
   }
 
   
@@ -514,9 +542,15 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       pdgId = gen->pdgId();
       isSignal = isSignalMuon(*gen);
     }
-  
+
     TLorentzVector recotlv(muon.momentum().x(), muon.momentum().y(), muon.momentum().z(), muon.energy() );
-    fillBranches(recottree_, recotlv, muref, isSignal, pdgId);
+  
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), muon.p4(),
+                                                        miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
+                                                        miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
+                                                        miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
+    //muon.setMiniPFIsolation(miniiso)
+    fillBranches(recottree_, recotlv, muref, isSignal, pdgId, miniiso);
   }
   
   return;
@@ -536,13 +570,18 @@ bool PatMuonAnalyser::isSignalMuon(const reco::GenParticle &gen)
   
 }
 
-void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref, bool isSignal, int pdgId)
+void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref, bool isSignal, int pdgId, pat::PFIsolation miniiso)
 {
   b_muon = tlv;
   b_muon_signal = isSignal;
   b_muon_pdgId = pdgId;
   ++b_muon_no;
-  
+
+  b_muon_miniIso_ch = -999;
+  b_muon_miniIso_nh= -999;
+  b_muon_miniIso_ph = -999;
+  b_muon_miniIso_pu = -999;
+
   b_muon_poszPV0  = 0;
   b_muon_poszMuon = 0;
     
@@ -559,11 +598,12 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
 
   b_muon_puppiNewIso_ch = -1; b_muon_puppiNewIso_nh = -1; b_muon_puppiNewIso_ph = -1; b_muon_puppiNewIso = -1;
   b_muon_trkNewIso = -1;
-  b_muon_pfNewIso_ch = -1; b_muon_pfNewIso_nh = -1; b_muon_pfNewIso_ph = -1; b_muon_pfNewIso_pu = -1; b_muon_pfNewIso = -1;
+  b_muon_pfNewIso_ch = -1; b_muon_pfNewIso_nh = -1; b_muon_pfNewIso_ph = -1; /*b_muon_pfNewIso_pu = -1;*/ b_muon_pfNewIso = -1;
   b_muon_minipuppiNewIso_ch = -1; b_muon_minipuppiNewIso_nh = -1; b_muon_minipuppiNewIso_ph = -1; b_muon_minipuppiNewIso_pu = -1; b_muon_minipuppiNewIso = -1;
   b_muon_minitrkNewIso = -1;
-  b_muon_minipfNewIso_ch = -1; b_muon_minipfNewIso_nh = -1; b_muon_minipfNewIso_ph = -1; b_muon_minipfNewIso_pu = -1; b_muon_minipfNewIso = -1;
+  b_muon_minipfNewIso_ch = -1; b_muon_minipfNewIso_nh = -1; b_muon_minipfNewIso_ph = -1; /*b_muon_minipfNewIso_pu = -1; */b_muon_minipfNewIso = -1;
     
+  /*
   b_muon_puppiNewIsoPt02_ch = -1; b_muon_puppiNewIsoPt02_nh = -1; b_muon_puppiNewIsoPt02_ph = -1; b_muon_puppiNewIsoPt02 = -1;
   b_muon_pfNewIsoPt02_ch = -1; b_muon_pfNewIsoPt02_nh = -1; b_muon_pfNewIsoPt02_ph = -1; b_muon_pfNewIsoPt02_pu = -1; b_muon_pfNewIsoPt02 = -1;
 
@@ -572,6 +612,7 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
 
   b_muon_puppiNewIsoPt05_ch = -1; b_muon_puppiNewIsoPt05_nh = -1; b_muon_puppiNewIsoPt05_ph = -1; b_muon_puppiNewIsoPt05 = -1;
   b_muon_pfNewIsoPt05_ch = -1; b_muon_pfNewIsoPt05_nh = -1; b_muon_pfNewIsoPt05_ph = -1; b_muon_pfNewIsoPt05_pu = -1; b_muon_pfNewIsoPt05 = -1;
+  */
 
   b_muon_puppiNewIsoPt06_ch = -1; b_muon_puppiNewIsoPt06_nh = -1; b_muon_puppiNewIsoPt06_ph = -1; b_muon_puppiNewIsoPt06 = -1;
   b_muon_pfNewIsoPt06_ch = -1; b_muon_pfNewIsoPt06_nh = -1; b_muon_pfNewIsoPt06_ph = -1; b_muon_pfNewIsoPt06_pu = -1; b_muon_pfNewIsoPt06 = -1;
@@ -595,6 +636,11 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
   b_muon_puppiIsoRepTrk = 0;
 
   b_muon_isME0MuonTight = 0; b_muon_isME0MuonMedium = 0; b_muon_isME0MuonLoose = 0;
+ 
+  b_muon_miniIso_ch = miniiso.chargedHadronIso();
+  b_muon_miniIso_nh = miniiso.neutralHadronIso();
+  b_muon_miniIso_ph = miniiso.photonIso();
+  b_muon_miniIso_pu = miniiso.puChargedHadronIso(); 
   
   if (muref.isNonnull()){
     auto muon = muref;
@@ -646,8 +692,9 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
     b_muon_pfNewIso_nh = (*pfNewIso_nh)[muref];
     b_muon_pfNewIso_ph = (*pfNewIso_ph)[muref];
     //b_muon_pfNewIso_pu = muon->pfIsolationR03().sumPUPt;
-    b_muon_pfNewIso_pu = (*pfNewIso_pu)[muref];
-    b_muon_pfNewIso    = ( b_muon_pfNewIso_ch + max(0.0, b_muon_pfNewIso_nh + b_muon_pfNewIso_ph - 0.5 * b_muon_pfNewIso_pu) ) / muon->pt();
+    //b_muon_pfNewIso_pu = (*pfNewIso_pu)[muref];
+    b_muon_pfNewIso    = ( b_muon_pfNewIso_ch + max(0.0, b_muon_pfNewIso_nh + b_muon_pfNewIso_ph - 0.5 ) )/ muon->pt();
+    //b_muon_pfNewIso    = ( b_muon_pfNewIso_ch + max(0.0, b_muon_pfNewIso_nh + b_muon_pfNewIso_ph - 0.5 * b_muon_pfNewIso_pu) ) / muon->pt();
     b_muon_minipuppiNewIso_ch = (*minipuppiNewIso_ch)[muref];
     b_muon_minipuppiNewIso_nh = (*minipuppiNewIso_nh)[muref];
     b_muon_minipuppiNewIso_ph = (*minipuppiNewIso_ph)[muref];
@@ -658,14 +705,16 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
     b_muon_minipfNewIso_nh = (*minipfNewIso_nh)[muref];
     b_muon_minipfNewIso_ph = (*minipfNewIso_ph)[muref];
     //b_muon_minipfNewIso_pu = muon->pfIsolationR03().sumPUPt;
-    b_muon_minipfNewIso_pu = (*minipfNewIso_pu)[muref];
-    b_muon_minipfNewIso    = ( b_muon_minipfNewIso_ch + max(0.0, b_muon_minipfNewIso_nh + b_muon_minipfNewIso_ph - 0.5 * b_muon_minipfNewIso_pu) ) / muon->pt();
+    //b_muon_minipfNewIso_pu = (*minipfNewIso_pu)[muref];
+    b_muon_minipfNewIso    = ( b_muon_minipfNewIso_ch + max(0.0, b_muon_minipfNewIso_nh + b_muon_minipfNewIso_ph - 0.5 ) )/ muon->pt();
+    //b_muon_minipfNewIso    = ( b_muon_minipfNewIso_ch + max(0.0, b_muon_minipfNewIso_nh + b_muon_minipfNewIso_ph - 0.5 * b_muon_minipfNewIso_pu) ) / muon->pt();
     /*printf("Diff : %lf // %lf, %lf // %lf, %lf // %lf, %lf // %lf\n", 
       b_muon_pfNewIso_ch, b_muon_pfNewIso_ch - b_muon_PFIso03ChargedHadronPt, 
       b_muon_pfNewIso_nh, b_muon_pfNewIso_nh - b_muon_PFIso03NeutralHadronEt, 
       b_muon_pfNewIso_ph, b_muon_pfNewIso_ph - b_muon_PFIso03PhotonEt, 
       b_muon_pfNewIso_pu, b_muon_pfNewIso_pu - b_muon_PFIso03PUPt);*/
 
+    /*
     b_muon_puppiNewIsoPt02_ch = (*puppiNewIsoPt02_ch)[muref];
     b_muon_puppiNewIsoPt02_nh = (*puppiNewIsoPt02_nh)[muref];
     b_muon_puppiNewIsoPt02_ph = (*puppiNewIsoPt02_ph)[muref];
@@ -698,6 +747,7 @@ void PatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToB
     //b_muon_pfNewIsoPt05_pu = muon->pfIsolationR03().sumPUPt;
     b_muon_pfNewIsoPt05_pu = (*pfNewIsoPt05_pu)[muref];
     b_muon_pfNewIsoPt05    = ( b_muon_pfNewIsoPt05_ch + max(0.0, b_muon_pfNewIsoPt05_nh + b_muon_pfNewIsoPt05_ph - 0.5 * b_muon_pfNewIsoPt05_pu) ) / muon->pt();
+    */
 
     /*
     b_muon_puppiNewIsoPt06_ch = (*puppiNewIsoPt06_ch)[muref];
@@ -829,6 +879,12 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_poszPV0",&b_muon_poszPV0,"muon_poszPV0/F");
   tree->Branch("muon_poszMuon",&b_muon_poszMuon,"muon_poszMuon/F");
   tree->Branch("muon_signal", &b_muon_signal, "muon_signal/O");
+
+  tree->Branch("muon_miniIso_ch", &b_muon_miniIso_ch, "muon_miniIso_ch/F");
+  tree->Branch("muon_miniIso_nh", &b_muon_miniIso_nh, "muon_miniIso_nh/F");
+  tree->Branch("muon_miniIso_ph", &b_muon_miniIso_ph, "muon_miniIso_ph/F");
+  tree->Branch("muon_miniIso_pu", &b_muon_miniIso_pu, "muon_miniIso_pu/F");
+
   tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
   tree->Branch("muon_isMedium", &b_muon_isMedium, "muon_isMedium/O");
   tree->Branch("muon_isLoose", &b_muon_isLoose, "muon_isLoose/O");
@@ -866,7 +922,7 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_pfNewIso_ch",&b_muon_pfNewIso_ch,"muon_pfNewIso_ch/F");
   tree->Branch("muon_pfNewIso_nh",&b_muon_pfNewIso_nh,"muon_pfNewIso_nh/F");
   tree->Branch("muon_pfNewIso_ph",&b_muon_pfNewIso_ph,"muon_pfNewIso_ph/F");
-  tree->Branch("muon_pfNewIso_pu",&b_muon_pfNewIso_pu,"muon_pfNewIso_pu/F");
+  //tree->Branch("muon_pfNewIso_pu",&b_muon_pfNewIso_pu,"muon_pfNewIso_pu/F");
   tree->Branch("muon_pfNewIso",&b_muon_pfNewIso,"muon_pfNewIso/F");
   tree->Branch("muon_minipuppiNewIso_ch",&b_muon_minipuppiNewIso_ch,"muon_minipuppiNewIso_ch/F");
   tree->Branch("muon_minipuppiNewIso_nh",&b_muon_minipuppiNewIso_nh,"muon_minipuppiNewIso_nh/F");
@@ -876,9 +932,10 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_minipfNewIso_ch",&b_muon_minipfNewIso_ch,"muon_minipfNewIso_ch/F");
   tree->Branch("muon_minipfNewIso_nh",&b_muon_minipfNewIso_nh,"muon_minipfNewIso_nh/F");
   tree->Branch("muon_minipfNewIso_ph",&b_muon_minipfNewIso_ph,"muon_minipfNewIso_ph/F");
-  tree->Branch("muon_minipfNewIso_pu",&b_muon_minipfNewIso_pu,"muon_minipfNewIso_pu/F");
+  //tree->Branch("muon_minipfNewIso_pu",&b_muon_minipfNewIso_pu,"muon_minipfNewIso_pu/F");
   tree->Branch("muon_minipfNewIso",&b_muon_minipfNewIso,"muon_minipfNewIso/F");
 
+  /*
   tree->Branch("muon_puppiNewIsoPt02_ch",&b_muon_puppiNewIsoPt02_ch,"muon_puppiNewIsoPt02_ch/F");
   tree->Branch("muon_puppiNewIsoPt02_nh",&b_muon_puppiNewIsoPt02_nh,"muon_puppiNewIsoPt02_nh/F");
   tree->Branch("muon_puppiNewIsoPt02_ph",&b_muon_puppiNewIsoPt02_ph,"muon_puppiNewIsoPt02_ph/F");
@@ -908,7 +965,8 @@ void PatMuonAnalyser::setBranches(TTree *tree)
   tree->Branch("muon_pfNewIsoPt05_ph",&b_muon_pfNewIsoPt05_ph,"muon_pfNewIsoPt05_ph/F");
   tree->Branch("muon_pfNewIsoPt05_pu",&b_muon_pfNewIsoPt05_pu,"muon_pfNewIsoPt05_pu/F");
   tree->Branch("muon_pfNewIsoPt05",&b_muon_pfNewIsoPt05,"muon_pfNewIsoPt05/F");
-  
+  */
+
   tree->Branch("muon_puppiNewIsoPt06_ch",&b_muon_puppiNewIsoPt06_ch,"muon_puppiNewIsoPt06_ch/F");
   tree->Branch("muon_puppiNewIsoPt06_nh",&b_muon_puppiNewIsoPt06_nh,"muon_puppiNewIsoPt06_nh/F");
   tree->Branch("muon_puppiNewIsoPt06_ph",&b_muon_puppiNewIsoPt06_ph,"muon_puppiNewIsoPt06_ph/F");
