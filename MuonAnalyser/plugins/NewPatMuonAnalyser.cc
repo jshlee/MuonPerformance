@@ -94,9 +94,10 @@ private:
   int b_muon_pdgId;
   int b_muon_mpdgId;
   int b_muon_no;
-  bool b_muon_isMatchedMuon, b_muon_isSignalMuon, b_muon_isGhostMuon;
+  int b_muon_simType;
+  bool b_muon_isSignalMuon;
 
-  float b_muon_defaultMva;
+  float b_muon_embeddedMva;
   float b_muon_bdtMva;
 
   float b_muon_istracker, b_muon_isglobal, b_muon_ispf;
@@ -208,22 +209,25 @@ void NewPatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup
   b_muon_no = 0;
   for (const reco::GenParticle &gen : *pruned) {
     if (abs(gen.pdgId()) != 13) continue;
-    if ( !isFromZ(gen) ) continue;
+    //if ( !isFromZ(gen) ) continue;
 
+    TLorentzVector gentlv(gen.momentum().x(), gen.momentum().y(), gen.momentum().z(), gen.energy() );
+
+    // getting matched reco muon
     edm::RefToBase<pat::Muon> recomuRef;
     for (size_t i = 0; i < muons->size(); i++) {
       auto muon = muons->at(i);
-      if (muon.simExtType() == reco::ExtendedMuonSimType::ExtNotMatched ||
-          muon.simExtType() == reco::ExtendedMuonSimType::ExtUnknown) { continue; }
 
-      if (gen.pt() == muon.simPt() && gen.eta() == muon.simEta() && gen.phi() == muon.simPhi()){
-	     recomuRef = muons->refAt(i);
-         break;
+      //matching GEN muon & SIM muon using deltaR
+      TLorentzVector simtlv;
+      simtlv.SetPtEtaPhiM(muon.simPt(), muon.simEta(), muon.simPhi(), 0.10566);
+      if (gentlv.DeltaR(simtlv) < 0.1){
+            recomuRef = muons->refAt(i);
+            break;
       }
     }
 
     //if ((recomuRef.get())->simBX() != 0) { continue; }
-    TLorentzVector gentlv(gen.momentum().x(), gen.momentum().y(), gen.momentum().z(), gen.energy() );
     fillBranches(genttree_, gentlv, recomuRef);
   }
 
@@ -238,6 +242,82 @@ void NewPatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup
   }
 
   return;
+}
+
+void NewPatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref)
+{
+  initTreeValues();
+  b_muon = tlv;
+  ++b_muon_no;
+
+  if (muref.isNonnull()){
+    auto muon = muref.get();
+  
+    b_muon_poszPV0  = priVertex_.position().z();
+    b_muon_poszMuon = muon->vz();
+    
+    // pdg id
+    b_muon_pdgId = muon->pdgId();
+    b_muon_mpdgId = muon->simMotherPdgId();
+
+    // muon id
+    b_muon_isTightCustom = isTightMuonCustom(*muon, priVertex_);
+    b_muon_isTight = muon::isTightMuon(*muon, priVertex_);
+    b_muon_isMedium = muon::isMediumMuon(*muon);
+    b_muon_isLoose = muon::isLooseMuon(*muon);
+    
+    // matched with any gen?
+    b_muon_isSignalMuon = (muon->simType() == reco::MuonSimType::MatchedPrimaryMuon);
+    b_muon_simType = muon->simType();
+
+    // mva values
+    b_muon_embeddedMva = muon->mvaValue();
+    b_muon_bdtMva = muon->mvaValue();
+
+    // miniIsolation
+    b_muon_miniIso_ch = muon->miniPFIsolation().chargedHadronIso();
+    b_muon_miniIso_nh = muon->miniPFIsolation().neutralHadronIso();
+    b_muon_miniIso_ph = muon->miniPFIsolation().photonIso();
+    b_muon_miniIso_pu = muon->miniPFIsolation().puChargedHadronIso(); 
+    
+    // old isolations
+    b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
+    b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
+    
+    b_muon_PFIso03ChargedHadronPt = muon->pfIsolationR03().sumChargedHadronPt;
+    b_muon_PFIso03NeutralHadronEt = muon->pfIsolationR03().sumNeutralHadronEt;
+    b_muon_PFIso03PhotonEt        = muon->pfIsolationR03().sumPhotonEt;
+    b_muon_PFIso03PUPt            = muon->pfIsolationR03().sumPUPt;
+
+    b_muon_PFIso04ChargedHadronPt = muon->pfIsolationR04().sumChargedHadronPt;
+    b_muon_PFIso04NeutralHadronEt = muon->pfIsolationR04().sumNeutralHadronEt;
+    b_muon_PFIso04PhotonEt        = muon->pfIsolationR04().sumPhotonEt;
+    b_muon_PFIso04PUPt            = muon->pfIsolationR04().sumPUPt;   
+    
+    b_muon_PFIso04 = (muon->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,muon->pfIsolationR04().sumNeutralHadronEt + muon->pfIsolationR04().sumPhotonEt - 0.5*muon->pfIsolationR04().sumPUPt))/muon->pt();
+    b_muon_PFIso03 = (muon->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,muon->pfIsolationR03().sumNeutralHadronEt + muon->pfIsolationR03().sumPhotonEt - 0.5*muon->pfIsolationR03().sumPUPt))/muon->pt();
+    
+    b_muon_puppiIso_ChargedHadron = muon->puppiChargedHadronIso();
+    b_muon_puppiIso_NeutralHadron = muon->puppiNeutralHadronIso();
+    b_muon_puppiIso_Photon = muon->puppiPhotonIso();
+    b_muon_puppiIso = (b_muon_puppiIso_ChargedHadron+b_muon_puppiIso_NeutralHadron+b_muon_puppiIso_Photon)/muon->pt();
+    b_muon_puppiIsoNoLep_ChargedHadron = muon->puppiNoLeptonsChargedHadronIso();
+    b_muon_puppiIsoNoLep_NeutralHadron = muon->puppiNoLeptonsNeutralHadronIso();
+    b_muon_puppiIsoNoLep_Photon = muon->puppiNoLeptonsPhotonIso();
+    b_muon_puppiIsoNoLep = (b_muon_puppiIsoNoLep_ChargedHadron+b_muon_puppiIsoNoLep_NeutralHadron+b_muon_puppiIsoNoLep_Photon)/muon->pt(); 
+
+    b_muon_puppiNewIso_ch = (*puppiNewIso_ch)[muref];
+    b_muon_puppiNewIso_nh = (*puppiNewIso_nh)[muref];
+    b_muon_puppiNewIso_ph = (*puppiNewIso_ph)[muref];
+    b_muon_puppiNewIso    = ( b_muon_puppiNewIso_ch + b_muon_puppiNewIso_nh + b_muon_puppiNewIso_ph )/muon->pt();
+    b_muon_trkNewIso = (*trkNewIso)[muref] / muon->pt();
+    b_muon_pfNewIso_ch = (*pfNewIso_ch)[muref];
+    b_muon_pfNewIso_nh = (*pfNewIso_nh)[muref];
+    b_muon_pfNewIso_ph = (*pfNewIso_ph)[muref];
+    b_muon_pfNewIso    = ( b_muon_pfNewIso_ch + max(0.0, b_muon_pfNewIso_nh + b_muon_pfNewIso_ph - 0.5 ) )/ muon->pt();
+    
+  }
+  tree->Fill();
 }
 
 void NewPatMuonAnalyser::setMvaValues(string tmvaWeight_)
@@ -300,101 +380,6 @@ bool NewPatMuonAnalyser::isFromZ(const reco::GenParticle &gen)
   return false;
 }
 
-void NewPatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::RefToBase<pat::Muon> muref)
-{
-  initTreeValues();
-  b_muon = tlv;
-  ++b_muon_no;
-
-  if (muref.isNonnull()){
-    auto muon = muref.get();
-  
-    b_muon_poszPV0  = priVertex_.position().z();
-    b_muon_poszMuon = muon->vz();
-    
-    // pdg id
-    b_muon_pdgId = muon->pdgId();
-    b_muon_mpdgId = muon->simMotherPdgId();
-
-    // muon id
-    b_muon_isTightCustom = isTightMuonCustom(*muon, priVertex_);
-    b_muon_isTight = muon::isTightMuon(*muon, priVertex_);
-    b_muon_isMedium = muon::isMediumMuon(*muon);
-    b_muon_isLoose = muon::isLooseMuon(*muon);
-    
-    // matched with any gen?
-    bool isMatchedMuon = true;
-    if (muon->simExtType() == reco::ExtendedMuonSimType::ExtNotMatched ||
-        muon->simExtType() == reco::ExtendedMuonSimType::ExtUnknown) {
-          isMatchedMuon = false;
-    }
-
-    // is it from pion, keon, or non primary?
-    bool isSignalMuon = isMatchedMuon;
-    if (muon->simExtType() == reco::ExtendedMuonSimType::MatchedMuonFromPiKppMuX ||
-        muon->simExtType() == reco::ExtendedMuonSimType::MatchedMuonFromPiKNotppMuX ||
-        muon->simExtType() == reco::ExtendedMuonSimType::MatchedMuonFromNonPrimaryParticle) {
-          isSignalMuon = false;
-    }
-
-    // is it ghost muon?
-    bool isGhostMuon = false;
-    if ( muon->simExtType() < 0){ isGhostMuon = true; }
-
-    b_muon_isMatchedMuon = isMatchedMuon;
-    b_muon_isSignalMuon = isSignalMuon;
-    b_muon_isGhostMuon = isGhostMuon;
-
-    // mva values
-    b_muon_defaultMva = muon->mvaValue();
-    b_muon_bdtMva = muon->mvaValue();
-
-    // miniIsolation
-    b_muon_miniIso_ch = muon->miniPFIsolation().chargedHadronIso();
-    b_muon_miniIso_nh = muon->miniPFIsolation().neutralHadronIso();
-    b_muon_miniIso_ph = muon->miniPFIsolation().photonIso();
-    b_muon_miniIso_pu = muon->miniPFIsolation().puChargedHadronIso(); 
-    
-    // old isolations
-    b_muon_TrkIso03 = muon->isolationR03().sumPt/muon->pt();
-    b_muon_TrkIso05 = muon->isolationR05().sumPt/muon->pt();
-    
-    b_muon_PFIso03ChargedHadronPt = muon->pfIsolationR03().sumChargedHadronPt;
-    b_muon_PFIso03NeutralHadronEt = muon->pfIsolationR03().sumNeutralHadronEt;
-    b_muon_PFIso03PhotonEt        = muon->pfIsolationR03().sumPhotonEt;
-    b_muon_PFIso03PUPt            = muon->pfIsolationR03().sumPUPt;
-
-    b_muon_PFIso04ChargedHadronPt = muon->pfIsolationR04().sumChargedHadronPt;
-    b_muon_PFIso04NeutralHadronEt = muon->pfIsolationR04().sumNeutralHadronEt;
-    b_muon_PFIso04PhotonEt        = muon->pfIsolationR04().sumPhotonEt;
-    b_muon_PFIso04PUPt            = muon->pfIsolationR04().sumPUPt;   
-    
-    b_muon_PFIso04 = (muon->pfIsolationR04().sumChargedHadronPt + TMath::Max(0.,muon->pfIsolationR04().sumNeutralHadronEt + muon->pfIsolationR04().sumPhotonEt - 0.5*muon->pfIsolationR04().sumPUPt))/muon->pt();
-    b_muon_PFIso03 = (muon->pfIsolationR03().sumChargedHadronPt + TMath::Max(0.,muon->pfIsolationR03().sumNeutralHadronEt + muon->pfIsolationR03().sumPhotonEt - 0.5*muon->pfIsolationR03().sumPUPt))/muon->pt();
-    
-    b_muon_puppiIso_ChargedHadron = muon->puppiChargedHadronIso();
-    b_muon_puppiIso_NeutralHadron = muon->puppiNeutralHadronIso();
-    b_muon_puppiIso_Photon = muon->puppiPhotonIso();
-    b_muon_puppiIso = (b_muon_puppiIso_ChargedHadron+b_muon_puppiIso_NeutralHadron+b_muon_puppiIso_Photon)/muon->pt();
-    b_muon_puppiIsoNoLep_ChargedHadron = muon->puppiNoLeptonsChargedHadronIso();
-    b_muon_puppiIsoNoLep_NeutralHadron = muon->puppiNoLeptonsNeutralHadronIso();
-    b_muon_puppiIsoNoLep_Photon = muon->puppiNoLeptonsPhotonIso();
-    b_muon_puppiIsoNoLep = (b_muon_puppiIsoNoLep_ChargedHadron+b_muon_puppiIsoNoLep_NeutralHadron+b_muon_puppiIsoNoLep_Photon)/muon->pt(); 
-
-    b_muon_puppiNewIso_ch = (*puppiNewIso_ch)[muref];
-    b_muon_puppiNewIso_nh = (*puppiNewIso_nh)[muref];
-    b_muon_puppiNewIso_ph = (*puppiNewIso_ph)[muref];
-    b_muon_puppiNewIso    = ( b_muon_puppiNewIso_ch + b_muon_puppiNewIso_nh + b_muon_puppiNewIso_ph )/muon->pt();
-    b_muon_trkNewIso = (*trkNewIso)[muref] / muon->pt();
-    b_muon_pfNewIso_ch = (*pfNewIso_ch)[muref];
-    b_muon_pfNewIso_nh = (*pfNewIso_nh)[muref];
-    b_muon_pfNewIso_ph = (*pfNewIso_ph)[muref];
-    b_muon_pfNewIso    = ( b_muon_pfNewIso_ch + max(0.0, b_muon_pfNewIso_nh + b_muon_pfNewIso_ph - 0.5 ) )/ muon->pt();
-    
-  }
-  tree->Fill();
-}
-
 bool NewPatMuonAnalyser::isTightMuonCustom(const reco::Muon& muon, reco::Vertex vtx) const
 {
   if ( !muon.isPFMuon() || !muon.isGlobalMuon() ) return false;
@@ -422,16 +407,15 @@ void NewPatMuonAnalyser::setBranches(TTree *tree)
 
   tree->Branch("muon_poszPV0",&b_muon_poszPV0,"muon_poszPV0/F");
   tree->Branch("muon_poszMuon",&b_muon_poszMuon,"muon_poszMuon/F");
-  tree->Branch("muon_isMatchedMuon", &b_muon_isMatchedMuon, "muon_isMatchedMuon/O");
   tree->Branch("muon_isSignalMuon", &b_muon_isSignalMuon, "muon_isSignalMuon/O");
-  tree->Branch("muon_isGhostMuon", &b_muon_isGhostMuon, "muon_isGhostMuon/O");
+  tree->Branch("muon_simType", &b_muon_simType, "muon_simType/I");
 
   tree->Branch("muon_miniIso_ch", &b_muon_miniIso_ch, "muon_miniIso_ch/F");
   tree->Branch("muon_miniIso_nh", &b_muon_miniIso_nh, "muon_miniIso_nh/F");
   tree->Branch("muon_miniIso_ph", &b_muon_miniIso_ph, "muon_miniIso_ph/F");
   tree->Branch("muon_miniIso_pu", &b_muon_miniIso_pu, "muon_miniIso_pu/F");
 
-  tree->Branch("muon_defaultMva", &b_muon_defaultMva, "muon_defaultMva/F");
+  tree->Branch("muon_embeddedMva", &b_muon_embeddedMva, "muon_embeddedMva/F");
   tree->Branch("muon_bdtMva", &b_muon_bdtMva, "muon_bdtMva/F");
 
   tree->Branch("muon_isTightCustom", &b_muon_isTightCustom, "muon_isTightCustom/O");
@@ -472,19 +456,26 @@ void NewPatMuonAnalyser::setBranches(TTree *tree)
 }
 
 void NewPatMuonAnalyser::initTreeValues(){
+  b_muon.Clear();
+
+  b_muon_no = 0;
+  b_muon_pdgId = 0; b_muon_mpdgId = 0;
+
+  b_nvertex = 0; b_pu_density = 0; b_pu_numInteractions = 0;
+  b_muon_poszPV0  = 0; b_muon_poszMuon = 0;
+    
+  b_muon_isSignalMuon = 0; b_muon_simType = -99;
+
+  b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
+  b_muon_isTightCustom = 0;
+  
+  b_muon_embeddedMva = -99;
+  b_muon_bdtMva = -99;
+
   b_muon_miniIso_ch = -999;
   b_muon_miniIso_nh= -999;
   b_muon_miniIso_ph = -999;
   b_muon_miniIso_pu = -999;
-
-  b_muon_poszPV0  = 0;
-  b_muon_poszMuon = 0;
-    
-  b_muon_isTight = 0; b_muon_isMedium = 0; b_muon_isLoose = 0;
-  b_muon_isTightCustom = 0;
-  
-  b_muon_defaultMva = 0;
-  b_muon_bdtMva = 0;
 
   b_muon_PFIso04 = 0;  b_muon_PFIso03 = 0;
   b_muon_PFIso03ChargedHadronPt = 0; b_muon_PFIso03NeutralHadronEt = 0;
