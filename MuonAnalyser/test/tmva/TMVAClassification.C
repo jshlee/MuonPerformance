@@ -164,8 +164,7 @@ int TMVAClassification( TString myMethodList = "" )
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
    TFile *input(0);
-   //TString fname = "../out.root";
-   TString fname = "/xrootd/store/user/tt8888tt/muon/9_3_0_pre4/zmm200_newval.root";
+   TString fname = "../outnew.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
    }
@@ -181,8 +180,8 @@ int TMVAClassification( TString myMethodList = "" )
 
    // Register the training and test trees
 
-   TTree *signalTree     = (TTree*)input->Get("MuonAnalyser/reco");
-   TTree *background     = (TTree*)input->Get("MuonAnalyser/reco");
+   TTree *signalTree     = (TTree*)input->Get("NewPatMuonAnalyser/reco");
+   TTree *background     = (TTree*)input->Get("NewPatMuonAnalyser/reco");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName( "TMVA.root" );
@@ -213,7 +212,6 @@ int TMVAClassification( TString myMethodList = "" )
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-   /*
    dataloader->AddVariable( "muon_istracker", 'F' );
    dataloader->AddVariable( "muon_isglobal", 'F' );
    dataloader->AddVariable( "muon_ispf", 'F' );
@@ -229,19 +227,6 @@ int TMVAClassification( TString myMethodList = "" )
    dataloader->AddVariable( "muon_trackerLayersWithMeasurement", 'F' );
    dataloader->AddVariable( "muon_innerquality", 'F' );
    dataloader->AddVariable( "muon_caloCompatibility", 'F' );
-   */
-   dataloader->AddVariable("LepGood_pt",                     'F' );
-   dataloader->AddVariable("LepGood_eta",                    'F' );
-   dataloader->AddVariable("LepGood_jetNDauChargedMVASel",   'F' );
-   dataloader->AddVariable("LepGood_miniRelIsoCharged",      'F' );
-   dataloader->AddVariable("LepGood_miniRelIsoNeutral",      'F' );
-   dataloader->AddVariable("LepGood_jetPtRelv2",             'F' );
-   dataloader->AddVariable("LepGood_jetPtRatio",  'F' );
-   dataloader->AddVariable("LepGood_jetBTagCSV",      'F' );
-   //dataloader->AddVariable("LepGood_sip3d",                  'F' );
-   //dataloader->AddVariable("LepGood_dxy",          'F' );
-   dataloader->AddVariable("LepGood_dz",           'F' );
-   dataloader->AddVariable("LepGood_segmentCompatibility",   'F' );
 
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
@@ -305,8 +290,8 @@ int TMVAClassification( TString myMethodList = "" )
    dataloader->SetBackgroundWeightExpression( "" );
 
    // Apply additional cuts on the signal and background samples (can be different)
-   TCut mycuts =  "muon_signal && muon.Pt()>5 && abs(muon.Eta())<2.4"; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
-   TCut mycutb = "!muon_signal && muon.Pt()>5 && abs(muon.Eta())<2.4"; // for example: TCut mycutb = "abs(var1)<0.5";
+   TCut mycuts =  "muon_isSignalMuon && muon.Pt()>5 && abs(muon.Eta())<2.4"; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   TCut mycutb = "!muon_isSignalMuon && muon.Pt()>5 && abs(muon.Eta())<2.4"; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // Tell the dataloader how to use the training and testing events
    //
@@ -324,7 +309,7 @@ int TMVAClassification( TString myMethodList = "" )
                                         //"nTrain_Signal=150000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//tenmu
                                         //"nTrain_Signal=10000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//ttbar
                                         //"nTrain_Signal=60000:nTrain_Background=20000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm
-                                        "nTrain_Signal=20000:nTrain_Background=14000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm
+                                        "nTrain_Signal=16000:nTrain_Background=2000:SplitMode=Random:NormMode=NumEvents:!V" );//zmm
 
    // ### Book MVA methods
    //
