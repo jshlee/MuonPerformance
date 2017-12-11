@@ -43,7 +43,7 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-  void setMvaValues(string tmvaWeight_);
+  void bookMvaValues(string tmvaWeight_);
   void getMvaValues(const pat::Muon& mu, reco::Vertex pv0);
   bool isTightMuonCustom(const reco::Muon& mu, reco::Vertex pv0) const;
 
@@ -99,6 +99,7 @@ private:
 
   float b_muon_embeddedMva;
   float b_muon_bdtMva;
+  bool b_muon_mvaLoose, b_muon_mvaMedium, b_muon_mvaTight;
 
   float b_muon_istracker, b_muon_isglobal, b_muon_ispf;
   float b_muon_chi2, b_muon_chi2pos, b_muon_trkKink, b_muon_segmentCompatibility, b_muon_nstations, b_muon_nglobalhits;
@@ -154,6 +155,8 @@ NewPatMuonAnalyser::NewPatMuonAnalyser(const edm::ParameterSet& iConfig):
   setBranches(genttree_);
   recottree_ = fs->make<TTree>("reco", "reco");
   setBranches(recottree_);
+
+  bookMvaValues(tmvaWeight_);
 }
 
 void NewPatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -204,6 +207,7 @@ void NewPatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup
       ++b_pu_numInteractions;
     }
   }
+
 
   // gen muon loop
   b_muon_no = 0;
@@ -271,8 +275,13 @@ void NewPatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::Ref
     b_muon_simType = muon->simType();
 
     // mva values
+    getMvaValues(*muon, priVertex_);
+    b_muon_bdtMva = bdt_->EvaluateMVA("BDT");
+
     b_muon_embeddedMva = muon->mvaValue();
-    b_muon_bdtMva = muon->mvaValue();
+    b_muon_mvaLoose = muon->passed(reco::Muon::MvaLoose);
+    b_muon_mvaMedium = muon->passed(reco::Muon::MvaMedium);
+    b_muon_mvaTight = muon->passed(reco::Muon::MvaTight);
 
     // miniIsolation
     b_muon_miniIso_ch = muon->miniPFIsolation().chargedHadronIso();
@@ -320,7 +329,7 @@ void NewPatMuonAnalyser::fillBranches(TTree *tree, TLorentzVector &tlv, edm::Ref
   tree->Fill();
 }
 
-void NewPatMuonAnalyser::setMvaValues(string tmvaWeight_)
+void NewPatMuonAnalyser::bookMvaValues(string tmvaWeight_)
 {
   bdt_ = new TMVA::Reader();
   bdt_->AddVariable("muon_istracker",&b_muon_istracker);
@@ -417,6 +426,25 @@ void NewPatMuonAnalyser::setBranches(TTree *tree)
 
   tree->Branch("muon_embeddedMva", &b_muon_embeddedMva, "muon_embeddedMva/F");
   tree->Branch("muon_bdtMva", &b_muon_bdtMva, "muon_bdtMva/F");
+  tree->Branch("muon_mvaLoose", &b_muon_mvaLoose, "muon_mvaLoose/O");
+  tree->Branch("muon_mvaMedium", &b_muon_mvaMedium, "muon_mvaMedium/O");
+  tree->Branch("muon_mvaTight", &b_muon_mvaTight, "muon_mvaTight/O");
+
+  tree->Branch("muon_istracker", &b_muon_istracker, "muon_istracker/F");
+  tree->Branch("muon_isglobal", &b_muon_isglobal, "muon_isglobal/F");
+  tree->Branch("muon_ispf", &b_muon_ispf, "muon_ispf/F");
+  tree->Branch("muon_normalizedChi2", &b_muon_chi2, "muon_normalizedChi2/F");
+  tree->Branch("muon_chi2LocalPosition", &b_muon_chi2pos, "muon_chi2LocalPosition/F");
+  tree->Branch("muon_trkKink", &b_muon_trkKink, "muon_trkKink/F");
+  tree->Branch("muon_segmentCompatibility", &b_muon_segmentCompatibility, "muon_segmentCompatibility/F");
+  tree->Branch("muon_numberOfValidMuonHits", &b_muon_nglobalhits, "muon_numberOfValidMuonHits/F");
+  tree->Branch("muon_numberOfMatchedStations", &b_muon_nstations, "muon_numberOfMatchedStations/F");
+  tree->Branch("muon_pv0pos_dxy", &b_muon_trackdxy, "muon_pv0pos_dxy/F");
+  tree->Branch("muon_pv0pos_dz", &b_muon_trackdz, "muon_pv0pos_dz/F");
+  tree->Branch("muon_numberOfValidPixelHits", &b_muon_ninnerhits, "muon_numberOfValidPixelHits/F");
+  tree->Branch("muon_trackerLayersWithMeasurement", &b_muon_trackerlayers, "muon_trackerLayersWithMeasurement/F");
+  tree->Branch("muon_innerquality", &b_muon_innerquality, "muon_innerquality/F");
+  tree->Branch("muon_caloCompatibility", &b_muon_caloCompatibility, "muon_caloCompatibility/F");
 
   tree->Branch("muon_isTightCustom", &b_muon_isTightCustom, "muon_isTightCustom/O");
   tree->Branch("muon_isTight", &b_muon_isTight, "muon_isTight/O");
@@ -471,6 +499,14 @@ void NewPatMuonAnalyser::initTreeValues(){
   
   b_muon_embeddedMva = -99;
   b_muon_bdtMva = -99;
+  b_muon_mvaLoose = 0; b_muon_mvaMedium = 0; b_muon_mvaTight = 0;
+
+  b_muon_istracker = -999;  b_muon_isglobal = -999;  b_muon_ispf = -999;
+  b_muon_chi2pos = -999;  b_muon_trkKink = -999;  b_muon_segmentCompatibility = -999;
+  b_muon_chi2 = -999;  b_muon_nglobalhits = -999;  b_muon_nstations = -999;
+  b_muon_trackdxy = -999;  b_muon_trackdz = -999;
+  b_muon_ninnerhits = -999;  b_muon_trackerlayers = -999;
+  b_muon_innerquality = -999; b_muon_caloCompatibility = -999;
 
   b_muon_miniIso_ch = -999;
   b_muon_miniIso_nh= -999;
