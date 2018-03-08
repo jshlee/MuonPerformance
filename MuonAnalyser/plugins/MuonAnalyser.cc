@@ -279,7 +279,7 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
 
   // tmva booking
   bdt_ = new TMVA::Reader();
-  /*
+  
   bdt_->AddVariable("muon_istracker",&b_muon_istracker);
   bdt_->AddVariable("muon_isglobal",&b_muon_isglobal);
   bdt_->AddVariable("muon_ispf",&b_muon_ispf);
@@ -294,19 +294,6 @@ MuonAnalyser::MuonAnalyser(const edm::ParameterSet& pset)
   bdt_->AddVariable("muon_trackerLayersWithMeasurement",&b_muon_trackerlayers);
   bdt_->AddVariable("muon_innerquality",&b_muon_innerquality);
   bdt_->AddVariable("muon_caloCompatibility",&b_muon_caloCompatibility);
-  */
-  bdt_->AddVariable("LepGood_pt",                    &b_tmva_pt_               );
-  bdt_->AddVariable("LepGood_eta",                   &b_tmva_eta_              );
-  bdt_->AddVariable("LepGood_jetNDauChargedMVASel",  &b_tmva_jetNDauCharged_   );
-  bdt_->AddVariable("LepGood_miniRelIsoCharged",     &b_tmva_miniRelIsoCharged_);
-  bdt_->AddVariable("LepGood_miniRelIsoNeutral",     &b_tmva_miniRelIsoNeutral_);
-  bdt_->AddVariable("LepGood_jetPtRelv2",            &b_tmva_jetPtRel_         );
-  bdt_->AddVariable("LepGood_jetPtRatio", &b_tmva_jetPtRatio_       );
-  bdt_->AddVariable("LepGood_jetBTagCSV",     &b_tmva_jetBTagCSV_       );
-  //bdt_->AddVariable("LepGood_sip3d",                 &b_tmva_sip_              );
-  //bdt_->AddVariable("LepGood_dxy",         &b_tmva_log_abs_dxyBS_    ); 
-  bdt_->AddVariable("LepGood_dz",          &b_tmva_log_abs_dzPV_     );
-  bdt_->AddVariable("LepGood_segmentCompatibility",  &b_tmva_segmentCompatibility_);
   bdt_->BookMVA("BDT", tmvaWeight_);
 
   me0bdt_ = new TMVA::Reader();
