@@ -9,6 +9,7 @@ process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('Configuration.StandardSequences.EndOfProcess_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
@@ -31,7 +32,7 @@ process.MessageLogger.cout = cms.untracked.PSet(
 # Beware, in this area the wild character is not working!
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:/home/scratch/TenMuExtendedE/reco/step3_000.root'
+        '/store/user/jlee/TenMuExtendedE_0_200_CMSSW_10_1_0_pre3/me0MuonFit/step3_001.root'
     ),
     skipBadFiles = cms.untracked.bool(True), 
 )
@@ -163,3 +164,5 @@ process.p = cms.Path(process.muonAssociatorByHitsHelper
                          +process.ak4PFCHSL2RelativeCorrector+process.ak4PFCHSL3AbsoluteCorrector
                          +process.ak4PFCHSL1FastjetCorrector+process.ak4PFCHSL1FastL2L3Corrector
                          +process.MuonAnalyser)
+process.endjob_step = cms.EndPath(process.endOfProcess)
+process.schedule = cms.Schedule(process.p,process.endjob_step)
