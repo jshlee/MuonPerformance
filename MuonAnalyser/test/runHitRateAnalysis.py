@@ -15,10 +15,15 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-# /DYToLL-M-50_0J_14TeV-madgraphMLM-pythia8/PhaseIITDRFall17DR-PU200_93X_upgrade2023_realistic_v2-v1/GEN-SIM-RECO
-process.source.fileNames.append("file:0224B4AB-31AF-E711-BD7E-0CC47A4C8EC6.root")
+# /RelValZMM_14/CMSSW_9_3_7-PU25ns_93X_upgrade2023_realistic_v5_2023D17PU200-v1/GEN-SIM-DIGI-RAW
+process.source.fileNames.append("file:0034A16F-1831-E811-BB69-5065F381B271.root")
+process.source.inputCommands=cms.untracked.vstring(
+'drop l1tEMTFHit2016Extras_simEmtfDigis_CSC_HLT',
+'drop l1tEMTFHit2016Extras_simEmtfDigis_RPC_HLT',
+'drop l1tEMTFHit2016s_simEmtfDigis__HLT',
+'drop l1tEMTFTrack2016Extras_simEmtfDigis__HLT',
+'drop l1tEMTFTrack2016s_simEmtfDigis__HLT')
 
-#print "fileNames: ", process.source.fileNames
 process.options = cms.untracked.PSet()
 
 process.TFileService = cms.Service("TFileService",fileName = cms.string("histo.root"))
@@ -27,11 +32,11 @@ process.load('SimMuon.GEMDigitizer.muonGEMPadDigis_cfi')
 process.load('SimMuon.GEMDigitizer.muonGEMPadDigiClusters_cfi')
 process.HitRateAnalysis = cms.EDAnalyzer('HitAnalysis',
     gemDigiInput      = cms.InputTag("simMuonGEMDigis"),
-    gemPadDigiInput   = cms.InputTag("simMuonGEMCSCPadDigis"),
+    gemPadDigiInput   = cms.InputTag("simMuonGEMPadDigis"),
     gemCoPadDigiInput = cms.InputTag("simCscTriggerPrimitiveDigis"),
 )
-
-process.p = cms.Path(process.simMuonGEMPadDigis+process.simMuonGEMPadDigiClusters+process.HitRateAnalysis)
+process.p = cms.Path(process.simMuonGEMPadDigis+process.simMuonGEMPadDigiClusters+
+                         process.HitRateAnalysis)
 
 
 ## for debugging
