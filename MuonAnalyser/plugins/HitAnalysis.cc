@@ -50,9 +50,9 @@ private:
   virtual void endJob() ;
 
   // ----------member data ---------------------------
-  edm::InputTag gemDigiInput_;
-  edm::InputTag gemPadDigiInput_;
-  edm::InputTag gemCoPadDigiInput_;
+  edm::EDGetTokenT<GEMDigiCollection> gemDigiInput_;
+  edm::EDGetTokenT<GEMPadDigiCollection> gemPadDigiInput_;
+  edm::EDGetTokenT<GEMCoPadDigiCollection> gemCoPadDigiInput_;
 
   edm::Service<TFileService> fs;
 
@@ -91,9 +91,9 @@ private:
 };
 HitAnalysis::HitAnalysis(const edm::ParameterSet& iConfig)
 {
-  gemDigiInput_ = iConfig.getParameter<edm::InputTag>("gemDigiInput");
-  gemPadDigiInput_ = iConfig.getParameter<edm::InputTag>("gemPadDigiInput");
-  gemCoPadDigiInput_ = iConfig.getParameter<edm::InputTag>("gemCoPadDigiInput");
+  gemDigiInput_ = consumes<GEMDigiCollection>(iConfig.getParameter<edm::InputTag>("gemDigiInput"));
+  gemPadDigiInput_ = consumes<GEMPadDigiCollection>(iConfig.getParameter<edm::InputTag>("gemPadDigiInput"));
+  gemCoPadDigiInput_ = consumes<GEMCoPadDigiCollection>(iConfig.getParameter<edm::InputTag>("gemCoPadDigiInput"));
 
   h_nPadPerChamber=fs->make<TH1F>("nPadPerChamber20","nPadPerChamber20",100,0,100);
   h_nPadPerChamber->GetXaxis()->SetTitle("no. Pads Per Chamber");
@@ -191,9 +191,9 @@ HitAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<GEMDigiCollection> gem_digis;  
   edm::Handle<GEMPadDigiCollection> gempad_digis;
   edm::Handle<GEMCoPadDigiCollection> gemcopad_digis;
-  iEvent.getByLabel(gemDigiInput_, gem_digis);
-  iEvent.getByLabel(gemPadDigiInput_, gempad_digis);
-  iEvent.getByLabel(gemCoPadDigiInput_, gemcopad_digis);
+  iEvent.getByToken(gemDigiInput_, gem_digis);
+  iEvent.getByToken(gemPadDigiInput_, gempad_digis);
+  iEvent.getByToken(gemCoPadDigiInput_, gemcopad_digis);
 
   int nPadPerChamber[73][2][40] = {};
   int nPadPerChamber10[73][2][40] = {};
