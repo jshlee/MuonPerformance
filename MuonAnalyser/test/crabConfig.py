@@ -11,6 +11,8 @@ config.JobType.psetName    = 'PAT2CAT_cfg.py'
 
 config.section_("Data")
 config.Data.publication  = False
+config.Data.splitting='FileBased'
+config.Data.unitsPerJob=1
 #################################################################
 # ALLOWS NON VALID DATASETS
 config.Data.allowNonValidInputDataset = True
