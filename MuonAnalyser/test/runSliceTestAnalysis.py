@@ -9,7 +9,7 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
-#process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 5000
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
@@ -17,7 +17,12 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-process.source.fileNames.append("/store/user/jlee/SingleMuon/crab_20180612_230657/180612_140727/0000/gemAOD_81.root")
+
+fname = 'singleMuon.txt'
+f = open(fname)
+for line in f:
+    #print line
+    process.source.fileNames.append(line)
 
 process.options = cms.untracked.PSet()
 

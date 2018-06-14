@@ -88,20 +88,26 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<GEMRecHitCollection> gemRecHits;  
   iEvent.getByToken(gemRecHits_, gemRecHits);
 
+  if (gemRecHits->size()) {
+    std::cout << "gemRecHits->size() " << gemRecHits->size() <<std::endl;
+  }
+  
   for (auto ch : GEMGeometry_->chambers()) {
     for(auto roll : ch->etaPartitions()) {
       GEMDetId rId = roll->id();
+      std::cout << "rId " << rId <<std::endl;
       auto recHitsRange = gemRecHits->get(rId); 
       auto gemRecHit = recHitsRange.first;
       for ( auto hit = gemRecHit; hit != recHitsRange.second; ++hit ) {
 
 	h_firstStrip[rId.chamber()][rId.layer()-1]->Fill(hit->firstClusterStrip(), rId.roll()-1);
-
+	h_clusterSize->Fill(hit->clusterSize());
+	
 	for (int nstrip = hit->firstClusterStrip(); nstrip < hit->firstClusterStrip()+hit->clusterSize(); ++nstrip) {
 	  h_allStrips[rId.chamber()][rId.layer()-1]->Fill(nstrip, rId.roll()-1);
 	}
-      }  
-    }   
+      }
+    }
   }
   
 
