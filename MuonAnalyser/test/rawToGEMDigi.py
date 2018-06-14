@@ -7,7 +7,7 @@ import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
-process = cms.Process('RECO',eras.Run2_2018)
+process = cms.Process('RECOGEM',eras.Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -27,7 +27,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:FCE5AD6A-7C30-E811-AA30-141877519FF7.root.root'),
+    fileNames = cms.untracked.vstring('file:EA53671A-89CD-E711-85FF-02163E011A18.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -53,6 +53,11 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
     outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )
+process.RECOoutput.outputCommands.append('drop *')
+process.RECOoutput.outputCommands.append('keep *_GEM*_*_*')
+process.RECOoutput.outputCommands.append('keep *_muons_*_*')
+process.RECOoutput.outputCommands.append('keep *_globalMuons_*_*')
+process.RECOoutput.outputCommands.append('keep *_standAloneMuons_*_*')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
