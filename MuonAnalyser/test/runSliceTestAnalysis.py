@@ -17,12 +17,11 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-
-fname = 'singleMuon.txt'
-f = open(fname)
-for line in f:
-    #print line
-    process.source.fileNames.append(line)
+process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/030/00000/7673E00A-2D64-E811-AA7B-FA163E959A66.root')
+#fname = 'singleMuon.txt'
+#f = open(fname)
+#for line in f:
+#    process.source.fileNames.append(line)
 
 process.options = cms.untracked.PSet()
 
