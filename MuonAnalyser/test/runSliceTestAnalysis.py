@@ -9,7 +9,7 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
-process.MessageLogger.cerr.FwkReport.reportEvery = 5000
+#process.MessageLogger.cerr.FwkReport.reportEvery = 5000
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
@@ -17,7 +17,9 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/030/00000/7673E00A-2D64-E811-AA7B-FA163E959A66.root')
+#process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
+process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2017G-v1/RECO/step3_236.root')
+
 #fname = 'singleMuon.txt'
 #f = open(fname)
 #for line in f:
@@ -29,5 +31,7 @@ process.TFileService = cms.Service("TFileService",fileName = cms.string("histo.r
 
 process.SliceTestAnalysis = cms.EDAnalyzer('SliceTestAnalysis',
     gemRecHits = cms.InputTag("gemRecHits"),
+    muons = cms.InputTag("muons"),
+    vertexCollection = cms.InputTag("offlinePrimaryVertices"),
 )
 process.p = cms.Path(process.SliceTestAnalysis)
