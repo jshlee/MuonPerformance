@@ -18,7 +18,7 @@ process.maxEvents = cms.untracked.PSet(
 # Input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 #process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
-process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2017G-v1/RECO/step3_236.root')
+process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2017G-v1/RECO/step3_322.root')
 
 #fname = 'singleMuon.txt'
 #f = open(fname)

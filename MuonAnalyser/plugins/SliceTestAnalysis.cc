@@ -106,7 +106,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   Handle<View<reco::Muon> > muons;
   iEvent.getByToken(muons_, muons);
-  ..std::cout << "muons->size() " << muons->size() <<std::endl;
+  std::cout << "muons->size() " << muons->size() <<std::endl;
 
   for (size_t i = 0; i < muons->size(); ++i) {    
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
