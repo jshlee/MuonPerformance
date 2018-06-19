@@ -121,9 +121,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if (muonTrack->hitPattern().numberOfValidMuonGEMHits()) {
 	std::cout << "numberOfValidMuonGEMHits->size() " << muonTrack->hitPattern().numberOfValidMuonGEMHits()
 		  << " recHitsSize " << muonTrack->recHitsSize()
+		  << " pt " << muonTrack->pt()
 		  <<std::endl;
 	for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
-	  cout << "subdetId "<< (*hit)->geographicalId().subdetId() << " gp " << (*hit)->localPosition()<<endl;
+	  cout << "detId "<< (*hit)->geographicalId().det()
+	       << " subdetId "<< (*hit)->geographicalId().subdetId()
+	       << " gp " << (*hit)->localPosition()<<endl;
 	}
       }
     }
