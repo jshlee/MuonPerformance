@@ -10,7 +10,7 @@ config.JobType.pluginName  = 'Analysis'
 config.JobType.psetName    = 'PAT2CAT_cfg.py'
 
 config.section_("Data")
-#config.Data.publication  = False
+config.Data.publication  = True
 config.Data.splitting='FileBased'
 config.Data.unitsPerJob=1
 #################################################################
@@ -22,6 +22,7 @@ config.section_("Site")
 #config.Site.storageSite = 'T2_KR_KNU'
 #crab checkwrite --site=T3_KR_KISTI --lfn=/store/group/CAT/
 config.Site.storageSite = 'T3_KR_KISTI'
+config.Site.whitelist=['T3_KR_KISTI']
 #config.Site.storageSite = 'T3_KR_UOS'
 #config.Data.outLFNDirBase = '/store/group/CAT/' 
 #config.Site.storageSite = 'T3_US_FNALLPC'

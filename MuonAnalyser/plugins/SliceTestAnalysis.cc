@@ -106,7 +106,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   Handle<View<reco::Muon> > muons;
   iEvent.getByToken(muons_, muons);
-  std::cout << "muons->size() " << muons->size() <<std::endl;
+  //std::cout << "muons->size() " << muons->size() <<std::endl;
 
   for (size_t i = 0; i < muons->size(); ++i) {    
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
@@ -119,8 +119,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
     if (muonTrack) {
       if (muonTrack->hitPattern().numberOfValidMuonGEMHits()) {
-	
-	std::cout << "numberOfValidMuonGEMHits->size() " << muonTrack->hitPattern().numberOfValidMuonGEMHits() <<std::endl;
+	std::cout << "numberOfValidMuonGEMHits->size() " << muonTrack->hitPattern().numberOfValidMuonGEMHits()
+		  << " recHitsSize " << muonTrack->recHitsSize()
+		  <<std::endl;
+	for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
+	  cout << "subdetId "<< (*hit)->geographicalId().subdetId() << " gp " << (*hit)->localPosition()<<endl;
+	}
       }
     }
   }
