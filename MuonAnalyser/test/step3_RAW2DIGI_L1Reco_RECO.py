@@ -22,20 +22,18 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
-)
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/data/Run2017G/SingleMuon/RAW/v1/000/306/801/00001/7ADC8664-3DCE-E711-ADEF-02163E019BF4.root'),
+    fileNames = cms.untracked.vstring('file:/xrootd/store/data/Run2017G/SingleMuon/RAW/v1/000/306/826/00000/FE2B6447-A4CE-E711-8DD7-02163E019CD7.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
+#import FWCore.PythonUtilities.LumiList as LumiList
+#process.source.lumisToProcess = LumiList.LumiList(filename = 'cert_306824-306826_5TeV.txt').getVLuminosityBlockRange()
+#print process.source.lumisToProcess
 
-process.options = cms.untracked.PSet(
-
-)
-
+process.options = cms.untracked.PSet()
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
     annotation = cms.untracked.string('step3 nevts:-1'),
@@ -43,8 +41,10 @@ process.configurationMetadata = cms.untracked.PSet(
     version = cms.untracked.string('$Revision: 1.19 $')
 )
 
-# Output definition
+process.gemSkim = cms.EDFilter("GEMSkim",gemRecHits = cms.InputTag("gemRecHits"))
+process.GEMRecHitSkim = cms.Path(process.gemSkim)
 
+# Output definition
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
         dataTier = cms.untracked.string('RECO'),
@@ -52,7 +52,8 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
     ),
     fileName = cms.untracked.string('step3.root'),
     outputCommands = process.RECOEventContent.outputCommands,
-    splitLevel = cms.untracked.int32(0)
+    splitLevel = cms.untracked.int32(0),
+    SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('GEMRecHitSkim'))
 )
 
 # Additional output definition
@@ -69,7 +70,7 @@ process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RECOoutput_step = cms.EndPath(process.RECOoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,process.endjob_step,process.RECOoutput_step)
+process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,process.GEMRecHitSkim,process.endjob_step,process.RECOoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
