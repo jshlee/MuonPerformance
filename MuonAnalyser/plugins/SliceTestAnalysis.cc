@@ -17,6 +17,13 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
+#include "RecoMuon/TrackingTools/interface/MuonServiceProxy.h"
+#include "TrackingTools/GeomPropagators/interface/Propagator.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "TrackPropagation/SteppingHelixPropagator/interface/SteppingHelixPropagator.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
+
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -58,9 +65,14 @@ private:
   edm::EDGetTokenT<reco::VertexCollection> vertexCollection_;
   edm::Service<TFileService> fs;
 
+  MuonServiceProxy* theService_;
+  edm::ESHandle<Propagator> propagator_;
+  edm::ESHandle<TransientTrackBuilder> ttrackBuilder_;
+  edm::ESHandle<MagneticField> bField_; 
+  
   TH2D* h_firstStrip[36][2];
   TH2D* h_allStrips[36][2];
-  TH1D* h_clusterSize, *h_totalStrips, *h_bxtotal;  
+  TH1D* h_clusterSize, *h_totalStrips, *h_bxtotal;
 };
 
 SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig)
@@ -68,6 +80,8 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig)
   gemRecHits_ = consumes<GEMRecHitCollection>(iConfig.getParameter<edm::InputTag>("gemRecHits"));
   muons_ = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muons"));
   vertexCollection_ = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"));
+  edm::ParameterSet serviceParameters = iConfig.getParameter<edm::ParameterSet>("ServiceParameters");
+  theService_ = new MuonServiceProxy(serviceParameters);
 
   h_clusterSize=fs->make<TH1D>(Form("clusterSize"),"clusterSize",100,0,100);
   h_totalStrips=fs->make<TH1D>(Form("totalStrips"),"totalStrips",200,0,200);
@@ -94,6 +108,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iSetup.get<MuonGeometryRecord>().get(hGeom);
   const GEMGeometry* GEMGeometry_ = &*hGeom;
 
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",ttrackBuilder_);
+  // iSetup.get<TrackingComponentsRecord>().get("SteppingHelixPropagatorAny",propagator_);
+  // iSetup.get<IdealMagneticFieldRecord>().get(bField_); 
+  theService_->update(iSetup);
+  auto propagator = theService_->propagator("SteppingHelixPropagatorAny");
+  
   edm::Handle<GEMRecHitCollection> gemRecHits;  
   iEvent.getByToken(gemRecHits_, gemRecHits);
 
@@ -118,16 +138,86 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
     else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
     if (muonTrack) {
+
+      std::set<double> detLists;
+
+      reco::TransientTrack ttTrack = ttrackBuilder_->build(muonTrack);
+      for (auto ch : GEMGeometry_->etaPartitions()) {
+	//if ( !detLists.insert( ch->surface().position().z() ).second ) continue;
+	
+	TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),ch->surface());
+	if (!tsos.isValid()) continue;
+
+	GlobalPoint tsosGP = tsos.globalPosition();
+	const LocalPoint pos = ch->toLocal(tsosGP);
+	const LocalPoint pos2D(pos.x(), pos.y(), 0);
+	const BoundPlane& bps(ch->surface());
+	//cout << "tsos gp   "<< tsosGP << ch->id() <<endl;
+
+	if (bps.bounds().inside(pos2D)) {
+	  cout << " in chamber "<< ch->id() << " pos = "<<pos<< " R = "<<pos.mag() <<" inside "
+	       <<  bps.bounds().inside(pos2D) <<endl;
+	  
+	  for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
+	    if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
+	      if ((*hit)->rawId() == ch->id().rawId() ) {
+		GEMDetId gemid((*hit)->geographicalId());
+		auto etaPart = GEMGeometry_->etaPartition(gemid);
+		cout << "found it "<< gemid
+		     << " lp " << (*hit)->localPosition()
+		     << " gp " << etaPart->toGlobal((*hit)->localPosition())
+		     << endl;
+	      }
+	    }
+	  }
+	}
+      }
+      
       if (muonTrack->hitPattern().numberOfValidMuonGEMHits()) {
 	std::cout << "numberOfValidMuonGEMHits->size() " << muonTrack->hitPattern().numberOfValidMuonGEMHits()
 		  << " recHitsSize " << muonTrack->recHitsSize()
 		  << " pt " << muonTrack->pt()
 		  <<std::endl;
 	for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
-	  cout << "detId "<< (*hit)->geographicalId().det()
-	       << " subdetId "<< (*hit)->geographicalId().subdetId()
-	       << " gp " << (*hit)->localPosition()<<endl;
+	  if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
+	    //if ((*hit)->rawId() == ch->id().rawId() ) {
+	    GEMDetId gemid((*hit)->geographicalId());
+	    auto etaPart = GEMGeometry_->etaPartition(gemid);
+
+	    TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),etaPart->surface());
+	    if (!tsos.isValid()) continue;	    
+	    GlobalPoint tsosGP = tsos.globalPosition();
+
+	    LocalPoint && tsos_localpos = tsos.localPosition();
+	    LocalError && tsos_localerr = tsos.localError().positionError();
+	    LocalPoint && dethit_localpos = (*hit)->localPosition();     
+	    LocalError && dethit_localerr = (*hit)->localPositionError();
+	    auto res_x = (dethit_localpos.x() - tsos_localpos.x());
+	    auto res_y = (dethit_localpos.y() - tsos_localpos.y()); 
+	    auto pull_x = (dethit_localpos.x() - tsos_localpos.x()) / 
+	      std::sqrt(dethit_localerr.xx() + tsos_localerr.xx());
+	    auto pull_y = (dethit_localpos.y() - tsos_localpos.y()) / 
+	      std::sqrt(dethit_localerr.yy() + tsos_localerr.yy());
+	    
+	    cout << "gem hit "<< gemid<< endl;
+	    cout << " gp " << etaPart->toGlobal((*hit)->localPosition())<< endl;
+	    cout << " tsosGP "<< tsosGP << endl;
+	    cout << " res_x " << res_x
+		 << " res_y " << res_y
+		 << " pull_x " << pull_x
+		 << " pull_y " << pull_y
+	      << endl;
+	    }
+	  
 	}
+	// auto res = muonTrack->residuals();
+	// for (unsigned int i = 0; i < muonTrack->recHitsSize(); ++i) {
+	//   cout << " res x "<< res.residualX(i)
+	//        << " res y "<< res.residualY(i)
+	//        << " pull x "<< res.pullX(i)
+	//        << " pull y "<< res.pullY(i)
+	//        <<endl;
+	// }
       }
     }
   }

@@ -51,7 +51,7 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string('step3.root'),
-    outputCommands = process.RECOEventContent.outputCommands,
+    outputCommands = process.FEVTEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0),
     SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('GEMRecHitSkim'))
 )
