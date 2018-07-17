@@ -2,12 +2,12 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step3 --conditions 101X_dataRun2_Prompt_v10 -s RAW2DIGI,L1Reco,RECO --runUnscheduled --process reRECO --data --era Run2_2017 --eventcontent RECO --hltProcess reHLT --scenario pp --datatier RECO --customise Configuration/DataProcessing/RecoTLR.customisePostEra_Run2_2017 -n -1 --filein /store/data/Run2017G/SingleMuon/RAW/v1/000/306/801/00001/7ADC8664-3DCE-E711-ADEF-02163E019BF4.root --fileout file:step3.root
+# with command line options: step3 --conditions 101X_dataRun2_Prompt_v10 -s RAW2DIGI,L1Reco,RECO --runUnscheduled --process reRECO --data --era Run2_2018 --eventcontent RECO --hltProcess reHLT --scenario pp --datatier RECO --customise Configuration/DataProcessing/RecoTLR.customisePostEra_Run2_2018 -n -1 --filein /store/data/Run2017G/SingleMuon/RAW/v1/000/306/801/00001/7ADC8664-3DCE-E711-ADEF-02163E019BF4.root --fileout file:step3.root
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
-process = cms.Process('reRECO',eras.Run2_2017,eras.run3_GEM)
+process = cms.Process('reRECO',eras.Run2_2018,eras.run3_GEM)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -26,7 +26,7 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/xrootd/store/data/Run2017G/SingleMuon/RAW/v1/000/306/826/00000/FE2B6447-A4CE-E711-8DD7-02163E019CD7.root'),
+    fileNames = cms.untracked.vstring('file:/xrootd/store/data/Run2018C/SingleMuon/RAW/v1/000/319/337/00000/EEE24158-BE82-E811-8419-FA163E00EF28.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 #import FWCore.PythonUtilities.LumiList as LumiList
@@ -58,9 +58,9 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
 
 # Additional output definition
 
-# Other statements
+# Other statements 101X_dataRun2_Prompt_v11
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v10', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v11', '')
 
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)
@@ -77,10 +77,10 @@ associatePatAlgosToolsTask(process)
 # customisation of the process.
 
 # Automatic addition of the customisation function from Configuration.DataProcessing.RecoTLR
-from Configuration.DataProcessing.RecoTLR import customisePostEra_Run2_2017 
+from Configuration.DataProcessing.RecoTLR import customisePostEra_Run2_2018 
 
-#call to customisation function customisePostEra_Run2_2017 imported from Configuration.DataProcessing.RecoTLR
-process = customisePostEra_Run2_2017(process)
+#call to customisation function customisePostEra_Run2_2018 imported from Configuration.DataProcessing.RecoTLR
+process = customisePostEra_Run2_2018(process)
 
 # End of customisation functions
 #do not add changes to your config after this point (unless you know what you are doing)

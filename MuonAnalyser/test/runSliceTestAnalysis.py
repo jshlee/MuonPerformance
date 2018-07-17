@@ -22,7 +22,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 process.source.skipEvents = cms.untracked.uint32(17601)
 
 #process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
-process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2017G-v1/FEVTEvent/step3_313.root')
+process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_313.root')
 
 #fname = 'singleMuon.txt'
 #f = open(fname)
