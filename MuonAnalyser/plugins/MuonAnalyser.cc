@@ -558,7 +558,6 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     //b_muon_DXDY1resolution = (pv0.position().xy()-mu->muonBestTrack()->vxy())/pv0.position().xy();
     //b_muon_DXDYresolution =(simVertex_.position().xy()-mu->muonBestTrack()->dxy(pv0.position()))/simVertex_.position().PxPy();
 
-
     
     b_muon_pTinvresolution = (1/b_muon.Pt() - 1/mu->pt())/(1/b_muon.Pt());
     b_muon_poszPV0       = pv0.position().z();
@@ -664,7 +663,7 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
 	    //b_muon_ME0dPhi = atan(chamber.dXdZ) - atan(segment.dXdZ);	      
 	    
        
-       b_muon_ME0deltaDXDZ = ( chamber.dXdZ - segment.dXdZ );
+        b_muon_ME0deltaDXDZ = ( chamber.dXdZ - segment.dXdZ );
 	    b_muon_ME0deltaDYDZ = ( chamber.dYdZ - segment.dYdZ );
 	    b_muon_ME0noRecHit  = me0Segment.nRecHits();
 
@@ -795,11 +794,11 @@ void MuonAnalyser::fillBranches(TTree *tree, TLorentzVector tlv, edm::RefToBase<
     GlobalPoint point(simVertex_.position().x(), simVertex_.position().y(), simVertex_.position().z());
     b_muon_ipxySim = abs(mu->muonBestTrack()->dxy(math::XYZPoint(point.x(),point.y(),point.z())));
     b_muon_ipzSim = abs(mu->muonBestTrack()->dz(math::XYZPoint(point.x(),point.y(),point.z())));
+//Change
+    collectTMVAvalues(*mu, pv0);
+    b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
 
-    //collectTMVAvalues(*mu, pv0);
-    //b_muon_tmva_bdt = bdt_->EvaluateMVA("BDT");
-
-    //b_muon_tmva_me0bdt = me0bdt_->EvaluateMVA("BDT");
+    b_muon_tmva_me0bdt = me0bdt_->EvaluateMVA("BDT");
   }
   tree->Fill();
 }
@@ -812,8 +811,13 @@ void MuonAnalyser::collectTMVAvalues(const reco::Muon& mu, reco::Vertex pv0)
   b_muon_istracker = mu.isTrackerMuon();
   b_muon_isglobal = mu.isGlobalMuon();
   b_muon_ispf = mu.isPFMuon();
-  if ( mu.globalTrack().isNonnull() ){ b_muon_chi2 = mu.globalTrack()->normalizedChi2(); }
-  else { b_muon_chi2 = dummyVal; }
+  //if ( mu.globalTrack().isNonnull() ){ b_muon_chi2 = mu.globalTrack()->normalizedChi2(); }
+  if ( mu.globalTrack().isNonnull() ){ b_muon_chi2 = mu.globalTrack()->normalizedChi2();}
+  else if (mu.innerTrack().isNonnull() ) {b_muon_chi2 = mu.innerTrack()->normalizedChi2();}
+  else{  b_muon_chi2 = dummyVal;}
+
+
+  //else { b_muon_chi2 = mu.innerTrack()->normalizedChi2(); }
   b_muon_chi2pos = mu.combinedQuality().chi2LocalPosition;
   b_muon_trkKink = mu.combinedQuality().trkKink;
   b_muon_segmentCompatibility = muon::segmentCompatibility(mu);
