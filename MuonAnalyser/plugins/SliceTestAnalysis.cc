@@ -362,7 +362,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    b_muonQuality = 1;
 	}
 
-	auto globalPosition = hit->globalPosition();
+	auto globalPosition = roll->toGlobal(hit->localPosition());
 	b_x = globalPosition.x();
 	b_y = globalPosition.y();
 	b_z = globalPosition.z();
