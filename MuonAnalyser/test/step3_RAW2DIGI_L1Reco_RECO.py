@@ -43,17 +43,18 @@ process.configurationMetadata = cms.untracked.PSet(
 
 process.gemSkim = cms.EDFilter("GEMSkim",gemRecHits = cms.InputTag("gemRecHits"))
 process.GEMRecHitSkim = cms.Path(process.gemSkim)
-
+process.AODEventContent.outputCommands.append("keep *_muonGEMDigis_*_*")
+process.AODEventContent.outputCommands.append("keep *_gemRecHits_*_*")
 # Output definition
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
         dataTier = cms.untracked.string('RECO'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('step3.root'),
-    outputCommands = process.FEVTEventContent.outputCommands,
+    fileName = cms.untracked.string('AOD.root'),
+    outputCommands = process.AODEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0),
-    SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('GEMRecHitSkim'))
+    #SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('GEMRecHitSkim'))
 )
 
 # Additional output definition
@@ -70,7 +71,9 @@ process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RECOoutput_step = cms.EndPath(process.RECOoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,process.GEMRecHitSkim,process.endjob_step,process.RECOoutput_step)
+process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,
+                                    #process.GEMRecHitSkim,
+                                    process.endjob_step,process.RECOoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
