@@ -39,6 +39,7 @@
 #include "Geometry/Records/interface/MuonGeometryRecord.h"
 
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Framework/interface/Run.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -57,8 +58,11 @@ public:
 
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
-  virtual void beginJob() ;
-  virtual void endJob() ;
+  virtual void beginJob() override;
+  virtual void endJob() override;
+
+  virtual void beginRun(Run const&, EventSetup const&) override;
+  virtual void endRun(Run const&, EventSetup const&) override;
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<GEMRecHitCollection> gemRecHits_;
@@ -82,11 +86,15 @@ private:
   TTree *t_hit;
   int b_run, b_lumi, b_event;
   int b_firstStrip, b_nStrips, b_chamber, b_layer, b_etaPartition, b_muonQuality;
+  float b_x, b_y, b_z;
 
-  int nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
+  int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
+
+  TTree *t_run;
 };
 
 SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
+  nEvents(0),
   nMuonTotal(0),
   nGEMFiducialMuon(0),
   nGEMTrackWithMuon(0)
@@ -103,7 +111,10 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
 
   h_globalPosOnGem = fs->make<TH2D>(Form("onGEM"), "onGEM", 100, -100, 100, 100, -100, 100);
 
-  t_hit = fs->make<TTree>();
+  t_run = fs->make<TTree>("Run", "Run");
+  t_run->Branch("run", &b_run, "run/I");
+
+  t_hit = fs->make<TTree>("Hit", "Hit");
   t_hit->Branch("run", &b_run, "run/I");
   t_hit->Branch("lumi", &b_lumi, "lumi/I");
   t_hit->Branch("run", &b_run, "run/I");
@@ -114,6 +125,9 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_hit->Branch("layer", &b_layer, "layer/I");
   t_hit->Branch("etaPartition", &b_etaPartition, "etaPartition/I");
   t_hit->Branch("muonQuality", &b_muonQuality, "muonQuality/I")->SetTitle("muonQuality -1:none 0:low 1:high");
+  t_hit->Branch("x", &b_x, "x/F");
+  t_hit->Branch("y", &b_y, "y/F");
+  t_hit->Branch("z", &b_z, "z/F");
   
   for (int ichamber=0; ichamber<36;++ichamber) {
   // for (int ichamber=27; ichamber<=30;++ichamber) {
@@ -136,6 +150,7 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
 SliceTestAnalysis::~SliceTestAnalysis()
 {
   std::cout << "::: GEM Slice Test Results :::" << std::endl;
+  std::cout << ": From " << nEvents << " events" << std::endl;
   std::cout << std::endl;
   std::cout << " # Muons " << nMuonTotal << std::endl;
   std::cout << " # FidMu " << nGEMFiducialMuon << std::endl;
@@ -146,9 +161,11 @@ SliceTestAnalysis::~SliceTestAnalysis()
 void
 SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  nEvents++;
+  
   b_run = iEvent.run();
   b_lumi = iEvent.luminosityBlock();
-  
+
   edm::ESHandle<GEMGeometry> hGeom;
   iSetup.get<MuonGeometryRecord>().get(hGeom);
   const GEMGeometry* GEMGeometry_ = &*hGeom;
@@ -298,11 +315,11 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
   }
 
-  if (poorMuHits.size() > 0) {
-    std::cout << "POOR MU ";
-    for (auto & hit : poorMuHits) std::cout << hit << " ";
-    std::cout << std::endl;
-  }
+  // if (poorMuHits.size() > 0) {
+  //   std::cout << "POOR MU ";
+  //   for (auto & hit : poorMuHits) std::cout << hit << " ";
+  //   std::cout << std::endl;
+  // }
   
   // if (gemRecHits->size()) {
   //   std::cout << "gemRecHits->size() " << gemRecHits->size() <<std::endl;
@@ -316,7 +333,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       //std::cout << "rId " << rId <<std::endl;
       auto recHitsRange = gemRecHits->get(rId); 
       auto gemRecHit = recHitsRange.first;
-      for ( auto hit = gemRecHit; hit != recHitsRange.second; ++hit ) {
+      for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
 
 	h_hitEta[rId.chamber()][rId.layer()]->Fill(rId.roll());
 	h_firstStrip[rId.chamber()][rId.layer()-1]->Fill(hit->firstClusterStrip(), rId.roll());
@@ -336,7 +353,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	for (auto muHit : poorMuHits) {
 	  if (*hit == *muHit) {
 	    b_muonQuality = 0;
-	    std::cout << "  POOR HIT" << std::endl;
+	    // std::cout << "  POOR HIT" << std::endl;
 	  }
 	}
 
@@ -344,6 +361,11 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  if (*hit == *muHit)
 	    b_muonQuality = 1;
 	}
+
+	auto globalPosition = hit->globalPosition();
+	b_x = globalPosition.x();
+	b_y = globalPosition.y();
+	b_z = globalPosition.z();
 
 	t_hit->Fill();
       }
@@ -354,6 +376,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 void SliceTestAnalysis::beginJob(){}
 void SliceTestAnalysis::endJob(){}
+
+void SliceTestAnalysis::beginRun(Run const& run, EventSetup const&){
+  b_run = run.run();
+  t_run->Fill();
+}
+void SliceTestAnalysis::endRun(Run const&, EventSetup const&){}
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(SliceTestAnalysis);
