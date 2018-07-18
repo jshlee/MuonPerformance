@@ -89,8 +89,12 @@ private:
   float b_x, b_y, b_z;
 
   int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
+  int b_nMuons, b_nMuonsWithGEMHit;
+
+  int b_nGEMHits;
 
   TTree *t_run;
+  TTree *t_event;
 };
 
 SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
@@ -118,6 +122,12 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_hit->Branch("run", &b_run, "run/I");
   t_hit->Branch("lumi", &b_lumi, "lumi/I");
   t_hit->Branch("run", &b_run, "run/I");
+
+  t_event = fs->make<TTree>("Event", "Event");
+  t_event->Branch("nMuons", &b_nMuons, "nMuons/I");
+  t_event->Branch("nMuonsWithGEMHit", &b_nMuonsWithGEMHit, "nMuonsWithGEMHit/I");
+  t_event->Branch("nGEMHits", &b_nGEMHits, "nGEMHits/I");
+  
 
   t_hit->Branch("firstStrip", &b_firstStrip, "firstStrip/I");
   t_hit->Branch("nStrips", &b_nStrips, "nStrips/I");
@@ -162,6 +172,10 @@ void
 SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   nEvents++;
+
+  b_nMuons = 0;
+  b_nMuonsWithGEMHit = 0;
+  b_nGEMHits = 0;
   
   b_run = iEvent.run();
   b_lumi = iEvent.luminosityBlock();
@@ -194,6 +208,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   std::vector<GEMRecHit*> poorMuHits;
 
   for (size_t i = 0; i < muons->size(); ++i) {
+    b_nMuons++;
     nMuonTotal++;
     
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
@@ -266,6 +281,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if (onDet) ++nGEMFiducialMuon;
       
       if (muonTrack->hitPattern().numberOfValidMuonGEMHits()) {
+	++b_nMuonsWithGEMHit;
 	++nGEMTrackWithMuon;
 	// std::cout << "numberOfValidMuonGEMHits->size() " << muonTrack->hitPattern().numberOfValidMuonGEMHits()
 	// 	  << " recHitsSize " << muonTrack->recHitsSize()
@@ -368,10 +384,13 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_z = globalPosition.z();
 
 	t_hit->Fill();
+	b_nGEMHits++;
       }
     }
   }
   h_totalStrips->Fill(totalStrips);
+
+  t_event->Fill();
 }
 
 void SliceTestAnalysis::beginJob(){}
