@@ -94,6 +94,7 @@ private:
 
   int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
   int b_nMuons, b_nMuonsWithGEMHit;
+  int b_valid;
 
   int b_nGEMHits;
 
@@ -107,6 +108,7 @@ struct GEMMuonAssociation {
   float pull_y;
   float res_x;
   float res_y;
+  int valid;
 };
 
 SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
@@ -160,6 +162,7 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_hit->Branch("pull_y", &b_pull_y, "pull_y/F");
   t_hit->Branch("res_x", &b_res_x, "res_x/F");
   t_hit->Branch("res_y", &b_res_y, "res_y/F");
+  t_hit->Branch("valid", &b_valid, "valid/I");
 
   for (int ichamber=0; ichamber<36;++ichamber) {
   // for (int ichamber=27; ichamber<=30;++ichamber) {
@@ -300,7 +303,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    auto etaPart = GEMGeometry_->etaPartition(gemid);
 
 	    TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),etaPart->surface());
-	    if (!tsos.isValid()) continue;	    
+	    if (!tsos.isValid()) continue;
 	    // GlobalPoint tsosGP = tsos.globalPosition();
 
 	    LocalPoint && tsos_localpos = tsos.localPosition();
@@ -317,7 +320,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    h_res_x->Fill(res_x);
 	    h_res_y->Fill(res_y);
 	    h_pull_x->Fill(pull_x);
-	    h_pull_y->Fill(pull_y);	    
+	    h_pull_y->Fill(pull_y);
 
 	    int qual = -1;
 	    if (mu->passed(reco::Muon::Selector::CutBasedIdTight))
@@ -326,10 +329,11 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	      qual = 1;
 	    else
 	      qual = 0;
+	    int isvalid =  (*hit)->isValid();
 	    muHits[static_cast<GEMRecHit*>(*hit)] = {muonQuality: qual,
 						     pull_x: pull_x, pull_y: pull_y,
-						     res_x: res_x, res_y: res_y};
-	  }	  
+						     res_x: res_x, res_y: res_y, valid: isvalid};
+	  }
 	}
       }
     }
@@ -365,6 +369,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_pull_y = -99;
 	b_res_x = -99;
 	b_res_y = -99;
+	b_valid = -1;
 	for (const auto & kv : muHits) {
 	  auto muHit = kv.first;
 	  if (*hit == *muHit) {
@@ -374,6 +379,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    b_pull_y = assoc.pull_y;
 	    b_res_x = assoc.res_x;
 	    b_res_y = assoc.res_y;
+	    b_valid = assoc.valid;
 	  }
 	}
 
