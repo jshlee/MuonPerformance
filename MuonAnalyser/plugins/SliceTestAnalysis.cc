@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include<map>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -89,6 +90,7 @@ private:
   int b_run, b_lumi, b_event;
   int b_firstStrip, b_nStrips, b_chamber, b_layer, b_etaPartition, b_muonQuality, b_bx;
   float b_x, b_y, b_z;
+  float b_pull_x, b_pull_y, b_res_x, b_res_y;
 
   int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
   int b_nMuons, b_nMuonsWithGEMHit;
@@ -97,6 +99,14 @@ private:
 
   TTree *t_run;
   TTree *t_event;
+};
+
+struct GEMMuonAssociation {
+  int muonQuality;
+  float pull_x;
+  float pull_y;
+  float res_x;
+  float res_y;
 };
 
 SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
@@ -146,6 +156,10 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_hit->Branch("x", &b_x, "x/F");
   t_hit->Branch("y", &b_y, "y/F");
   t_hit->Branch("z", &b_z, "z/F");
+  t_hit->Branch("pull_x", &b_pull_x, "pull_x/F");
+  t_hit->Branch("pull_y", &b_pull_y, "pull_y/F");
+  t_hit->Branch("res_x", &b_res_x, "res_x/F");
+  t_hit->Branch("res_y", &b_res_y, "res_y/F");
 
   for (int ichamber=0; ichamber<36;++ichamber) {
   // for (int ichamber=27; ichamber<=30;++ichamber) {
@@ -211,9 +225,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   Handle<View<reco::Muon> > muons;
   iEvent.getByToken(muons_, muons);
 
-  std::vector<GEMRecHit*> tightMuHits;
-  std::vector<GEMRecHit*> looseMuHits;
-  std::vector<GEMRecHit*> noidMuHits;
+  std::map<GEMRecHit*,GEMMuonAssociation> muHits;
 
   for (size_t i = 0; i < muons->size(); ++i) {
     b_nMuons++;
@@ -274,12 +286,6 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
 	  GEMDetId gemid((*hit)->geographicalId());
 	  h_trkEta[gemid.chamber()][gemid.layer()]->Fill(gemid.roll());
-	  if (mu->passed(reco::Muon::Selector::CutBasedIdTight))
-	    tightMuHits.push_back(static_cast<GEMRecHit*>(*hit));
-	  else if (mu->passed(reco::Muon::Selector::CutBasedIdLoose))
-	    looseMuHits.push_back(static_cast<GEMRecHit*>(*hit));
-	  else
-	    noidMuHits.push_back(static_cast<GEMRecHit*>(*hit));
 	}
       }
 
@@ -312,6 +318,17 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    h_res_y->Fill(res_y);
 	    h_pull_x->Fill(pull_x);
 	    h_pull_y->Fill(pull_y);	    
+
+	    int qual = -1;
+	    if (mu->passed(reco::Muon::Selector::CutBasedIdTight))
+	      qual = 2;
+	    else if (mu->passed(reco::Muon::Selector::CutBasedIdLoose))
+	      qual = 1;
+	    else
+	      qual = 0;
+	    muHits[static_cast<GEMRecHit*>(*hit)] = {muonQuality: qual,
+						     pull_x: pull_x, pull_y: pull_y,
+						     res_x: res_x, res_y: res_y};
 	  }	  
 	}
       }
@@ -344,21 +361,20 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_layer = rId.layer();
 	b_etaPartition = rId.roll();
 	b_muonQuality = -1;
-	for (auto muHit : noidMuHits) {
+	b_pull_x = -99;
+	b_pull_y = -99;
+	b_res_x = -99;
+	b_res_y = -99;
+	for (const auto & kv : muHits) {
+	  auto muHit = kv.first;
 	  if (*hit == *muHit) {
-	    b_muonQuality = 0;
+	    auto assoc = kv.second;
+	    b_muonQuality = assoc.muonQuality;
+	    b_pull_x = assoc.pull_x;
+	    b_pull_y = assoc.pull_y;
+	    b_res_x = assoc.res_x;
+	    b_res_y = assoc.res_y;
 	  }
-	}
-
-	for (auto muHit : looseMuHits) {
-	  if (*hit == *muHit) {
-	    b_muonQuality = 1;
-	  }
-	}
-
-	for (auto muHit : tightMuHits) {
-	  if (*hit == *muHit)
-	    b_muonQuality = 2;
 	}
 
 	auto globalPosition = roll->toGlobal(hit->localPosition());
