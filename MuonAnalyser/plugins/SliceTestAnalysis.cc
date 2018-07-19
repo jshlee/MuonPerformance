@@ -85,7 +85,7 @@ private:
 
   TTree *t_hit;
   int b_run, b_lumi, b_event;
-  int b_firstStrip, b_nStrips, b_chamber, b_layer, b_etaPartition, b_muonQuality;
+  int b_firstStrip, b_nStrips, b_chamber, b_layer, b_etaPartition, b_muonQuality, b_bx;
   float b_x, b_y, b_z;
 
   int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
@@ -129,6 +129,7 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_hit->Branch("run", &b_run, "run/I");
   t_hit->Branch("lumi", &b_lumi, "lumi/I");  
 
+  t_hit->Branch("bx", &b_bx, "bx/I");
   t_hit->Branch("firstStrip", &b_firstStrip, "firstStrip/I");
   t_hit->Branch("nStrips", &b_nStrips, "nStrips/I");
   t_hit->Branch("chamber", &b_chamber, "chamber/I");
@@ -202,7 +203,6 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   Handle<View<reco::Muon> > muons;
   iEvent.getByToken(muons_, muons);
-  //std::cout << "muons->size() " << muons->size() <<std::endl;
 
   std::vector<GEMRecHit*> tightMuHits;
   std::vector<GEMRecHit*> looseMuHits;
@@ -215,10 +215,6 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
     const reco::Muon* mu = muRef.get();
 
-    // if (mu->isGEMMuon()) {
-    //   std::cout << "isGEMMuon " <<std::endl;
-    // }
-    
     const reco::Track* muonTrack = 0;  
     if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
     else if ( mu->outerTrack().isNonnull()  ) muonTrack = mu->outerTrack().get();
@@ -242,22 +238,18 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	if (!tsos.isValid()) continue;
 	
 	GlobalPoint tsosGP = tsos.globalPosition();
-	//if ( !detLists.insert( ch->surface().position().z() ).second ) continue;
 	const LocalPoint pos = ch->toLocal(tsosGP);
 	const LocalPoint pos2D(pos.x(), pos.y(), 0);
 	const BoundPlane& bps(ch->surface());
-	//cout << "tsos gp   "<< tsosGP << ch->id() <<endl;
 	h_globalPosOnGem->Fill(tsosGP.x(), tsosGP.y());
 
 	if (bps.bounds().inside(pos2D)) {
 	  onDet = true;
 	  auto gemid = ch->id();
 	  h_inEta[gemid.chamber()][gemid.layer()]->Fill(gemid.roll());
-	    // cout << " in chamber "<< ch->id() << " pos = "<<pos<< " R = "<<pos.mag() <<" inside "
-	  //      <<  bps.bounds().inside(pos2D) <<endl;
 	  
 	  for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
-	    if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
+	    if ((*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
 	      if ((*hit)->rawId() == ch->id().rawId() ) {
 		GEMDetId gemid((*hit)->geographicalId());
 		auto etaPart = GEMGeometry_->etaPartition(gemid);
@@ -289,70 +281,25 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       if (muonTrack->hitPattern().numberOfValidMuonGEMHits()) {
 	++b_nMuonsWithGEMHit;
 	++nGEMTrackWithMuon;
-	// std::cout << "numberOfValidMuonGEMHits->size() " << muonTrack->hitPattern().numberOfValidMuonGEMHits()
-	// 	  << " recHitsSize " << muonTrack->recHitsSize()
-	// 	  << " pt " << muonTrack->pt()
-	// 	  <<std::endl;
 	for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
 	  if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
-	    //if ((*hit)->rawId() == ch->id().rawId() ) {
 	    GEMDetId gemid((*hit)->geographicalId());
 	    auto etaPart = GEMGeometry_->etaPartition(gemid);
 
 	    TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),etaPart->surface());
 	    if (!tsos.isValid()) continue;	    
-	    // GlobalPoint tsosGP = tsos.globalPosition();
-
-	    // LocalPoint && tsos_localpos = tsos.localPosition();
-	    // LocalError && tsos_localerr = tsos.localError().positionError();
-	    // LocalPoint && dethit_localpos = (*hit)->localPosition();     
-	    // LocalError && dethit_localerr = (*hit)->localPositionError();
-	    // auto res_x = (dethit_localpos.x() - tsos_localpos.x());
-	    // auto res_y = (dethit_localpos.y() - tsos_localpos.y()); 
-	    // auto pull_x = (dethit_localpos.x() - tsos_localpos.x()) / 
-	    //   std::sqrt(dethit_localerr.xx() + tsos_localerr.xx());
-	    // auto pull_y = (dethit_localpos.y() - tsos_localpos.y()) / 
-	    //   std::sqrt(dethit_localerr.yy() + tsos_localerr.yy());
-	    
-	    // cout << "gem hit "<< gemid<< endl;
-	    // cout << " gp " << etaPart->toGlobal((*hit)->localPosition())<< endl;
-	    // cout << " tsosGP "<< tsosGP << endl;
-	    // cout << " res_x " << res_x
-	    // 	 << " res_y " << res_y
-	    // 	 << " pull_x " << pull_x
-	    // 	 << " pull_y " << pull_y
-	    //   << endl;
-	    }
-	  
+	  }
 	}
-	// auto res = muonTrack->residuals();
-	// for (unsigned int i = 0; i < muonTrack->recHitsSize(); ++i) {
-	//   cout << " res x "<< res.residualX(i)
-	//        << " res y "<< res.residualY(i)
-	//        << " pull x "<< res.pullX(i)
-	//        << " pull y "<< res.pullY(i)
-	//        <<endl;
-	// }
       }
     }
   }
 
-  // if (looseMuHits.size() > 0) {
-  //   std::cout << "POOR MU ";
-  //   for (auto & hit : looseMuHits) std::cout << hit << " ";
-  //   std::cout << std::endl;
-  // }
-  
-  // if (gemRecHits->size()) {
-  //   std::cout << "gemRecHits->size() " << gemRecHits->size() <<std::endl;
-  // }
   int totalStrips = 0;
 
   for (auto ch : GEMGeometry_->chambers()) {
     for(auto roll : ch->etaPartitions()) {
       GEMDetId rId = roll->id();
 
-      //std::cout << "rId " << rId <<std::endl;
       auto recHitsRange = gemRecHits->get(rId); 
       auto gemRecHit = recHitsRange.first;
       for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
@@ -367,6 +314,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	}
 
 	b_firstStrip = hit->firstClusterStrip();
+	b_bx = hit->BunchX();
 	b_nStrips = hit->clusterSize();
 	b_chamber = rId.chamber();
 	b_layer = rId.layer();
