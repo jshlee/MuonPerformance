@@ -83,6 +83,8 @@ private:
   TH1D* h_hitEta[36][2];
   TH1D* h_trkEta[36][2];
 
+  TH1D* h_res_x, *h_res_y, *h_pull_x, *h_pull_y;
+
   TTree *t_hit;
   int b_run, b_lumi, b_event;
   int b_firstStrip, b_nStrips, b_chamber, b_layer, b_etaPartition, b_muonQuality;
@@ -124,6 +126,11 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_event->Branch("nGEMHits", &b_nGEMHits, "nGEMHits/I");
   t_event->Branch("run", &b_run, "run/I");
   t_event->Branch("lumi", &b_lumi, "lumi/I");
+
+  h_res_x=fs->make<TH1D>(Form("res_x"),"res_x",100,-50,50);
+  h_res_y=fs->make<TH1D>(Form("res_y"),"res_y",100,-50,50);
+  h_pull_x=fs->make<TH1D>(Form("pull_x"),"pull_x",100,-50,50);
+  h_pull_y=fs->make<TH1D>(Form("pull_y"),"pull_y",100,-50,50);
 
   t_hit = fs->make<TTree>("Hit", "Hit");
   t_hit->Branch("run", &b_run, "run/I");
@@ -303,16 +310,21 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    if (!tsos.isValid()) continue;	    
 	    // GlobalPoint tsosGP = tsos.globalPosition();
 
-	    // LocalPoint && tsos_localpos = tsos.localPosition();
-	    // LocalError && tsos_localerr = tsos.localError().positionError();
-	    // LocalPoint && dethit_localpos = (*hit)->localPosition();     
-	    // LocalError && dethit_localerr = (*hit)->localPositionError();
-	    // auto res_x = (dethit_localpos.x() - tsos_localpos.x());
-	    // auto res_y = (dethit_localpos.y() - tsos_localpos.y()); 
-	    // auto pull_x = (dethit_localpos.x() - tsos_localpos.x()) / 
-	    //   std::sqrt(dethit_localerr.xx() + tsos_localerr.xx());
-	    // auto pull_y = (dethit_localpos.y() - tsos_localpos.y()) / 
-	    //   std::sqrt(dethit_localerr.yy() + tsos_localerr.yy());
+	    LocalPoint && tsos_localpos = tsos.localPosition();
+	    LocalError && tsos_localerr = tsos.localError().positionError();
+	    LocalPoint && dethit_localpos = (*hit)->localPosition();     
+	    LocalError && dethit_localerr = (*hit)->localPositionError();
+	    auto res_x = (dethit_localpos.x() - tsos_localpos.x());
+	    auto res_y = (dethit_localpos.y() - tsos_localpos.y()); 
+	    auto pull_x = (dethit_localpos.x() - tsos_localpos.x()) / 
+	      std::sqrt(dethit_localerr.xx() + tsos_localerr.xx());
+	    auto pull_y = (dethit_localpos.y() - tsos_localpos.y()) / 
+	      std::sqrt(dethit_localerr.yy() + tsos_localerr.yy());
+
+        h_res_x->Fill(res_x);
+        h_res_y->Fill(res_y);
+        h_pull_x->Fill(pull_x);
+        h_pull_y->Fill(pull_y);
 	    
 	    // cout << "gem hit "<< gemid<< endl;
 	    // cout << " gp " << etaPart->toGlobal((*hit)->localPosition())<< endl;
