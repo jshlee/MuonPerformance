@@ -117,28 +117,28 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
 
   t_run = fs->make<TTree>("Run", "Run");
   t_run->Branch("run", &b_run, "run/I");
-
-  t_hit = fs->make<TTree>("Hit", "Hit");
-  t_hit->Branch("run", &b_run, "run/I");
-  t_hit->Branch("lumi", &b_lumi, "lumi/I");
-  t_hit->Branch("run", &b_run, "run/I");
-
+  
   t_event = fs->make<TTree>("Event", "Event");
   t_event->Branch("nMuons", &b_nMuons, "nMuons/I");
   t_event->Branch("nMuonsWithGEMHit", &b_nMuonsWithGEMHit, "nMuonsWithGEMHit/I");
   t_event->Branch("nGEMHits", &b_nGEMHits, "nGEMHits/I");
-  
+  t_event->Branch("run", &b_run, "run/I");
+  t_event->Branch("lumi", &b_lumi, "lumi/I");
+
+  t_hit = fs->make<TTree>("Hit", "Hit");
+  t_hit->Branch("run", &b_run, "run/I");
+  t_hit->Branch("lumi", &b_lumi, "lumi/I");  
 
   t_hit->Branch("firstStrip", &b_firstStrip, "firstStrip/I");
   t_hit->Branch("nStrips", &b_nStrips, "nStrips/I");
   t_hit->Branch("chamber", &b_chamber, "chamber/I");
   t_hit->Branch("layer", &b_layer, "layer/I");
   t_hit->Branch("etaPartition", &b_etaPartition, "etaPartition/I");
-  t_hit->Branch("muonQuality", &b_muonQuality, "muonQuality/I")->SetTitle("muonQuality -1:none 0:low 1:high");
+  t_hit->Branch("muonQuality", &b_muonQuality, "muonQuality/I")->SetTitle("muonQuality -1:none 0:noid 1:looseID 2:tightID");
   t_hit->Branch("x", &b_x, "x/F");
   t_hit->Branch("y", &b_y, "y/F");
   t_hit->Branch("z", &b_z, "z/F");
-  
+
   for (int ichamber=0; ichamber<36;++ichamber) {
   // for (int ichamber=27; ichamber<=30;++ichamber) {
     for (int ilayer=0; ilayer<2;++ilayer) {
@@ -204,8 +204,9 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(muons_, muons);
   //std::cout << "muons->size() " << muons->size() <<std::endl;
 
-  std::vector<GEMRecHit*> goodMuHits;
-  std::vector<GEMRecHit*> poorMuHits;
+  std::vector<GEMRecHit*> tightMuHits;
+  std::vector<GEMRecHit*> looseMuHits;
+  std::vector<GEMRecHit*> noidMuHits;
 
   for (size_t i = 0; i < muons->size(); ++i) {
     b_nMuons++;
@@ -274,7 +275,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
 	  GEMDetId gemid((*hit)->geographicalId());
 	  h_trkEta[gemid.chamber()][gemid.layer()]->Fill(gemid.roll());
-	  poorMuHits.push_back(static_cast<GEMRecHit*>(*hit));
+	  if (mu->passed(reco::Muon::Selector::CutBasedIdTight))
+	    tightMuHits.push_back(static_cast<GEMRecHit*>(*hit));
+	  else if (mu->passed(reco::Muon::Selector::CutBasedIdLoose))
+	    looseMuHits.push_back(static_cast<GEMRecHit*>(*hit));
+	  else
+	    noidMuHits.push_back(static_cast<GEMRecHit*>(*hit));
 	}
       }
 
@@ -331,9 +337,9 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
   }
 
-  // if (poorMuHits.size() > 0) {
+  // if (looseMuHits.size() > 0) {
   //   std::cout << "POOR MU ";
-  //   for (auto & hit : poorMuHits) std::cout << hit << " ";
+  //   for (auto & hit : looseMuHits) std::cout << hit << " ";
   //   std::cout << std::endl;
   // }
   
@@ -366,16 +372,21 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_layer = rId.layer();
 	b_etaPartition = rId.roll();
 	b_muonQuality = -1;
-	for (auto muHit : poorMuHits) {
+	for (auto muHit : noidMuHits) {
 	  if (*hit == *muHit) {
 	    b_muonQuality = 0;
-	    // std::cout << "  POOR HIT" << std::endl;
 	  }
 	}
 
-	for (auto muHit : goodMuHits) {
-	  if (*hit == *muHit)
+	for (auto muHit : looseMuHits) {
+	  if (*hit == *muHit) {
 	    b_muonQuality = 1;
+	  }
+	}
+
+	for (auto muHit : tightMuHits) {
+	  if (*hit == *muHit)
+	    b_muonQuality = 2;
 	}
 
 	auto globalPosition = roll->toGlobal(hit->localPosition());
