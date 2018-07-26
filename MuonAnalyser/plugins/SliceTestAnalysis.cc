@@ -1,5 +1,5 @@
 // cd /cms/ldap_home/iawatson/scratch/GEM/CMSSW_10_1_5/src/ && eval `scramv1 runtime -sh` && eval `scramv1 runtime -sh` && scram b -j 10
-// cd ../../.. && eval `scramv1 runtime -sh` && eval `scramv1 runtime -sh` && scram b -j 10
+// cd ../../.. && source /cvmfs/cms.cern.ch/cmsset_default.sh && eval `scramv1 runtime -sh` && eval `scramv1 runtime -sh` && scram b -j 10
 // system include files
 #include <memory>
 #include <cmath>
@@ -76,13 +76,13 @@ private:
   edm::ESHandle<TransientTrackBuilder> ttrackBuilder_;
   edm::ESHandle<MagneticField> bField_; 
   
-  TH2D* h_firstStrip[36][2];
-  TH2D* h_allStrips[36][2];
+  TH2D* h_firstStrip[36][3];
+  TH2D* h_allStrips[36][3];
   TH2D* h_globalPosOnGem;
   TH1D* h_clusterSize, *h_totalStrips, *h_bxtotal;
-  TH1D* h_inEta[36][2];
-  TH1D* h_hitEta[36][2];
-  TH1D* h_trkEta[36][2];
+  TH1D* h_inEta[36][3];
+  TH1D* h_hitEta[36][3];
+  TH1D* h_trkEta[36][3];
 
   TH1D* h_res_x, *h_res_y, *h_pull_x, *h_pull_y;
 
@@ -90,6 +90,7 @@ private:
   int b_run, b_lumi, b_event;
   int b_firstStrip, b_nStrips, b_chamber, b_layer, b_etaPartition, b_muonQuality, b_bx;
   float b_x, b_y, b_z;
+  float b_mu_eta, b_mu_phi, b_mu_pt;
   float b_pull_x, b_pull_y, b_res_x, b_res_y;
 
   int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
@@ -98,16 +99,31 @@ private:
 
   int b_nGEMHits;
 
+  // muon branches
+  int m_nhits, m_nvalidhits;
+  int m_nbounds;
+  int m_quality;
+  float m_pt, m_eta, m_phi;
+  vector<int> m_roll, m_chamber, m_layer; // hit info
+  vector<float> m_resx, m_resy, m_pullx, m_pully;
+  vector<int> m_in_roll, m_in_chamber, m_in_layer; // propagation bound info
+
   TTree *t_run;
+  TTree *t_muon;
   TTree *t_event;
 };
 
 struct GEMMuonAssociation {
   int muonQuality;
+  float mu_phi;
+  float mu_eta;
+  float mu_pt;
+
   float pull_x;
   float pull_y;
   float res_x;
   float res_y;
+
   int valid;
 };
 
@@ -144,6 +160,25 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   h_pull_x=fs->make<TH1D>(Form("pull_x"),"pull_x",100,-50,50);
   h_pull_y=fs->make<TH1D>(Form("pull_y"),"pull_y",100,-50,50);
 
+  t_muon = fs->make<TTree>("Muon", "Muon");
+  t_muon->Branch("nhits", &m_nhits, "nhits/I")->SetTitle("n GEM hits associated to muon");
+  t_muon->Branch("nvalidhits", &m_nvalidhits, "nvalidhits/I")->SetTitle("n GEM hits associated to muon, and muon can propagate to eta partition of hit");
+  t_muon->Branch("nbounds", &m_nbounds, "nbounds/I")->SetTitle("times muon is in GEM eta partition bounds");
+  t_muon->Branch("pt", &m_pt, "pt/F");
+  t_muon->Branch("eta", &m_eta, "eta/F");
+  t_muon->Branch("phi", &m_phi, "phi/F");
+  t_muon->Branch("quality", &m_quality, "quality/I")->SetTitle("muon quality :: 0:noid 1:looseID 2:tightID");
+  t_muon->Branch("roll", &m_roll);
+  t_muon->Branch("chamber", &m_chamber);
+  t_muon->Branch("layer", &m_layer);
+  t_muon->Branch("resx", &m_resx);
+  t_muon->Branch("resy", &m_resy);
+  t_muon->Branch("pullx", &m_pullx);
+  t_muon->Branch("pully", &m_pully);
+  t_muon->Branch("in_roll", &m_in_roll);
+  t_muon->Branch("in_chamber", &m_in_chamber);
+  t_muon->Branch("in_layer", &m_in_layer);
+
   t_hit = fs->make<TTree>("Hit", "Hit");
   t_hit->Branch("run", &b_run, "run/I");
   t_hit->Branch("lumi", &b_lumi, "lumi/I");  
@@ -163,10 +198,13 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_hit->Branch("res_x", &b_res_x, "res_x/F");
   t_hit->Branch("res_y", &b_res_y, "res_y/F");
   t_hit->Branch("valid", &b_valid, "valid/I");
+  t_hit->Branch("mu_phi", &b_mu_phi, "mu_phi/F");
+  t_hit->Branch("mu_eta", &b_mu_eta, "mu_eta/F");
+  t_hit->Branch("mu_pt", &b_mu_pt, "mu_pt/F");
 
   for (int ichamber=0; ichamber<36;++ichamber) {
   // for (int ichamber=27; ichamber<=30;++ichamber) {
-    for (int ilayer=0; ilayer<2;++ilayer) {
+    for (int ilayer=1; ilayer<3;++ilayer) {
       h_firstStrip[ichamber][ilayer] = fs->make<TH2D>(Form("firstStrip ch %i lay %i",ichamber, ilayer),"firstStrip",384,1,385,8,0.5,8.5);
       h_firstStrip[ichamber][ilayer]->GetXaxis()->SetTitle("strip");
       h_firstStrip[ichamber][ilayer]->GetYaxis()->SetTitle("iEta");
@@ -233,9 +271,23 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   for (size_t i = 0; i < muons->size(); ++i) {
     b_nMuons++;
     nMuonTotal++;
-    
+
+    m_nhits = 0;
+    m_nvalidhits = 0;
+    m_nbounds = 0;
+    m_roll.clear(); m_chamber.clear(); m_layer.clear();
+    m_resx.clear(); m_resy.clear(); m_pullx.clear(); m_pully.clear();
+    m_in_roll.clear(); m_in_chamber.clear(); m_in_layer.clear();
+        
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
     const reco::Muon* mu = muRef.get();
+
+    if (mu->passed(reco::Muon::Selector::CutBasedIdTight))
+      m_quality = 2;
+    else if (mu->passed(reco::Muon::Selector::CutBasedIdLoose))
+      m_quality = 1;
+    else
+      m_quality = 0;
 
     const reco::Track* muonTrack = 0;  
     if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
@@ -248,14 +300,14 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       bool onDet = false;
 
       // prepropagate to near the GEM region, to speedup per/etapart prop. w/o loss of generatlity
-      TrajectoryStateOnSurface tsos_ = propagator->propagate(ttTrack.outermostMeasurementState(),
-      							    GEMGeometry_->etaPartitions()[0]->surface());
-      if (!tsos_.isValid()) continue;
+      // TrajectoryStateOnSurface tsos_ = propagator->propagate(ttTrack.outermostMeasurementState(),
+      // 							    GEMGeometry_->etaPartitions()[0]->surface());
+      // if (!tsos_.isValid()) continue;
       
       // GlobalPoint tsosGP = tsos.globalPosition();
       
       for (auto ch : GEMGeometry_->etaPartitions()) {
-	TrajectoryStateOnSurface tsos = propagator->propagate(tsos_, // ttTrack.outermostMeasurementState(),
+	TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),
 							      ch->surface());
 	if (!tsos.isValid()) continue;
 	
@@ -266,9 +318,13 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	h_globalPosOnGem->Fill(tsosGP.x(), tsosGP.y());
 
 	if (bps.bounds().inside(pos2D)) {
+	  m_nbounds++;
 	  onDet = true;
 	  auto gemid = ch->id();
 	  h_inEta[gemid.chamber()][gemid.layer()]->Fill(gemid.roll());
+	  m_in_roll.push_back(gemid.roll());
+	  m_in_chamber.push_back(gemid.chamber());
+	  m_in_layer.push_back(gemid.layer());
 	  
 	  for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
 	    if ((*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
@@ -302,9 +358,13 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    GEMDetId gemid((*hit)->geographicalId());
 	    auto etaPart = GEMGeometry_->etaPartition(gemid);
 
+	    m_nhits++;
+
 	    TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),etaPart->surface());
 	    if (!tsos.isValid()) continue;
 	    // GlobalPoint tsosGP = tsos.globalPosition();
+
+	    m_nvalidhits++;
 
 	    LocalPoint && tsos_localpos = tsos.localPosition();
 	    LocalError && tsos_localerr = tsos.localError().positionError();
@@ -322,22 +382,33 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    h_pull_x->Fill(pull_x);
 	    h_pull_y->Fill(pull_y);
 
-	    int qual = -1;
-	    if (mu->passed(reco::Muon::Selector::CutBasedIdTight))
-	      qual = 2;
-	    else if (mu->passed(reco::Muon::Selector::CutBasedIdLoose))
-	      qual = 1;
-	    else
-	      qual = 0;
+	    m_roll.push_back(gemid.roll());
+	    m_chamber.push_back(gemid.chamber());
+	    m_layer.push_back(gemid.layer());
+
+	    m_resx.push_back(res_x);
+	    m_resy.push_back(res_y);
+	    m_pullx.push_back(pull_x);
+	    m_pully.push_back(pull_y);
+	    
 	    int isvalid =  (*hit)->isValid();
-	    muHits[static_cast<GEMRecHit*>(*hit)] = {muonQuality: qual,
+	    auto mup = tsos.globalMomentum();
+	    muHits[static_cast<GEMRecHit*>(*hit)] = {muonQuality: m_quality,
+						     mu_phi: mup.phi(), mu_eta: mup.eta(), mu_pt: mup.perp(),
 						     pull_x: pull_x, pull_y: pull_y,
 						     res_x: res_x, res_y: res_y, valid: isvalid};
 	  }
 	}
       }
     }
-  }
+
+    if (m_nhits > 0 or m_nbounds > 0) {
+      m_pt = mu->pt();
+      m_eta = mu->eta();
+      m_phi = mu->phi();
+      t_muon->Fill();
+    }
+  } // Muon Loop
 
   int totalStrips = 0;
 
@@ -350,12 +421,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
 
 	h_hitEta[rId.chamber()][rId.layer()]->Fill(rId.roll());
-	h_firstStrip[rId.chamber()][rId.layer()-1]->Fill(hit->firstClusterStrip(), rId.roll());
+	h_firstStrip[rId.chamber()][rId.layer()]->Fill(hit->firstClusterStrip(), rId.roll());
 	h_clusterSize->Fill(hit->clusterSize());
 	h_bxtotal->Fill(hit->BunchX());
 	for (int nstrip = hit->firstClusterStrip(); nstrip < hit->firstClusterStrip()+hit->clusterSize(); ++nstrip) {
 	  totalStrips++;
-	  h_allStrips[rId.chamber()][rId.layer()-1]->Fill(nstrip, rId.roll());
+	  h_allStrips[rId.chamber()][rId.layer()]->Fill(nstrip, rId.roll());
 	}
 
 	b_firstStrip = hit->firstClusterStrip();
@@ -370,6 +441,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	b_res_x = -99;
 	b_res_y = -99;
 	b_valid = -1;
+	b_mu_phi = b_mu_eta = b_mu_pt = -99;
 	for (const auto & kv : muHits) {
 	  auto muHit = kv.first;
 	  if (*hit == *muHit) {
@@ -380,6 +452,9 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    b_res_x = assoc.res_x;
 	    b_res_y = assoc.res_y;
 	    b_valid = assoc.valid;
+	    b_mu_eta = assoc.mu_eta;
+	    b_mu_phi = assoc.mu_phi;
+	    b_mu_pt = assoc.mu_pt;
 	  }
 	}
 
