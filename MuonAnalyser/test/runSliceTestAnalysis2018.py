@@ -37,8 +37,9 @@ process.source.skipEvents = cms.untracked.uint32(0)
 #process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
 from glob import glob
 process.source.fileNames.extend(
-    ['file:/xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_{0:03d}.root'.format(i) for i in range(349, 349+10)]
-    #['file:'+f for f in glob('/xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3*.root')][:]
+    ['/store/user/jlee/SingleMuon/Run2018C-v1/RECOv2/step3_019.root']
+    # ['file:/xrootd/store/user/iawatson/SingleMuon/Run2018C-v1/wGEM/RECOv1/step3_{0:03d}.root'.format(i) for i in range(682, 682+1)]
+    # ['file:'+f for f in glob('/xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3*.root')][:]
 )
 #process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2017G-v1/FEVTEvent/step3_313.root')
 

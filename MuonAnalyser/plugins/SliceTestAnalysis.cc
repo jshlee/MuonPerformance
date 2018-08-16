@@ -107,7 +107,8 @@ private:
   vector<int> m_roll, m_chamber, m_layer; // hit info
   vector<float> m_resx, m_resy, m_pullx, m_pully;
   vector<int> m_in_roll, m_in_chamber, m_in_layer; // propagation bound info
-
+  vector<float> m_in_globalPhi, m_in_globalEta, m_in_nearGemPhi, m_in_nearGemEta; // global info
+  
   TTree *t_run;
   TTree *t_muon;
   TTree *t_event;
@@ -178,6 +179,10 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_muon->Branch("in_roll", &m_in_roll);
   t_muon->Branch("in_chamber", &m_in_chamber);
   t_muon->Branch("in_layer", &m_in_layer);
+  t_muon->Branch("in_globalPhi", &m_in_globalPhi);
+  t_muon->Branch("in_globalEta", &m_in_globalEta);
+  t_muon->Branch("in_nearGemPhi", &m_in_nearGemPhi);
+  t_muon->Branch("in_nearGemEta", &m_in_nearGemEta);
 
   t_hit = fs->make<TTree>("Hit", "Hit");
   t_hit->Branch("run", &b_run, "run/I");
@@ -278,7 +283,8 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     m_roll.clear(); m_chamber.clear(); m_layer.clear();
     m_resx.clear(); m_resy.clear(); m_pullx.clear(); m_pully.clear();
     m_in_roll.clear(); m_in_chamber.clear(); m_in_layer.clear();
-        
+    m_in_globalPhi.clear(); m_in_globalEta.clear(); m_in_nearGemPhi.clear(); m_in_nearGemEta.clear();
+    
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
     const reco::Muon* mu = muRef.get();
 
@@ -325,6 +331,39 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  m_in_roll.push_back(gemid.roll());
 	  m_in_chamber.push_back(gemid.chamber());
 	  m_in_layer.push_back(gemid.layer());
+
+	  m_in_globalPhi.push_back(tsosGP.phi());
+	  m_in_globalEta.push_back(tsosGP.eta());
+
+	  float gemEta = +99.0, gemPhi = +99.0;
+
+	  
+	  for (auto ch : GEMGeometry_->chambers()) {
+	    for(auto roll : ch->etaPartitions()) {
+	      GEMDetId rId = roll->id();
+	      if (rId != gemid) continue;
+	      
+	      auto recHitsRange = gemRecHits->get(rId); 
+	      auto gemRecHit = recHitsRange.first;
+	      for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
+		auto gemGlob = ch->toGlobal(hit->localPosition());
+
+		// pick closest hit
+		if (fabs(gemGlob.phi() - tsosGP.phi()) < gemPhi) {
+		  gemPhi = gemGlob.phi();
+		  gemEta = gemGlob.eta();
+		}
+		
+		// h_hitEta[rId.chamber()][rId.layer()]->Fill(rId.roll());
+		// h_firstStrip[rId.chamber()][rId.layer()]->Fill(hit->firstClusterStrip(), rId.roll());
+		// h_clusterSize->Fill(hit->clusterSize());
+		// h_bxtotal->Fill(hit->BunchX());
+	      }
+	    }
+	  }
+	  m_in_nearGemPhi.push_back(gemPhi);
+	  m_in_nearGemEta.push_back(gemEta);
+
 	  
 	  for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
 	    if ((*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
