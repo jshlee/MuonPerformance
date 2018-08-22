@@ -1,91 +1,58 @@
-import ROOT
-
+import ROOT, array
 f = ROOT.TFile("sliceTest2018.root")
-#f = ROOT.TFile("histo2018.root")
-t = f.SliceTestAnalysis.Get("Muon")
+fv2 = ROOT.TFile("sliceTest2018v2.root")
 
-#t.Draw("track_roll>>eta(8,1,9)", "onDet&&abs(track_roll)<10")
-#t.Draw("track_roll>>eta2(8,1,9)", "!onDet&&abs(track_roll)<10")
-#eta = ROOT.gROOT.FindObject("eta")
-#eta2 = ROOT.gROOT.FindObject("eta2")
-#
-#t.Draw("track_chamber>>ch(36,0,36)", "onDet&&abs(track_chamber)>0")
-#t.Draw("track_chamber>>ch2(36,0,36)", "!onDet&&abs(track_chamber)>0")
-#ch = ROOT.gROOT.FindObject("ch")
-#ch2 = ROOT.gROOT.FindObject("ch2")
-#
+tevent = f.SliceTestAnalysis.Get("Events")
+tmuon=f.SliceTestAnalysis.Get("Muon")
+thit=f.SliceTestAnalysis.Get("Hit")
 cnv = ROOT.TCanvas()
-#eff = ROOT.TEfficiency(eta,eta2)
-#eff.Draw()
-#eff.SetTitle("efficiency per etaPartition; etaPartition; Efficiency")
-#cnv.Print("eff_eta.png")
-#
-#eff2 = ROOT.TEfficiency(ch,ch2)
-#eff2.Draw()
-#eff2.SetTitle("efficiency per chamber; chamber; Efficiency")
-#cnv.Print("eff_ch.png")
 
-t2 = f.SliceTestAnalysis.Get("Hit")
 """
-t2.Draw("nStrips>>s(10,0,10)","etaPartition==1")
-s = ROOT.gROOT.FindObject("s")
-s.SetMaximum(s.GetMaximum()*3.5)
-s.Draw()
-s.SetStats(0)
-s.SetTitle("nStrips; nStrips; number of hit")
-leg = ROOT.TLegend(0.6,0.45,0.88,0.88)
-for i in range(1,9):
-    t2.Draw("nStrips>>nstrip%d"%i,"etaPartition==%d"%i,"same")
-    strip = ROOT.gROOT.FindObject("nstrip%d"%i)
-    strip.SetLineColor(i+1)
-    leg.AddEntry(strip, "etaPartition %d"%i, "l")
-leg.Draw()
-cnv.Print("clusterSize.png")
+tmuon.Draw("run>>h")
+h_run = ROOT.gROOT.FindObject("h")
+runs=[]
+for i in range(1,h_run.GetNbinsX()+1):
+  run = int(h_run.GetBinCenter(i))
+  if tmuon.Draw("nhits","run==%d"%run) != 0: runs.append(int(h_run.GetBinCenter(i)))
+print runs
+htmp = ROOT.TH1D("", "",len(runs),0,len(runs))
 
-h = f.SliceTestAnalysis.Get("res_x")
-h.Draw()
-cnv.Print("res_x.png")
-h = f.SliceTestAnalysis.Get("res_y")
-h.Draw()
-cnv.Print("res_y.png")
-
-h = f.SliceTestAnalysis.Get("pull_x")
-h.Draw()
-cnv.Print("pull_x.png")
-h = f.SliceTestAnalysis.Get("pull_y")
-h.Draw()
-cnv.Print("pull_y.png")
-
-t2.Draw("y:x>>xy", "muonQuality>=2")
-xy = ROOT.gROOT.FindObject("xy")
-xy.SetTitle("xy occupancy; global x; global y")
-xy.Draw()
-cnv.Print("xy.png")
-t2.Draw("sqrt(x**2+y**2):z>>rz")
-rz = ROOT.gROOT.FindObject("rz")
-rz.SetTitle("rz occupancy; global r; global z")
-rz.Draw()
-cnv.Print("rz.png")
+tex = ROOT.TLatex()
+tex.SetNDC()
 """
 
-t.Draw("resx>>rtot(10,-200,200)", "nvalidhits==3")
-t.Draw("resx[0]>>r0(10,-200,200)", "nvalidhits==3&&resx[0]>resx[1]&&resx[0]>resx[2]")
-t.Draw("resx[1]>>r1(10,-200,200)", "nvalidhits==3&&resx[1]>resx[0]&&resx[1]>resx[2]")
-t.Draw("resx[2]>>r2(10,-200,200)", "nvalidhits==3&&resx[2]>resx[0]&&resx[2]>resx[1]")
-rtot = ROOT.gROOT.FindObject("rtot")
-r0 = ROOT.gROOT.FindObject("r0")
-r1 = ROOT.gROOT.FindObject("r1")
-r2 = ROOT.gROOT.FindObject("r2")
-large = r0.Clone()
-large.Add(r1)
-large.Add(r2)
-large.SetLineColor(2)
-rtot.Add(large,-1)
-rtot.Draw()
-large.Draw("same")
-cnv.Print("hit3.png")
+idcut = "pt>5&&quality>=2"
+for ch in [27,28,29,30]:
+    for lay in [1,2]:
+	print ch, lay
+        tmuon.Draw("in_roll:in_strip/128>>in_strip(3,0,3,8,1,9)", "%s&&nvalidhits>0&&in_layer==%d&&in_chamber==%d"%(idcut,lay,ch))
+        tmuon.Draw("in_roll:in_strip/128>>hit_strip(3,0,3,8,1,9)", "%s%%nvalidhits>0&&in_nearGemRoll==in_roll&&in_nearGemFirstStrip!=-9&&(in_nearGemFirstStrip/128)==(in_strip/128)&&in_layer==%d&&in_chamber==%d"%(idcut,lay,ch))
+        h = ROOT.gROOT.FindObject("in_strip")
+        h2 = ROOT.gROOT.FindObject("hit_strip")
+        eff = ROOT.TEfficiency(h2,h)
+        eff.SetTitle("ch %d lay %d; VFAT; Roll"%(ch, lay))
+        eff.Draw()
+        cnv.Update()
+        eff.GetPaintedHistogram().SetMaximum(0.2)
+        eff.GetPaintedHistogram().SetMinimum(0)
+        eff.SetMarkerSize(1.3)
+        ROOT.gStyle.SetPaintTextFormat(".4f")
+        eff.Draw("coltextz")
+        cnv.Print("eff_ch%d_lay%d.png"%(ch,lay))
 
-
-
-
-
+	"""
+        for i,run in enumerate(runs):
+	    tot = tmuon.Draw("nhits","run==%d&&in_chamber==%d&&in_layer==%d"%(run,ch,lay))
+	    passed = tmuon.Draw("nhits","nhits>0&&run==%d&&in_chamber==%d&&in_layer==%d"%(run,ch,lay))
+	    h.GetXaxis().SetBinLabel(i+1,str(run))
+	    if tot != 0: h.SetBinContent(i+1,passed/float(tot))
+        h.Draw()
+        h.SetStats(0)
+        #h.SetMaximum(0.22)
+        h.SetMaximum(0.3)
+        h.SetMinimum(0)
+        h.SetTitle("Efficiency per Run (ch %d lay%d);Run;Efficiency"%(ch,lay))
+        tex.DrawLatex(0.15, 0.75, "SliceTest 2018C")
+        cnv.Print("runeff_ch%d_lay%d.png"%(ch,lay))
+        h.Reset()
+	"""
