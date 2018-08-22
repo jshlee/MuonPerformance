@@ -26,7 +26,7 @@ for ch in [27,28,29,30]:
     for lay in [1,2]:
 	print ch, lay
         tmuon.Draw("in_roll:in_strip/128>>in_strip(3,0,3,8,1,9)", "%s&&nvalidhits>0&&in_layer==%d&&in_chamber==%d"%(idcut,lay,ch))
-        tmuon.Draw("in_roll:in_strip/128>>hit_strip(3,0,3,8,1,9)", "%s%%nvalidhits>0&&in_nearGemRoll==in_roll&&in_nearGemFirstStrip!=-9&&(in_nearGemFirstStrip/128)==(in_strip/128)&&in_layer==%d&&in_chamber==%d"%(idcut,lay,ch))
+        tmuon.Draw("in_roll:in_strip/128>>hit_strip(3,0,3,8,1,9)", "%s&&nvalidhits>0&&in_nearGemRoll==in_roll&&in_nearGemFirstStrip!=-9&&(in_nearGemFirstStrip/128)==(in_strip/128)&&in_layer==%d&&in_chamber==%d"%(idcut,lay,ch))
         h = ROOT.gROOT.FindObject("in_strip")
         h2 = ROOT.gROOT.FindObject("hit_strip")
         eff = ROOT.TEfficiency(h2,h)
