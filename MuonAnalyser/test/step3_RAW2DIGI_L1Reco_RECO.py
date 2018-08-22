@@ -22,7 +22,7 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 
 # Input source
 process.source = cms.Source("PoolSource",
@@ -45,6 +45,11 @@ process.gemSkim = cms.EDFilter("GEMSkim",gemRecHits = cms.InputTag("gemRecHits")
 process.GEMRecHitSkim = cms.Path(process.gemSkim)
 process.AODEventContent.outputCommands.append("keep *_muonGEMDigis_*_*")
 process.AODEventContent.outputCommands.append("keep *_gemRecHits_*_*")
+process.AODEventContent.outputCommands.append("keep *_muons_*_*")
+process.AODEventContent.outputCommands.append("keep TrackingRecHitsOwned_globalMuons_*_*")
+process.AODEventContent.outputCommands.append("keep TrackingRecHitsOwned_standAloneMuons_*_*")
+process.AODEventContent.outputCommands.append("drop *_ak4PFJets*_*_*")
+
 # Output definition
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
