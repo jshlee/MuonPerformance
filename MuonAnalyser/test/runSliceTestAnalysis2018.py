@@ -21,27 +21,7 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 process.source.skipEvents = cms.untracked.uint32(0)
 
-### Files available as at 17.7.2018
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_000.root 319337
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_349.root 319347
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_975.root 319348
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_993.root 319349
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_1140.root 319449
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_1510.root 319450
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_1518.root 319456
-# Error in <TFile::TFile>: file /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_1808.root does not exist
-# Skipping /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_1808.root
-# /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_1857.root 319459
-
-
-#process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
-from glob import glob
-process.source.fileNames.extend(
-    ['file:AOD.root']
-    # ['file:/xrootd/store/user/iawatson/SingleMuon/Run2018C-v1/wGEM/RECOv1/step3_{0:03d}.root'.format(i) for i in range(682, 682+1)]
-    # ['file:'+f for f in glob('/xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3*.root')][:]
-)
-#process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2017G-v1/FEVTEvent/step3_313.root')
+process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2018C-v1/RECOv4/AOD_963.root')
 
 #fname = 'singleMuon.txt'
 #f = open(fname)
