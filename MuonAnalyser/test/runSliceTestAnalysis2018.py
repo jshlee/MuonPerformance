@@ -21,7 +21,7 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 process.source.skipEvents = cms.untracked.uint32(0)
 
-process.source.fileNames.append('/store/user/jlee/SingleMuon/Run2018C-v1/RECOv4/AOD_963.root')
+process.source.fileNames.append('file:/afs/cern.ch/work/j/jlee/AOD_963.root')
 
 #fname = 'singleMuon.txt'
 #f = open(fname)
