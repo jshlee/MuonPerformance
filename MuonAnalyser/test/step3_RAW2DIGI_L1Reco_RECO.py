@@ -26,7 +26,7 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/xrootd/store/data/Run2018C/SingleMuon/RAW/v1/000/319/337/00000/EEE24158-BE82-E811-8419-FA163E00EF28.root'),
+    fileNames = cms.untracked.vstring('file:FCF3CA05-E1AA-E811-98EF-FA163ED70477.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 #import FWCore.PythonUtilities.LumiList as LumiList
@@ -75,6 +75,7 @@ process.reconstruction_step = cms.Path(process.reconstruction)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RECOoutput_step = cms.EndPath(process.RECOoutput)
 
+process.muonGEMDigis.unPackStatusDigis = cms.bool(True)
 # Schedule definition
 process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,
                                     #process.GEMRecHitSkim,
