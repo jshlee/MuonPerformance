@@ -97,6 +97,8 @@ private:
   float b_pull_x, b_pull_y, b_res_x, b_res_y;
 
   int nEvents, nMuonTotal, nGEMFiducialMuon, nGEMTrackWithMuon;
+  int m_trkHitFound, m_notrkHitFound, m_noHitFound;
+  
   int nTightMuons, nTightMuonsFid, nTightMuonsWithGEM;
   int b_nMuons, b_nMuonsWithGEMHit;
   int b_valid;
@@ -141,6 +143,7 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   nGEMTrackWithMuon(0)
 { 
   nTightMuons = 0; nTightMuonsFid = 0; nTightMuonsWithGEM = 0;
+  m_trkHitFound = 0; m_notrkHitFound = 0; m_noHitFound = 0;
   gemRecHits_ = consumes<GEMRecHitCollection>(iConfig.getParameter<edm::InputTag>("gemRecHits"));
   muons_ = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muons"));
   vertexCollection_ = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"));
@@ -247,6 +250,10 @@ SliceTestAnalysis::~SliceTestAnalysis()
   std::cout << " # Muons " << nMuonTotal << std::endl;
   std::cout << " # FidMu " << nGEMFiducialMuon << std::endl;
   std::cout << " # GEMMu " << nGEMTrackWithMuon << std::endl;
+
+  std::cout << " # trk hit found " << m_trkHitFound << std::endl;
+  std::cout << " # hit     found " << m_notrkHitFound << std::endl;
+  std::cout << " # hit not found " << m_noHitFound << std::endl;
   
   std::cout << " # tight Muons " << nTightMuons << std::endl;
   std::cout << " # tight FidMu " << nTightMuonsFid << std::endl;
@@ -310,12 +317,14 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if (mu->passed(reco::Muon::Selector::CutBasedIdTight)) {
       m_quality = 2;
       nTightMuons++;
-    }      
+    }
     else if (mu->passed(reco::Muon::Selector::CutBasedIdLoose))
       m_quality = 1;
     else
       m_quality = 0;
 
+    if (m_quality != 2) continue;
+    if (mu->pt() < 10) continue;
     
     const reco::Track* muonTrack = 0;  
     if ( mu->globalTrack().isNonnull() ) muonTrack = mu->globalTrack().get();
@@ -327,29 +336,27 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       reco::TransientTrack ttTrack = ttrackBuilder_->build(muonTrack);
       //bool onDet = false;
 
-      auto superChamber = GEMGeometry_->superChambers()[0];
-      if (mu->eta() * superChamber->id().region() < 0 ) continue;
+      for (auto chamber : GEMGeometry_->chambers()) {
 
-      // loop over layers
-      for (int layer = 1; layer < 3; ++layer) {
+	if (chamber->id().chamber() == 1) continue;
+	if (mu->eta() * chamber->id().region() < 0 ) continue;
 
-	auto chamber = superChamber->chamber(layer);	
 	TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),
-							       chamber->surface());      
-	if (!tsos.isValid()) continue;      
+							      chamber->surface());
+	//cout <<" " << chamber->id() <<" " << chamber->surface().position().z()<< endl;
+	if (!tsos.isValid()) continue;
 	GlobalPoint tsosGP = tsos.globalPosition();
-
+	
 	// find matching etaPartition
-	for (auto etaPart : GEMGeometry_->etaPartitions()) {
+	for (auto etaPart : chamber->etaPartitions()) {
 	  auto gemid = etaPart->id();
-	  if (gemid.layer() != layer) continue;
 	  
-	  const LocalPoint pos = etaPart->toLocal(tsosGP);
-	  const LocalPoint pos2D(pos.x(), pos.y(), 0);
+	  const LocalPoint locPos = etaPart->toLocal(tsosGP);
+	  const LocalPoint locPos2D(locPos.x(), locPos.y(), 0);
 	  const BoundPlane& bps(etaPart->surface());
 
 	  // checking if muon is within eta partition
-	  if (bps.bounds().inside(pos2D)) {
+	  if (bps.bounds().inside(locPos2D)) {
 
 	    h_mu_all[gemid.chamber()][gemid.layer()-1]->Fill(gemid.roll());
 	    h_globalPosOnGem->Fill(tsosGP.x(), tsosGP.y());
@@ -363,47 +370,58 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    m_in_globalPhi.push_back(tsosGP.phi());
 	    m_in_globalEta.push_back(tsosGP.eta());
 
+	    bool hitFound = false;
 	    // finding gem hit within this etaPartition
 	    for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
 	      if ((*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
 		if ((*hit)->rawId() == gemid.rawId() ) {
+		  hitFound = true;
+		  m_trkHitFound++;
 		  if (m_quality == 2 && mu->pt()>20) ++nGEMTrackWithMuon;
 		  //GEMDetId gemid((*hit)->geographicalId());
 		  //auto etaPart = GEMGeometry_->etaPartition(gemid);
-		  h_mu_all[gemid.chamber()][gemid.layer()-1]->Fill(gemid.roll());
-	    
+		  h_mu_all_gem[gemid.chamber()][gemid.layer()-1]->Fill(gemid.roll());		  
 		}
 	      }
 	    }
-	  }
-	}
-	  
-	// finding gem hit closest gem hit
-	float gemEta = +99.0, gemPhi = +99.0;      
-	for (auto ch : GEMGeometry_->chambers()) {
-	  for(auto roll : ch->etaPartitions()) {
-	    GEMDetId rId = roll->id();	      
-	    auto recHitsRange = gemRecHits->get(rId); 
+
+	    float gemEta = +99.0, gemPhi = +99.0;      
+	    // if (!hitFound) {
+	    // finding gem hit closest gem hit
+	    auto recHitsRange = gemRecHits->get(gemid);
+	    LocalPoint hitLocPos(-999,-999,-999);
+
 	    auto gemRecHit = recHitsRange.first;
 	    for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
-	      auto gemGlob = ch->toGlobal(hit->localPosition());
-
+	      hitLocPos = hit->localPosition();
+	      auto gemGlob = etaPart->toGlobal(hitLocPos);
+		
 	      // pick closest hit
 	      if (fabs(gemGlob.phi() - tsosGP.phi()) < gemPhi) {
 		gemPhi = gemGlob.phi();
 		gemEta = gemGlob.eta();
 	      }
-		
-	      // h_hitEta[rId.chamber()][rId.layer()]->Fill(rId.roll());
-	      // h_firstStrip[rId.chamber()][rId.layer()]->Fill(hit->firstClusterStrip(), rId.roll());
-	      // h_clusterSize->Fill(hit->clusterSize());
-	      // h_bxtotal->Fill(hit->BunchX());
 	    }
+	    if (fabs(locPos.x() - hitLocPos.x()) < 2.0) {
+	      m_notrkHitFound++;
+	    }
+	    else {
+	      m_noHitFound++;
+	    }
+	      
+	    cout << "track locPos "<< locPos
+		 << " closest hit "<< hitLocPos
+		 <<" hitfound " << hitFound
+		 << gemid
+		 << endl;
+
+	    //   }
+	    
+	    m_in_nearGemPhi.push_back(gemPhi);
+	    m_in_nearGemEta.push_back(gemEta);
+	    
 	  }
 	}
-	m_in_nearGemPhi.push_back(gemPhi);
-	m_in_nearGemEta.push_back(gemEta);
-	
       }
     
       
