@@ -21,7 +21,7 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:FCF3CA05-E1AA-E811-98EF-FA163ED70477.root'),
+    fileNames = cms.untracked.vstring('file:/cms/ldap_home/jlee/FCF3CA05-E1AA-E811-98EF-FA163ED70477.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 #import FWCore.PythonUtilities.LumiList as LumiList
@@ -61,11 +61,16 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
     #SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('GEMRecHitSkim'))
 )
 
-# Additional output definition
-
 # Other statements 101X_dataRun2_Prompt_v11
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v11', '')
+print process.GlobalTag
+process.GlobalTag.toGet = cms.VPSet(
+    cms.PSet(
+        connect = cms.string('sqlite_file:GEMELMap.db'),
+        record = cms.string('GEMELMapRcd'),
+        tag = cms.string('GEMELMap_v3')
+    ))
 
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)

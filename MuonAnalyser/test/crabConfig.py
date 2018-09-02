@@ -8,7 +8,7 @@ config.General.transferOutputs = True
 config.section_("JobType")
 config.JobType.pluginName  = 'Analysis'
 config.JobType.psetName    = 'PAT2CAT_cfg.py'
-#config.JobType.maxMemoryMB = 3000
+config.JobType.maxMemoryMB = 2500
 config.section_("Data")
 config.Data.publication  = True
 config.Data.splitting='FileBased'
