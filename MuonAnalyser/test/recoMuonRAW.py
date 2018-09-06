@@ -17,11 +17,12 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/cms/ldap_home/jlee/FCF3CA05-E1AA-E811-98EF-FA163ED70477.root'),
+    fileNames = cms.untracked.vstring('file:B2AA1EF5-E0AA-E811-BD11-FA163ED8B27F.root'),
+    #fileNames = cms.untracked.vstring('/store/data/Run2018C/SingleMuon/RAW/v1/000/319/347/00000/F8F47D7C-4683-E811-A76E-FA163E133A3E.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 #import FWCore.PythonUtilities.LumiList as LumiList
@@ -64,10 +65,10 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
 # Other statements 101X_dataRun2_Prompt_v11
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v11', '')
-print process.GlobalTag
+# using local emap db
 process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(
-        connect = cms.string('sqlite_file:GEMELMap.db'),
+        connect = cms.string('sqlite_fip:MuonPerformance/MuonAnalyser/data/GEMELMap.db'),
         record = cms.string('GEMELMapRcd'),
         tag = cms.string('GEMELMap_v3')
     ))
@@ -83,16 +84,17 @@ process.highlevelreco = cms.Sequence(process.egammaHighLevelRecoPrePF*
 process.reconstruction = cms.Sequence(process.localreco*process.globalreco*process.highlevelreco)
 
 process.reconstruction_step = cms.Path(process.reconstruction)
-process.endjob_step = cms.EndPath(process.endOfProcess)
+#process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RECOoutput_step = cms.EndPath(process.RECOoutput)
 
 process.muonGEMDigis.unPackStatusDigis = cms.bool(True)
 # Schedule definition
 process.schedule = cms.Schedule(process.raw2digi_step,
                                     #process.L1Reco_step,
-                                    process.reconstruction_step,
+                                    #process.reconstruction_step,
                                     #process.GEMRecHitSkim,
-                                    process.endjob_step,process.RECOoutput_step)
+                                    #process.endjob_step,
+                                    process.RECOoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
