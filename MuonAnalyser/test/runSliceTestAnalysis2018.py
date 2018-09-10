@@ -11,7 +11,7 @@ process.load('RecoMuon.TrackingTools.MuonServiceProxy_cff')
 process.load('TrackingTools.TransientTrack.TransientTrackBuilder_cfi')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v11', '')
-process.MessageLogger.cerr.FwkReport.reportEvery = 5000
+#process.MessageLogger.cerr.FwkReport.reportEvery = 5000
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
@@ -21,7 +21,7 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 process.source.skipEvents = cms.untracked.uint32(0)
 
-process.source.fileNames.append('file:AOD.root')
+process.source.fileNames.append('file:/cms/ldap_home/jlee/store/SingleMuon/Run2018C-v1/RECOv6newDigiStatus/AOD_221.root')
 
 #fname = 'singleMuon.txt'
 #f = open(fname)
@@ -35,6 +35,8 @@ process.TFileService = cms.Service("TFileService",fileName = cms.string("histo20
 process.SliceTestAnalysis = cms.EDAnalyzer('SliceTestAnalysis',
     process.MuonServiceProxy,
     gemRecHits = cms.InputTag("gemRecHits"),
+    gebStatusCol = cms.InputTag("muonGEMDigis","GEBStatus"),
+    vfatStatusCol = cms.InputTag("muonGEMDigis","vfatStatus"),
     muons = cms.InputTag("muons"),
     vertexCollection = cms.InputTag("offlinePrimaryVertices"),
 )

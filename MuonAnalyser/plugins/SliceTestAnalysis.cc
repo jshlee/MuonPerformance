@@ -39,6 +39,9 @@
 
 #include "Geometry/Records/interface/MuonGeometryRecord.h"
 
+#include "DataFormats/GEMDigi/interface/GEMGEBStatusDigiCollection.h"
+#include "DataFormats/GEMDigi/interface/GEMVfatStatusDigiCollection.h"
+
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/Run.h"
 
@@ -67,6 +70,8 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<GEMRecHitCollection> gemRecHits_;
+  edm::EDGetTokenT<GEMGEBStatusDigiCollection> gebStatusCol_;
+  edm::EDGetTokenT<GEMVfatStatusDigiCollection> vfatStatusCol_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muons_;
   edm::EDGetTokenT<reco::VertexCollection> vertexCollection_;
   edm::Service<TFileService> fs;
@@ -145,6 +150,9 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   nTightMuons = 0; nTightMuonsFid = 0; nTightMuonsWithGEM = 0;
   m_trkHitFound = 0; m_notrkHitFound = 0; m_noHitFound = 0;
   gemRecHits_ = consumes<GEMRecHitCollection>(iConfig.getParameter<edm::InputTag>("gemRecHits"));
+  gebStatusCol_ = consumes<GEMGEBStatusDigiCollection>(iConfig.getParameter<edm::InputTag>("gebStatusCol"));
+  vfatStatusCol_ = consumes<GEMVfatStatusDigiCollection>(iConfig.getParameter<edm::InputTag>("vfatStatusCol"));
+  
   muons_ = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muons"));
   vertexCollection_ = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"));
   edm::ParameterSet serviceParameters = iConfig.getParameter<edm::ParameterSet>("ServiceParameters");
@@ -285,13 +293,43 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   
   edm::Handle<GEMRecHitCollection> gemRecHits;  
   iEvent.getByToken(gemRecHits_, gemRecHits);
-  //std::cout << "gemRecHits->size() " << gemRecHits->size() <<std::endl;
+  //std::cout << "gemRecHits->size() " << gemRecHits->size() <<std::endl;  
   
   edm::Handle<reco::VertexCollection> vertexCollection;
   iEvent.getByToken( vertexCollection_, vertexCollection );
   if(vertexCollection.isValid()) {
     vertexCollection->size();
     //    std::cout << "vertex->size() " << vertexCollection->size() <<std::endl;
+  }
+
+  // checking readout status
+  edm::Handle<GEMGEBStatusDigiCollection> gebStatusCol;  
+  iEvent.getByToken(gebStatusCol_, gebStatusCol);
+  
+  edm::Handle<GEMVfatStatusDigiCollection> vfatStatusCol;  
+  iEvent.getByToken(vfatStatusCol_, vfatStatusCol);
+
+  for (auto ch : GEMGeometry_->chambers()) {
+    GEMDetId cId = ch->id();
+    auto gebs = gebStatusCol->get(cId); 
+    for (auto geb = gebs.first; geb != gebs.second; ++geb) {
+      std::cout << "geb id " << cId <<std::endl;
+      std::cout << "geb read no. vfats " << int(geb->getVwh())/3
+		<< " InFu " << int(geb->getInFu())
+		<<std::endl;
+    }
+    for (auto roll : ch->etaPartitions()) {
+      GEMDetId rId = roll->id();
+      auto vfats = vfatStatusCol->get(rId); 
+      for (auto vfat = vfats.first; vfat != vfats.second; ++vfat) {
+	std::cout << rId
+		  << " vfat pos " << vfat->position()
+		  << " quality " << int(vfat->quality())
+		  << " flag " << int(vfat->flag())
+		  <<std::endl;
+
+      }
+    }
   }
  
   Handle<View<reco::Muon> > muons;
@@ -357,7 +395,7 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 	  // checking if muon is within eta partition
 	  if (bps.bounds().inside(locPos2D)) {
-
+	    nGEMFiducialMuon++;
 	    h_mu_all[gemid.chamber()][gemid.layer()-1]->Fill(gemid.roll());
 	    h_globalPosOnGem->Fill(tsosGP.x(), tsosGP.y());
 	    m_nbounds++;
@@ -390,19 +428,23 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    // finding gem hit closest gem hit
 	    auto recHitsRange = gemRecHits->get(gemid);
 	    LocalPoint hitLocPos(-999,-999,-999);
+	    cout << "hit gemid "<< gemid
+		 <<" gemRecHits->size() " << gemRecHits->size()
+		 << endl;
 
 	    auto gemRecHit = recHitsRange.first;
 	    for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
 	      hitLocPos = hit->localPosition();
 	      auto gemGlob = etaPart->toGlobal(hitLocPos);
-		
+	      cout << "hit loc "<< locPos
+		   << endl;		
 	      // pick closest hit
 	      if (fabs(gemGlob.phi() - tsosGP.phi()) < gemPhi) {
 		gemPhi = gemGlob.phi();
 		gemEta = gemGlob.eta();
 	      }
 	    }
-	    if (fabs(locPos.x() - hitLocPos.x()) < 2.0) {
+	    if (fabs(locPos.x() - hitLocPos.x()) < 20.0) {
 	      m_notrkHitFound++;
 	    }
 	    else {
@@ -439,54 +481,54 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       // 	  ++nTightMuonsWithGEM;
       // 	}
 	
-    // 	for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
-    // 	  if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
-    // 	    GEMDetId gemid((*hit)->geographicalId());
-    // 	    auto etaPart = GEMGeometry_->etaPartition(gemid);
+      // 	for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
+      // 	  if ( (*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
+      // 	    GEMDetId gemid((*hit)->geographicalId());
+      // 	    auto etaPart = GEMGeometry_->etaPartition(gemid);
 
-    // 	    m_nhits++;
+      // 	    m_nhits++;
 
-    // 	    TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),etaPart->surface());
-    // 	    if (!tsos.isValid()) continue;
-    // 	    // GlobalPoint tsosGP = tsos.globalPosition();
+      // 	    TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),etaPart->surface());
+      // 	    if (!tsos.isValid()) continue;
+      // 	    // GlobalPoint tsosGP = tsos.globalPosition();
 
-    // 	    m_nvalidhits++;
+      // 	    m_nvalidhits++;
 
-    // 	    LocalPoint && tsos_localpos = tsos.localPosition();
-    // 	    LocalError && tsos_localerr = tsos.localError().positionError();
-    // 	    LocalPoint && dethit_localpos = (*hit)->localPosition();     
-    // 	    LocalError && dethit_localerr = (*hit)->localPositionError();
-    // 	    auto res_x = (dethit_localpos.x() - tsos_localpos.x());
-    // 	    auto res_y = (dethit_localpos.y() - tsos_localpos.y()); 
-    // 	    auto pull_x = (dethit_localpos.x() - tsos_localpos.x()) / 
-    // 	      std::sqrt(dethit_localerr.xx() + tsos_localerr.xx());
-    // 	    auto pull_y = (dethit_localpos.y() - tsos_localpos.y()) / 
-    // 	      std::sqrt(dethit_localerr.yy() + tsos_localerr.yy());
+      // 	    LocalPoint && tsos_localpos = tsos.localPosition();
+      // 	    LocalError && tsos_localerr = tsos.localError().positionError();
+      // 	    LocalPoint && dethit_localpos = (*hit)->localPosition();     
+      // 	    LocalError && dethit_localerr = (*hit)->localPositionError();
+      // 	    auto res_x = (dethit_localpos.x() - tsos_localpos.x());
+      // 	    auto res_y = (dethit_localpos.y() - tsos_localpos.y()); 
+      // 	    auto pull_x = (dethit_localpos.x() - tsos_localpos.x()) / 
+      // 	      std::sqrt(dethit_localerr.xx() + tsos_localerr.xx());
+      // 	    auto pull_y = (dethit_localpos.y() - tsos_localpos.y()) / 
+      // 	      std::sqrt(dethit_localerr.yy() + tsos_localerr.yy());
 	    
-    // 	    h_res_x->Fill(res_x);
-    // 	    h_res_y->Fill(res_y);
-    // 	    h_pull_x->Fill(pull_x);
-    // 	    h_pull_y->Fill(pull_y);
+      // 	    h_res_x->Fill(res_x);
+      // 	    h_res_y->Fill(res_y);
+      // 	    h_pull_x->Fill(pull_x);
+      // 	    h_pull_y->Fill(pull_y);
 
-    // 	    m_roll.push_back(gemid.roll());
-    // 	    m_chamber.push_back(gemid.chamber());
-    // 	    m_layer.push_back(gemid.layer());
+      // 	    m_roll.push_back(gemid.roll());
+      // 	    m_chamber.push_back(gemid.chamber());
+      // 	    m_layer.push_back(gemid.layer());
 
-    // 	    m_resx.push_back(res_x);
-    // 	    m_resy.push_back(res_y);
-    // 	    m_pullx.push_back(pull_x);
-    // 	    m_pully.push_back(pull_y);
+      // 	    m_resx.push_back(res_x);
+      // 	    m_resy.push_back(res_y);
+      // 	    m_pullx.push_back(pull_x);
+      // 	    m_pully.push_back(pull_y);
 	    
-    // 	    int isvalid =  (*hit)->isValid();
-    // 	    auto mup = tsos.globalMomentum();
-    // 	    muHits[static_cast<GEMRecHit*>(*hit)] = {muonQuality: m_quality,
-    // 						     mu_phi: mup.phi(), mu_eta: mup.eta(), mu_pt: mup.perp(),
-    // 						     pull_x: pull_x, pull_y: pull_y,
-    // 						     res_x: res_x, res_y: res_y, valid: isvalid};
-    // 	  }
-    // 	}
-    //   }
-    // }
+      // 	    int isvalid =  (*hit)->isValid();
+      // 	    auto mup = tsos.globalMomentum();
+      // 	    muHits[static_cast<GEMRecHit*>(*hit)] = {muonQuality: m_quality,
+      // 						     mu_phi: mup.phi(), mu_eta: mup.eta(), mu_pt: mup.perp(),
+      // 						     pull_x: pull_x, pull_y: pull_y,
+      // 						     res_x: res_x, res_y: res_y, valid: isvalid};
+      // 	  }
+      // 	}
+      //   }
+      // }
     
       if (m_nhits > 0 or m_nbounds > 0) {
 	m_pt = mu->pt();
@@ -506,6 +548,10 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       auto recHitsRange = gemRecHits->get(rId); 
       auto gemRecHit = recHitsRange.first;
       for (auto hit = gemRecHit; hit != recHitsRange.second; ++hit) {
+
+	// cout << "hit gemid "<< rId
+	//      <<" hit->firstClusterStrip() " << hit->firstClusterStrip()
+	//      << endl;
 
 	h_hitEta[rId.chamber()][rId.layer()-1]->Fill(rId.roll());
 	h_firstStrip[rId.chamber()][rId.layer()-1]->Fill(hit->firstClusterStrip(), rId.roll());
