@@ -309,28 +309,28 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<GEMVfatStatusDigiCollection> vfatStatusCol;  
   iEvent.getByToken(vfatStatusCol_, vfatStatusCol);
 
-  for (auto ch : GEMGeometry_->chambers()) {
-    GEMDetId cId = ch->id();
-    auto gebs = gebStatusCol->get(cId); 
-    for (auto geb = gebs.first; geb != gebs.second; ++geb) {
-      std::cout << "geb id " << cId <<std::endl;
-      std::cout << "geb read no. vfats " << int(geb->getVwh())/3
-		<< " InFu " << int(geb->getInFu())
-		<<std::endl;
-    }
-    for (auto roll : ch->etaPartitions()) {
-      GEMDetId rId = roll->id();
-      auto vfats = vfatStatusCol->get(rId); 
-      for (auto vfat = vfats.first; vfat != vfats.second; ++vfat) {
-	std::cout << rId
-		  << " vfat pos " << vfat->position()
-		  << " quality " << int(vfat->quality())
-		  << " flag " << int(vfat->flag())
-		  <<std::endl;
+  // for (auto ch : GEMGeometry_->chambers()) {
+  //   GEMDetId cId = ch->id();
+  //   auto gebs = gebStatusCol->get(cId); 
+  //   for (auto geb = gebs.first; geb != gebs.second; ++geb) {
+  //     std::cout << "geb id " << cId <<std::endl;
+  //     std::cout << "geb read no. vfats " << int(geb->getVwh())/3
+  // 		<< " InFu " << int(geb->getInFu())
+  // 		<<std::endl;
+  //   }
+  //   for (auto roll : ch->etaPartitions()) {
+  //     GEMDetId rId = roll->id();
+  //     auto vfats = vfatStatusCol->get(rId); 
+  //     for (auto vfat = vfats.first; vfat != vfats.second; ++vfat) {
+  // 	std::cout << rId
+  // 		  << " vfat pos " << vfat->position()
+  // 		  << " quality " << int(vfat->quality())
+  // 		  << " flag " << int(vfat->flag())
+  // 		  <<std::endl;
 
-      }
-    }
-  }
+  //     }
+  //   }
+  // }
  
   Handle<View<reco::Muon> > muons;
   iEvent.getByToken(muons_, muons);
@@ -378,23 +378,51 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 	if (chamber->id().chamber() == 1) continue;
 	if (mu->eta() * chamber->id().region() < 0 ) continue;
-
-	TrajectoryStateOnSurface tsos = propagator->propagate(ttTrack.outermostMeasurementState(),
-							      chamber->surface());
-	//cout <<" " << chamber->id() <<" " << chamber->surface().position().z()<< endl;
-	if (!tsos.isValid()) continue;
-	GlobalPoint tsosGP = tsos.globalPosition();
-	
+		
 	// find matching etaPartition
 	for (auto etaPart : chamber->etaPartitions()) {
 	  auto gemid = etaPart->id();
+
+	  // get closest tsos
+	  GlobalPoint gemetagp = etaPart->position();
+	  TrajectoryStateOnSurface tsos = ttTrack.stateOnSurface(gemetagp);
+	  if (!tsos.isValid()) continue;
+
+	  // propagate from closest tsos
+	  tsos = propagator->propagate(tsos,etaPart->surface());	
+	  if (!tsos.isValid()) continue;
+	 
+	  GlobalPoint tsosGP = tsos.globalPosition();
 	  
 	  const LocalPoint locPos = etaPart->toLocal(tsosGP);
 	  const LocalPoint locPos2D(locPos.x(), locPos.y(), 0);
 	  const BoundPlane& bps(etaPart->surface());
-
+	  // if (gemid.roll() == 1){
+	  //   cout <<"geo test " << chamber->id()<< endl;
+	    
+	  //   LocalPoint testpoint1(22.0,-5,0);
+	  //   LocalPoint testpoint2(22.0,0,0);
+	  //   LocalPoint testpoint3(22.0,5,0);
+	  //   cout <<"inside "
+	  // 	 << bps.bounds().inside(testpoint1) <<" "
+	  // 	 << bps.bounds().inside(testpoint2) <<" "
+	  // 	 << bps.bounds().inside(testpoint3) <<" "
+	  //     // << bps.bounds().inside(testpoint4) <<" "
+	  // 	 << endl;
+	   
+	  // }
+	  
 	  // checking if muon is within eta partition
 	  if (bps.bounds().inside(locPos2D)) {
+
+	    // // if (tsosATgem.isValid()){
+	    //   cout <<" " << chamber->id()
+	    // 	   <<" tsos " << tsos
+	    // 	   <<" tsosATgem " << tsosATgem
+	    // 	   << endl;
+	    //   //}
+	    //const LocalPoint locPosAtGEM = etaPart->toLocal(tsosATgem.globalPosition());
+
 	    nGEMFiducialMuon++;
 	    h_mu_all[gemid.chamber()][gemid.layer()-1]->Fill(gemid.roll());
 	    h_globalPosOnGem->Fill(tsosGP.x(), tsosGP.y());
