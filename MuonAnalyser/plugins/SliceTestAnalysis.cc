@@ -104,10 +104,10 @@ private:
   int m_nbounds;
   int m_quality;
   float m_pt, m_eta, m_phi;
-  vector<int> m_roll, m_chamber, m_layer; // hit info
+  vector<int> m_roll, m_chamber, m_layer, m_strip; // hit info
   vector<float> m_resx, m_resy, m_pullx, m_pully;
-  vector<int> m_in_roll, m_in_chamber, m_in_layer; // propagation bound info
-  vector<float> m_in_globalPhi, m_in_globalEta, m_in_nearGemPhi, m_in_nearGemEta; // global info
+  vector<int> m_in_roll, m_in_chamber, m_in_layer, m_in_strip; // propagation bound info
+  vector<float> m_in_globalPhi, m_in_globalEta, m_in_nearGemPhi, m_in_nearGemEta, m_in_nearGemRoll, m_in_nearGemFirstStrip, m_in_nearGemClusterSize; // global info
   
   TTree *t_run;
   TTree *t_muon;
@@ -162,6 +162,8 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   h_pull_y=fs->make<TH1D>(Form("pull_y"),"pull_y",100,-50,50);
 
   t_muon = fs->make<TTree>("Muon", "Muon");
+  t_muon->Branch("run", &b_run, "run/I");
+  t_muon->Branch("lumi", &b_lumi, "lumi/I");
   t_muon->Branch("nhits", &m_nhits, "nhits/I")->SetTitle("n GEM hits associated to muon");
   t_muon->Branch("nvalidhits", &m_nvalidhits, "nvalidhits/I")->SetTitle("n GEM hits associated to muon, and muon can propagate to eta partition of hit");
   t_muon->Branch("nbounds", &m_nbounds, "nbounds/I")->SetTitle("times muon is in GEM eta partition bounds");
@@ -172,6 +174,7 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_muon->Branch("roll", &m_roll);
   t_muon->Branch("chamber", &m_chamber);
   t_muon->Branch("layer", &m_layer);
+  t_muon->Branch("strip", &m_strip);
   t_muon->Branch("resx", &m_resx);
   t_muon->Branch("resy", &m_resy);
   t_muon->Branch("pullx", &m_pullx);
@@ -179,10 +182,14 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   t_muon->Branch("in_roll", &m_in_roll);
   t_muon->Branch("in_chamber", &m_in_chamber);
   t_muon->Branch("in_layer", &m_in_layer);
+  t_muon->Branch("in_strip", &m_in_strip);
   t_muon->Branch("in_globalPhi", &m_in_globalPhi);
   t_muon->Branch("in_globalEta", &m_in_globalEta);
   t_muon->Branch("in_nearGemPhi", &m_in_nearGemPhi);
   t_muon->Branch("in_nearGemEta", &m_in_nearGemEta);
+  t_muon->Branch("in_nearGemRoll", &m_in_nearGemRoll);
+  t_muon->Branch("in_nearGemFirstStrip", &m_in_nearGemFirstStrip);
+  t_muon->Branch("in_nearGemClusterSize", &m_in_nearGemClusterSize);
 
   t_hit = fs->make<TTree>("Hit", "Hit");
   t_hit->Branch("run", &b_run, "run/I");
@@ -280,10 +287,10 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     m_nhits = 0;
     m_nvalidhits = 0;
     m_nbounds = 0;
-    m_roll.clear(); m_chamber.clear(); m_layer.clear();
+    m_roll.clear(); m_chamber.clear(); m_layer.clear(); m_strip.clear();
     m_resx.clear(); m_resy.clear(); m_pullx.clear(); m_pully.clear();
-    m_in_roll.clear(); m_in_chamber.clear(); m_in_layer.clear();
-    m_in_globalPhi.clear(); m_in_globalEta.clear(); m_in_nearGemPhi.clear(); m_in_nearGemEta.clear();
+    m_in_roll.clear(); m_in_chamber.clear(); m_in_layer.clear(); m_in_strip.clear();
+    m_in_globalPhi.clear(); m_in_globalEta.clear(); m_in_nearGemPhi.clear(); m_in_nearGemEta.clear(); m_in_nearGemFirstStrip.clear();
     
     edm::RefToBase<reco::Muon> muRef = muons->refAt(i);
     const reco::Muon* mu = muRef.get();
@@ -331,11 +338,13 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  m_in_roll.push_back(gemid.roll());
 	  m_in_chamber.push_back(gemid.chamber());
 	  m_in_layer.push_back(gemid.layer());
+      m_in_strip.push_back((int)(ch->strip(pos)));
 
 	  m_in_globalPhi.push_back(tsosGP.phi());
 	  m_in_globalEta.push_back(tsosGP.eta());
 
 	  float gemEta = +99.0, gemPhi = +99.0;
+	  int gemRoll = -9, gemFirstStrip = -9, gemClusterSize = -9;
 
 	  
 	  for (auto ch : GEMGeometry_->chambers()) {
@@ -352,6 +361,9 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 		if (fabs(gemGlob.phi() - tsosGP.phi()) < gemPhi) {
 		  gemPhi = gemGlob.phi();
 		  gemEta = gemGlob.eta();
+		  gemRoll = rId.roll();
+		  gemFirstStrip = hit->firstClusterStrip();
+		  gemClusterSize = hit->clusterSize();
 		}
 		
 		// h_hitEta[rId.chamber()][rId.layer()]->Fill(rId.roll());
@@ -363,7 +375,13 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  }
 	  m_in_nearGemPhi.push_back(gemPhi);
 	  m_in_nearGemEta.push_back(gemEta);
-
+	  m_in_nearGemRoll.push_back(gemRoll);
+	  m_in_nearGemFirstStrip.push_back(gemFirstStrip);
+	  m_in_nearGemClusterSize.push_back(gemClusterSize);
+	  if (gemFirstStrip != -9) {
+          cout << "  strip: " << gemFirstStrip << "  VFAT: " << int(gemFirstStrip/128) << " X: " << ch->centreOfStrip(gemFirstStrip).x() << "  phi: " << ch->toGlobal(ch->centreOfStrip(gemFirstStrip)).phi()<< endl;
+	  cout << gemPhi << "  " << tsosGP.phi() << endl;
+	  }
 	  
 	  for (auto hit = muonTrack->recHitsBegin(); hit != muonTrack->recHitsEnd(); hit++) {
 	    if ((*hit)->geographicalId().det() == 2 && (*hit)->geographicalId().subdetId() == 4) {
@@ -424,6 +442,8 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    m_roll.push_back(gemid.roll());
 	    m_chamber.push_back(gemid.chamber());
 	    m_layer.push_back(gemid.layer());
+            auto gemhit = static_cast<GEMRecHit*>(*hit);
+            m_strip.push_back((int) (etaPart->strip(dethit_localpos)));
 
 	    m_resx.push_back(res_x);
 	    m_resy.push_back(res_y);
