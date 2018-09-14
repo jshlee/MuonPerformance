@@ -303,6 +303,10 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   // checking readout status
+  cout << "bunchCrossing "<< iEvent.bunchCrossing()
+       << " orbitNumber "<< iEvent.orbitNumber()
+       << endl;
+    
   edm::Handle<GEMGEBStatusDigiCollection> gebStatusCol;  
   iEvent.getByToken(gebStatusCol_, gebStatusCol);
   
@@ -314,10 +318,12 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   //   auto gebs = gebStatusCol->get(cId); 
   //   for (auto geb = gebs.first; geb != gebs.second; ++geb) {
   //     std::cout << "geb id " << cId <<std::endl;
+      
   //     std::cout << "geb read no. vfats " << int(geb->getVwh())/3
   // 		<< " InFu " << int(geb->getInFu())
   // 		<<std::endl;
   //   }
+  // }
   //   for (auto roll : ch->etaPartitions()) {
   //     GEMDetId rId = roll->id();
   //     auto vfats = vfatStatusCol->get(rId); 
@@ -391,7 +397,6 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  // propagate from closest tsos
 	  tsos = propagator->propagate(tsos,etaPart->surface());	
 	  if (!tsos.isValid()) continue;
-	 
 	  GlobalPoint tsosGP = tsos.globalPosition();
 	  
 	  const LocalPoint locPos = etaPart->toLocal(tsosGP);
@@ -414,6 +419,9 @@ SliceTestAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  
 	  // checking if muon is within eta partition
 	  if (bps.bounds().inside(locPos2D)) {
+	  LocalError && tsos_localerr = tsos.localError().positionError();
+	  cout <<"error "<<std::sqrt(tsos_localerr.xx())<<endl;
+	  
 
 	    // // if (tsosATgem.isValid()){
 	    //   cout <<" " << chamber->id()

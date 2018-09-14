@@ -17,12 +17,12 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Input source
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:B2AA1EF5-E0AA-E811-BD11-FA163ED8B27F.root'),
-    fileNames = cms.untracked.vstring('/store/data/Run2018C/SingleMuon/RAW/v1/000/319/347/00000/F8F47D7C-4683-E811-A76E-FA163E133A3E.root'),
+    fileNames = cms.untracked.vstring('/store/data/Run2018C/SingleMuon/RAW/v1/000/319/347/00000/5CCC3C8F-E982-E811-80E1-FA163EAE9F8D.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 #import FWCore.PythonUtilities.LumiList as LumiList
@@ -91,7 +91,7 @@ process.muonGEMDigis.unPackStatusDigis = cms.bool(True)
 # Schedule definition
 process.schedule = cms.Schedule(process.raw2digi_step,
                                     #process.L1Reco_step,
-                                    process.reconstruction_step,
+                                    #process.reconstruction_step,
                                     #process.GEMRecHitSkim,
                                     #process.endjob_step,
                                     process.RECOoutput_step)
