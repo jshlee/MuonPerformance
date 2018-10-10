@@ -17,7 +17,7 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 
 # Input source
 process.source = cms.Source("PoolSource",
@@ -81,7 +81,9 @@ process.highlevelreco = cms.Sequence(process.egammaHighLevelRecoPrePF*
                              #process.egammaHighLevelRecoPostPF*
                              process.muoncosmichighlevelreco*
                              process.muonshighlevelreco)
-process.reconstruction = cms.Sequence(process.localreco*process.globalreco*process.highlevelreco)
+process.reconstruction = cms.Sequence(process.localreco*process.globalreco
+                                          *process.highlevelreco
+                                          )
 
 process.reconstruction_step = cms.Path(process.reconstruction)
 #process.endjob_step = cms.EndPath(process.endOfProcess)
@@ -89,11 +91,9 @@ process.RECOoutput_step = cms.EndPath(process.RECOoutput)
 
 process.muonGEMDigis.unPackStatusDigis = cms.bool(True)
 # Schedule definition
-process.schedule = cms.Schedule(process.raw2digi_step,
-                                    #process.L1Reco_step,
-                                    #process.reconstruction_step,
-                                    #process.GEMRecHitSkim,
-                                    #process.endjob_step,
+process.schedule = cms.Schedule(process.raw2digi_step,##process.L1Reco_step,
+                                    process.reconstruction_step,
+                                    ##process.GEMRecHitSkim,process.endjob_step,
                                     process.RECOoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)

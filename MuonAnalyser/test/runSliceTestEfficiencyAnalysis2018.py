@@ -19,7 +19,7 @@ process.maxEvents = cms.untracked.PSet(
 #process.maxEvents.input = cms.untracked.int32(10)
 # Input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-process.source.skipEvents = cms.untracked.uint32(0)
+#process.source.skipEvents = cms.untracked.uint32(0)
 
 ### Files available as at 17.7.2018
 # /xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3_000.root 319337
@@ -37,7 +37,8 @@ process.source.skipEvents = cms.untracked.uint32(0)
 #process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
 from glob import glob
 process.source.fileNames.extend(
-     ['file:root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv6newDigiStatus/AOD_623.root']
+    ['file:root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv7/AOD_222.root']
+    #['file:AOD.root']
      #['file:/xrootd/store/user/jlee/SingleMuon/2018DLatency321908-321909/180902_194730/0000/AOD_{0:02d}.root'.format(i) for i in range(30, 30+10)]
     # ['file:'+f for f in glob('/xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3*.root')][:]
 )
@@ -50,11 +51,18 @@ process.source.fileNames.extend(
 
 process.options = cms.untracked.PSet()
 
-process.TFileService = cms.Service("TFileService",fileName = cms.string("histo2018.root"))
+process.TFileService = cms.Service("TFileService",
+fileName = cms.string("histo2018.root"),
+closeFileFast = cms.untracked.bool(True)
+)
 
 process.SliceTestEfficiencyAnalysis = cms.EDAnalyzer('SliceTestEfficiencyAnalysis',
     process.MuonServiceProxy,
     gemRecHits = cms.InputTag("gemRecHits"),
+    amc13Event = cms.InputTag("muonGEMDigis","AMC13Event"),
+    amcData = cms.InputTag("muonGEMDigis","AMCdata"),
+    gebStatusCol = cms.InputTag("muonGEMDigis","gebStatus"),
+    vfatStatusCol = cms.InputTag("muonGEMDigis","vfatStatus"),    
     muons = cms.InputTag("muons"),
     vertexCollection = cms.InputTag("offlinePrimaryVertices"),
     #gemDigis = cms.InputTag("muonGEMDigis","AMCStatus"),
