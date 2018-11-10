@@ -43,7 +43,7 @@
 #include "DataFormats/MuonData/interface/MuonDigiCollection.h"
 #include "DataFormats/GEMDigi/interface/GEMAMC13EventCollection.h"
 #include "DataFormats/GEMDigi/interface/GEMAMCdataCollection.h"
-#include "DataFormats/GEMDigi/interface/GEMGEBStatusDigiCollection.h"
+#include "DataFormats/GEMDigi/interface/GEMGEBdataCollection.h"
 #include "DataFormats/GEMDigi/interface/GEMVfatStatusDigiCollection.h"
 
 #include "FWCore/Framework/interface/ESHandle.h"
@@ -82,7 +82,7 @@ private:
   edm::EDGetTokenT<GEMRecHitCollection> gemRecHits_;
   edm::EDGetTokenT<GEMAMC13EventCollection> amc13Event_;
   edm::EDGetTokenT<GEMAMCdataCollection> amcData_;
-  edm::EDGetTokenT<GEMGEBStatusDigiCollection> gebStatusCol_;
+  edm::EDGetTokenT<GEMGEBdataCollection> gebStatusCol_;
   edm::EDGetTokenT<GEMVfatStatusDigiCollection> vfatStatusCol_;
   edm::EDGetTokenT<edm::View<reco::Muon> > muons_;
   edm::EDGetTokenT<reco::VertexCollection> vertexCollection_;
@@ -90,7 +90,7 @@ private:
 
   edm::Handle<GEMAMC13EventCollection> amc13Event;
   edm::Handle<GEMAMCdataCollection> amcData;
-  edm::Handle<GEMGEBStatusDigiCollection> gebStatusCol;  
+  edm::Handle<GEMGEBdataCollection> gebStatusCol;  
   edm::Handle<GEMVfatStatusDigiCollection> vfatStatusCol;  
 
   double Latency_;
@@ -156,7 +156,7 @@ SliceTestEfficiencyAnalysis::SliceTestEfficiencyAnalysis(const edm::ParameterSet
   gemRecHits_ = consumes<GEMRecHitCollection>(iConfig.getParameter<edm::InputTag>("gemRecHits"));
   amc13Event_ = consumes<GEMAMC13EventCollection>(iConfig.getParameter<edm::InputTag>("amc13Event"));
   amcData_ = consumes<GEMAMCdataCollection>(iConfig.getParameter<edm::InputTag>("amcData"));
-  gebStatusCol_ = consumes<GEMGEBStatusDigiCollection>(iConfig.getParameter<edm::InputTag>("gebStatusCol"));
+  gebStatusCol_ = consumes<GEMGEBdataCollection>(iConfig.getParameter<edm::InputTag>("gebStatusCol"));
   vfatStatusCol_ = consumes<GEMVfatStatusDigiCollection>(iConfig.getParameter<edm::InputTag>("vfatStatusCol"));
   muons_ = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muons"));
   edm::ParameterSet serviceParameters = iConfig.getParameter<edm::ParameterSet>("ServiceParameters");
@@ -446,19 +446,19 @@ bool SliceTestEfficiencyAnalysis::checkEtaPartitionGood(const GEMEtaPartition* p
   
   auto gebs = gebStatusCol->get(rId.chamberId()); 
   for (auto geb = gebs.first; geb != gebs.second; ++geb) {
-    if (int(geb->getInFu()) != 0 ) return false;
+    if (int(geb->inFIFOund()) != 0 ) return false;
     
     std::cout << "geb id " << rId.chamberId() <<std::endl;
-    std::cout << "geb read no. vfats " << int(geb->getVwh())/3
-     	      << " getOHBC " << int(geb->getOHBC())
-   	      << " InFu " << int(geb->getInFu())
+    std::cout << "geb read no. vfats " << int(geb->vfatWordCnt())/3
+     	      << " getOHBC " << int(geb->bcOH())
+   	      << " InFu " << int(geb->inFIFOund())
     	      <<std::endl;
   }
   
   auto vfats = vfatStatusCol->get(rId); 
   for (auto vfat = vfats.first; vfat != vfats.second; ++vfat) {
     std::cout << rId
-    	      << " vfat pos " << vfat->position()
+    	      << " vfat pos " << vfat->phi()
     	      << " quality " << int(vfat->quality())
     	      << " amcBx " << amcBx
     	      << " bc " << vfat->bc()

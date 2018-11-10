@@ -17,12 +17,13 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+#process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 
 # Input source
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:B2AA1EF5-E0AA-E811-BD11-FA163ED8B27F.root'),
-    fileNames = cms.untracked.vstring('/store/data/Run2018C/SingleMuon/RAW/v1/000/319/347/00000/5CCC3C8F-E982-E811-80E1-FA163EAE9F8D.root'),
+    fileNames = cms.untracked.vstring('/store/data/Run2018C/SingleMuon/RAW/v1/000/319/347/00000/001248FB-EC82-E811-8E3A-FA163E53D77F.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 #import FWCore.PythonUtilities.LumiList as LumiList
@@ -50,6 +51,7 @@ process.RecoMuonRECO.outputCommands.extend(TcdsEventContent.outputCommands)
 process.RecoMuonRECO.outputCommands.append("keep *_muonGEMDigis_*_*")
 process.RecoMuonRECO.outputCommands.append("keep *_gemRecHits_*_*")
 process.RecoMuonRECO.outputCommands.append("keep *_csc2DRecHits_*_*")
+process.RecoMuonRECO.outputCommands.append("keep *_cscSegments_*_*")
 
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
@@ -82,7 +84,7 @@ process.highlevelreco = cms.Sequence(process.egammaHighLevelRecoPrePF*
                              process.muoncosmichighlevelreco*
                              process.muonshighlevelreco)
 process.reconstruction = cms.Sequence(process.localreco*process.globalreco
-                                          *process.highlevelreco
+                                          #*process.highlevelreco
                                           )
 
 process.reconstruction_step = cms.Path(process.reconstruction)
