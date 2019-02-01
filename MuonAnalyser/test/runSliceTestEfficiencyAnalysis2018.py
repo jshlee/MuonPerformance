@@ -37,7 +37,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 #process.source.fileNames.append('/store/data/Run2018B/Cosmics/AOD/PromptReco-v1/000/317/428/00000/E4BC1D7B-3F6A-E811-9E05-FA163E57A064.root')
 from glob import glob
 process.source.fileNames.extend(
-    ['file:root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv7/AOD_222.root']
+    ['file:root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jlee/SingleMuon/Run2018C-v1/FULLRECOv1/AOD_222.root']
     #['file:AOD.root']
      #['file:/xrootd/store/user/jlee/SingleMuon/2018DLatency321908-321909/180902_194730/0000/AOD_{0:02d}.root'.format(i) for i in range(30, 30+10)]
     # ['file:'+f for f in glob('/xrootd/store/user/jlee/SingleMuon/Run2018C-v1/RECOv1/step3*.root')][:]

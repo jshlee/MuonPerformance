@@ -18,7 +18,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
-#process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10))
 
 # Input source
 process.source = cms.Source("PoolSource",
@@ -71,8 +71,8 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v11', '')
 process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(
         connect = cms.string('sqlite_fip:MuonPerformance/MuonAnalyser/data/GEMELMap.db'),
-        record = cms.string('GEMELMapRcd'),
-        tag = cms.string('GEMELMap_v3')
+        record = cms.string('GEMeMapRcd'),
+        tag = cms.string('GEMeMap_v4')
     ))
 
 # Path and EndPath definitions
@@ -80,12 +80,10 @@ process.raw2digi_step = cms.Path(process.RawToDigi)
 process.L1Reco_step = cms.Path(process.L1Reco)
 process.highlevelreco = cms.Sequence(process.egammaHighLevelRecoPrePF*
                              process.particleFlowReco*
-                             #process.egammaHighLevelRecoPostPF*
+                             process.egammaHighLevelRecoPostPF*
                              process.muoncosmichighlevelreco*
                              process.muonshighlevelreco)
-process.reconstruction = cms.Sequence(process.localreco*process.globalreco
-                                          #*process.highlevelreco
-                                          )
+#process.reconstruction = cms.Sequence(process.localreco*process.globalreco*process.highlevelreco)
 
 process.reconstruction_step = cms.Path(process.reconstruction)
 #process.endjob_step = cms.EndPath(process.endOfProcess)

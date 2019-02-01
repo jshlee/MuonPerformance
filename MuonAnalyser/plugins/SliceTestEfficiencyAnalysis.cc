@@ -441,6 +441,11 @@ bool SliceTestEfficiencyAnalysis::checkEtaPartitionGood(const GEMEtaPartition* p
     auto amcs = (*amcsIt).second;
     for (auto amc = amcs.first; amc != amcs.second; ++amc) {
       amcBx = amc->bx();
+      std::cout << "amc->boardId() " << amc->boardId()
+                << " amc->amcNum() " << int(amc->amcNum())
+                << " amc->l1A() " << amc->l1A()
+                <<std::endl;
+      
     }
   }
   
