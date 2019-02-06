@@ -59,7 +59,8 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string('AOD.root'),
-    outputCommands = process.RecoMuonRECO.outputCommands,
+    #outputCommands = process.RecoMuonRECO.outputCommands,
+    outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0),
     #SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('GEMRecHitSkim'))
 )
@@ -68,7 +69,9 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v11', '')
 # using local emap db
-process.GlobalTag.toGet = cms.VPSet(
+useDBfile = False
+if useDBfile:
+    process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(
         connect = cms.string('sqlite_fip:MuonPerformance/MuonAnalyser/data/GEMELMap.db'),
         record = cms.string('GEMeMapRcd'),
