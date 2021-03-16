@@ -517,10 +517,10 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       }
     }
 
-    ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4;
+    // ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4;
     const pat::Muon* mu = muref.get();
-    if (mu) { p4 = mu->p4(); }
-    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), p4,
+    // if (mu) { p4 = mu->p4(); }
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), mu->polarP4(),
                                                         miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
                                                         miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
                                                         miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
@@ -545,7 +545,7 @@ void PatMuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     TLorentzVector recotlv(muon.momentum().x(), muon.momentum().y(), muon.momentum().z(), muon.energy() );
   
-    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), muon.p4(),
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), muon.polarP4(),
                                                         miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
                                                         miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
                                                         miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);

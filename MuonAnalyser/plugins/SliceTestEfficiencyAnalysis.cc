@@ -14,6 +14,7 @@
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -161,7 +162,7 @@ SliceTestEfficiencyAnalysis::SliceTestEfficiencyAnalysis(const edm::ParameterSet
   muons_ = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muons"));
   edm::ParameterSet serviceParameters = iConfig.getParameter<edm::ParameterSet>("ServiceParameters");
   //gemDigis_ = consumes<MuonDigiCollection<unsigned short,GEMAMCStatusDigi>>(iConfig.getParameter<edm::InputTag>("gemDigis"));
-  theService_ = new MuonServiceProxy(serviceParameters);
+  theService_ = new MuonServiceProxy(serviceParameters, consumesCollector(), MuonServiceProxy::UseEventSetupIn::RunAndEvent);
   Latency_ = iConfig.getParameter<double>("latency");
 
   t_event = fs->make<TTree>("Event", "Event");
@@ -451,12 +452,12 @@ bool SliceTestEfficiencyAnalysis::checkEtaPartitionGood(const GEMEtaPartition* p
   
   auto gebs = gebStatusCol->get(rId.chamberId()); 
   for (auto geb = gebs.first; geb != gebs.second; ++geb) {
-    if (int(geb->inFIFOund()) != 0 ) return false;
+    //if (int(geb->inFIFOund()) != 0 ) return false;
     
     std::cout << "geb id " << rId.chamberId() <<std::endl;
     std::cout << "geb read no. vfats " << int(geb->vfatWordCnt())/3
      	      << " getOHBC " << int(geb->bcOH())
-   	      << " InFu " << int(geb->inFIFOund())
+      //<< " InFu " << int(geb->inFIFOund())
     	      <<std::endl;
   }
   

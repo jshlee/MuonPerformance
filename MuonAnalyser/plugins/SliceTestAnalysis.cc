@@ -13,6 +13,7 @@
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -138,8 +139,7 @@ SliceTestAnalysis::SliceTestAnalysis(const edm::ParameterSet& iConfig) :
   muons_ = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muons"));
   vertexCollection_ = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"));
   edm::ParameterSet serviceParameters = iConfig.getParameter<edm::ParameterSet>("ServiceParameters");
-  theService_ = new MuonServiceProxy(serviceParameters);
-
+  theService_ = new MuonServiceProxy(serviceParameters, consumesCollector(), MuonServiceProxy::UseEventSetupIn::RunAndEvent);
   h_clusterSize=fs->make<TH1D>(Form("clusterSize"),"clusterSize",100,0,100);
   h_totalStrips=fs->make<TH1D>(Form("totalStrips"),"totalStrips",200,0,200);
   h_bxtotal=fs->make<TH1D>(Form("bx"),"bx",31,-15,15);

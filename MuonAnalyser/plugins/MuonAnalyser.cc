@@ -450,10 +450,10 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const reco::GenParticle& gen = *(simTP->genParticles()[0]);
     if ( gen.mother()) { mpdgId = gen.mother()->pdgId(); }
 
-    ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4;
+    //ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4;
     const Muon* mu = muonRef.get();
-    if (mu) { p4 = mu->p4(); }
-    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), p4,
+    //if (mu) { p4 = mu->polarP4(); }
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), mu->polarP4(),
                                                         miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
                                                         miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
                                                         miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
@@ -513,7 +513,7 @@ void MuonAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
     initTreeValues();
 
-    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), (mu->p4()),
+    pat::PFIsolation miniiso = pat::getMiniPFIsolation(&(*pfCands), (mu->polarP4()),
                                                         miniIsoParams_[0], miniIsoParams_[1], miniIsoParams_[2],
                                                         miniIsoParams_[3], miniIsoParams_[4], miniIsoParams_[5],
                                                         miniIsoParams_[6], miniIsoParams_[7], miniIsoParams_[8]);
